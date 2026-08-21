@@ -1,0 +1,16 @@
+#!/bin/sh
+# Reboot, and say so — to the one reader that needs telling, one moment later.
+#
+# rcK's default is already the reboot path, but only by absence: a poweroff
+# interrupted before init got to the shutdown action leaves a marker behind
+# that a reboot in the same session would inherit. Clearing it makes the safe
+# default an assertion rather than a coincidence.
+#
+# busybox is invoked by explicit path: the bare name resolves back to the
+# /usr/sbin/reboot shim, which would loop.
+MARKER="${BASEOS_POWEROFF_MARKER:-/run/poweroff-requested}"
+BUSYBOX="${BASEOS_BUSYBOX:-/usr/bin/busybox}"
+
+rm -f "$MARKER"
+
+exec "$BUSYBOX" reboot "$@"

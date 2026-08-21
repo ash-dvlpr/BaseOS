@@ -1,0 +1,5 @@
+#!/bin/sh
+# Compatibility shim. Frontends exec the bare name — NextUI's launch.sh acts on
+# keymon's /tmp/poweroff sentinel by running `poweroff` — so the fix has to live
+# under the name they already call. The logic is in baseos-poweroff.
+exec "${BASEOS_SBIN:-/usr/sbin}/baseos-poweroff" "$@"

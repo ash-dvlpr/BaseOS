@@ -1,0 +1,4 @@
+#!/bin/sh
+# Compatibility shim; see poweroff. baseos-update also reaches this by the bare
+# name after a slot flip and after a rollback flip.
+exec "${BASEOS_SBIN:-/usr/sbin}/baseos-reboot" "$@"

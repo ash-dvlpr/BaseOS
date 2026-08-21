@@ -142,10 +142,80 @@ to-do in [06](06-status-and-lessons.md).
 ## 5. Power button / poweroff
 
 There is no `systemd-logind` on base OS. NextUI's `keymon` reads the power key
-(event0, `axp2202-pek`) directly and writes `/tmp/poweroff` / `/tmp/reboot` sentinels
-that `launch.sh` acts on; BusyBox init runs the poweroff/reboot. A **long-press powers
-off in hardware** at the AXP2202 PMIC regardless of software — normal, expected
-force-off behaviour.
+(event0, `axp2202-pek`) directly and writes `/tmp/poweroff` / `/tmp/reboot`
+sentinels that `launch.sh` acts on by running `poweroff` or `reboot`; BusyBox
+init runs the single `::shutdown:` action, `/etc/init.d/rcK`, for both. A
+**long-press powers off in hardware** at the AXP2202 PMIC after 6 s
+(`pmu_powkey_off_time = 6000`) regardless of software — normal, expected
+force-off behaviour. It stays off with a charger attached, which
+AXP717 `REG22H[0] = 0` ("do not auto turn on after an OFFLEVEL POK shutdown")
+predicts and measurement confirms.
+
+**The kernel's power off does not stay off while a charger is attached.**
+`reboot(RB_POWER_OFF)` reaches PSCI `SYSTEM_OFF` and BL31, the shutdown
+completes normally, and the PMIC brings the device back about seven seconds
+later reporting `bootreason=charger`. Measured repeatedly on an RG SP.
+Unplugged it stays off, which is what made this look for a while like a hang
+rather than a restart. Left unhandled it turns any device on a charger into a
+boot loop, because the frontend's doze timeout ends in a `poweroff`.
+`knulli-cfw/distribution` issues #472 and #287 describe the same fault on other
+H700 hardware.
+
+So `rcK` ends by writing the PMU's own soft-poweroff bit over i2c
+(`/usr/sbin/axp-off`, AXP717 `REG27H[0]`), which does stay off. Two
+consequences beyond the charger case: the PMIC cut never walks the kernel's
+device `.shutdown()` hooks, so a live `mali_kbase` cannot hang that path at
+all; and a power off no longer depends on what BL31 does with the PMU. What in
+BL31's `SYSTEM_OFF` handler undoes the shutdown was never identified — it is
+bypassed, not diagnosed.
+
+`axp-off` discovers the PMIC rather than assuming where it is, and checks what
+it found before writing to it. The register map is a property of the silicon
+and travels to every board carrying this part; the i2c bus number comes from
+the devicetree and does not. The kernel has already probed and bound the chip —
+which is why the write needs `I2C_SLAVE_FORCE` — so the tool reads the binding
+out of `/sys/bus/i2c/drivers/axp20x-i2c`, whose entries are named
+`<bus>-<addr>`; with two clients bound, the one at `0x34` wins rather than
+whichever `readdir` happens to yield first.
+
+Two checks then have to agree, because they disqualify different things.
+`0x34` is the cheaper one and it is a location check: every AXP in the family
+sits there, so on its own it catches a board that moved the chip and *not* a
+board carrying a different AXP at the same address — where `0x27` need not mean
+"soft poweroff" at all. So the client's own `name` attribute is checked too,
+against an allowlist of the parts somebody has actually measured. Today that is
+one entry, `axp2202`, read off an RG SP at
+`/sys/bus/i2c/drivers/axp20x-i2c/5-0034/name`. No binding, none at `0x34`, or a
+name that is missing, unreadable or unlisted all mean no write: it fails closed
+and the poweroff falls back to the kernel path.
+
+The call site gates on that, not only the write itself. Run without `--now`,
+`axp-off` writes nothing and exits 0 only after discovery succeeded, the address
+and the name matched, `/dev/i2c-N` opened and `REG27H` read — an exact "can this
+work on this board" probe. `rcK` runs it as a precondition, so a board where any
+of those steps fails takes the kernel path unchanged and never unmounts anything
+for a write that could not have worked.
+
+**The residual risk, stated plainly:** the name is the *kernel's*
+identification, not the chip answering for itself — on a devicetree system it
+comes from the node's compatible, so it is only as good as the vendor DTB, and
+matching a chip-ID register out of the silicon would be strictly better. And
+eleven targets ship while one has been measured: another H700 board could carry
+the very same AXP2202 under a different name, in which case this simply refuses
+and does nothing, exactly as it does where the part really is different. That is
+the safe direction, and it is not a claim that any of the other ten models
+works. [06](06-status-and-lessons.md) §1 records what was measured per model
+rather than inferring it.
+
+BusyBox init gives `rcK` no way to tell a poweroff from a reboot, so
+`/usr/sbin/poweroff` and `/usr/sbin/reboot` are **shims** over
+`baseos-poweroff` and `baseos-reboot`, which record the intent in
+`/run/poweroff-requested`. Absent the marker, `rcK` takes the reboot path, and
+that default is deliberate: a poweroff that falls through merely restarts on the
+charger, which is what shipped before, while a reboot that powers off would
+strand `baseos-update` after a slot flip, leaving the device sitting there off
+mid-update with no boot counted at all. `/run` is tmpfs, so a marker cannot
+survive a boot and be mistaken for a fresh request.
 
 ## 6. USB gadget — adb and optional card storage
 

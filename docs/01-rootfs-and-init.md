@@ -8,7 +8,8 @@ exactly-scoped set of stock libraries and daemons. ~105 MB in a 512 MiB ext4.
 Four sources, assembled by `build-rootfs.sh` (see [02](02-image-build-and-flash.md)):
 
 1. **Static BusyBox** (Alpine `busybox-static`, ~1 MB) — provides `/sbin/init`, `sh`
-   (ash), `mount`, `insmod`, `udhcpc`, `hwclock`, `getty`, `poweroff`/`reboot`,
+   (ash), `mount`, `insmod`, `udhcpc`, `hwclock`, `getty`, `poweroff`/`reboot` (both
+   shadowed by BaseOS shims, [05](05-runtime-power-network.md) §5),
    **and — importantly — `mkfs.vfat`/`mkdosfs`, `partprobe`, `blockdev`, `killall`**
    (used by the first-boot expand, [03](03-first-boot-and-expand.md)).
 2. **The StockMod harvest** — an allowlist (`manifest/harvest.list`) extracted from
@@ -140,7 +141,11 @@ The existing `MinUI.pak/launch.sh` runs **unchanged** on base OS: its stock-OS c
 (`systemctl …`, `killall brightCtrl.bin cexpert`, the logind drop-in, the TF1 dmenu
 self-heal) are already guarded with `|| true` / `command -v` / `mountpoint -q`, and
 resolve harmlessly against our shims. Poweroff/reboot work via the sentinels NextUI
-already writes (`/tmp/poweroff`, `/tmp/reboot`) — BusyBox init handles both.
+already writes (`/tmp/poweroff`, `/tmp/reboot`), and BusyBox init runs `rcK` for
+both. `/usr/sbin/poweroff` and `/usr/sbin/reboot` — which `/sbin` resolves to as
+well — are now BaseOS shims over `baseos-poweroff` / `baseos-reboot`
+([05](05-runtime-power-network.md) §5), so a caller invoking either by name takes
+the PMIC path. One that execs the busybox binary directly does not.
 
 NextUI's RetroAchievements HTTP layer also runs unchanged: it invokes the static
 `/usr/bin/curl` supplied by BaseOS. The binary is built from a pinned curl release and
