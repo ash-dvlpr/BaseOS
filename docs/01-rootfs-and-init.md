@@ -101,6 +101,16 @@ ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt100   # serial console (harmless wi
    boot-check`, which counts trial boots after a system update and restores the
    previous slot if this one never reaches a frontend session
    ([07](07-partition-layout-and-updates.md))
+4a. **a charger boot ends here.** If U-Boot reports `bootreason=charger`, `rcS` writes
+   the PMU's soft-poweroff bit and the device goes back off to charge instead of
+   running a frontend against its own charger. It sits *before* that `boot-check`, so
+   charging a device never spends one of its trial boots, and before the card mount,
+   so nothing is mounted that a power cut could tear. Six preconditions have to agree
+   first — a real `/data`, no `/data/no-charger-off`, MENU not held (holding it still
+   reaches USB-storage mode, [08](08-usb-adb-and-otg.md)), an unarmed `axp-off` probe
+   that says the PMIC is reachable on this board, a usable RTC, and no auto-off
+   stamp inside the last 120 s — and any of them failing continues the boot
+   normally ([05](05-runtime-power-network.md) §5)
 5. restore the entropy seed; `hwclock -s` (background); `insmod 8821cs.ko` (background)
 6. `machine-id`: reuse `/data/machine-id` or generate one; symlink `/etc/machine-id`
    and `/var/lib/dbus/machine-id → /run/machine-id`

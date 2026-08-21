@@ -189,12 +189,12 @@ one entry, `axp2202`, read off an RG SP at
 name that is missing, unreadable or unlisted all mean no write: it fails closed
 and the poweroff falls back to the kernel path.
 
-The call site gates on that, not only the write itself. Run without `--now`,
+Both call sites gate on that, not only the write itself. Run without `--now`,
 `axp-off` writes nothing and exits 0 only after discovery succeeded, the address
 and the name matched, `/dev/i2c-N` opened and `REG27H` read — an exact "can this
-work on this board" probe. `rcK` runs it as a precondition, so a board where any
-of those steps fails takes the kernel path unchanged and never unmounts anything
-for a write that could not have worked.
+work on this board" probe. `rcK` and `rcS` each run it as a precondition, so a
+board where any of those steps fails takes the kernel path unchanged, and in
+`rcS` never unmounts `/data` first.
 
 **The residual risk, stated plainly:** the name is the *kernel's*
 identification, not the chip answering for itself — on a devicetree system it
@@ -216,6 +216,32 @@ charger, which is what shipped before, while a reboot that powers off would
 strand `baseos-update` after a slot flip, leaving the device sitting there off
 mid-update with no boot counted at all. `/run` is tmpfs, so a marker cannot
 survive a boot and be mistaken for a fresh request.
+
+**A charger boot ends itself.** The PMIC powers the rails up whenever VBUS
+appears — vendor behaviour, not a fault — and U-Boot records the cause as
+`bootreason=charger`, mirrored at `axp2202-battery/boot_mode`. `rcS` sees it
+early, before `baseos-update boot-check`, the card mount or any frontend, and
+calls `axp-off` directly, so the handheld charges with the machine off instead
+of running a frontend against its own charger. U-Boot has already drawn its
+battery screen by then, so the cable still gives visible feedback. POWER
+produces `bootreason=button` and a completely normal boot with the cable
+attached, which is what keeps adb reachable.
+
+Six guards on that branch: a real `/data`, because the tmpfs fallback cannot
+remember anything between boots and an unbounded loop beats a busy frontend;
+`/data/no-charger-off` as an outright opt-out; MENU not held, because for a
+powered-off device connecting the cable *is* the power-on and the documented
+"cable, then hold MENU from power-on" storage-mode recovery
+([08](08-usb-adb-and-otg.md)) has to keep working on a device that is otherwise
+unusable; the unarmed `axp-off` probe above, so a board this was never measured
+on skips the branch before anything is unmounted; a readable RTC, since it is
+the only way to recognise a loop; and a 120 s window that stops a loop if the
+PMIC write ever stops sticking. The opt-out exists because this hardware
+**cannot** distinguish a host PC from a dumb charger — the driver publishes no
+`usb_type` and BC detection reads empty.
+
+Full measurements, and the two theories tested and killed on the way:
+[`diagnostics/results/2026-08-18-charger-boot-and-poweroff.md`](../diagnostics/results/2026-08-18-charger-boot-and-poweroff.md).
 
 ## 6. USB gadget — adb and optional card storage
 

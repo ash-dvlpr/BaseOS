@@ -26,3 +26,10 @@ power). Each wake appends a line to `/mnt/sdcard/sleep-drain.log`:
 
 `avg` is the mean current during suspend; `proj_suspend_life` = full battery /
 avg current. Single-digit-mA average ⇒ real deep sleep; tens of mA ⇒ fake.
+
+## results — measurement write-ups
+
+`results/` holds the write-up behind a change that needed hardware to settle.
+`2026-08-18-charger-boot-and-poweroff.md` records why `poweroff` did not stay
+off on a charger, the register evidence for writing the PMU directly, and the
+two theories that were tested and killed on the way.

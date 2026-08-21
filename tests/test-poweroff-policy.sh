@@ -125,7 +125,50 @@ strip "$BR" | sed -n "${rmln}p" | grep -q 'usr/sbin/reboot' \
 strip "$BR" | grep -q '\*/axp-off' \
 	|| fail "axp-off is not exempt from the closure check; the build will report UNRESOLVABLE"
 
-# --- 8. rcK closes its filesystems before it cuts power -------------------
+# --- 8. the charger branch runs before the update trial counter -----------
+# A charger boot never reaches a frontend session. Counted as a failed trial
+# boot it would roll back a perfectly good update on a device that is merely
+# charged often.
+RCS="$OVERLAY/etc/init.d/rcS"
+charger="$(lineof "$RCS" 'bootreason=charger')"
+check="$(lineof "$RCS" 'baseos-update boot-check')"
+[ -n "$charger" ] || fail "rcS no longer acts on a charger boot"
+[ -n "$check" ] || fail "rcS no longer runs the update trial check"
+[ "$charger" -lt "$check" ] || fail "the charger branch runs after boot-check: charged devices will roll back good updates"
+
+# --- 9. the charger branch closes /data before it cuts power --------------
+# sync alone leaves the filesystem marked in use; only umount (or a read-only
+# remount) guarantees the journal is not replayed on every subsequent mount.
+# This is the lesson diagnostics/results/2026-08-18-charger-boot-and-poweroff.md
+# calls out by name ("sync is not an unmount") — pin it so it cannot regress.
+data_close="$(lineof "$RCS" 'umount /data')"
+pmic_write="$(lineof "$RCS" 'axp-off --now')"
+[ -n "$data_close" ] || fail "rcS no longer closes /data before powering off"
+[ -n "$pmic_write" ] || fail "rcS no longer writes the PMIC to end a charger boot"
+[ "$data_close" -lt "$pmic_write" ] || fail "rcS cuts power before closing /data: the journal will replay on every subsequent mount"
+
+# --- 10. the loop stamp is recorded before the power off is committed -----
+# The stamp is the whole memory of the loop guard. Written after the PMIC cut it
+# would never land on the boot that mattered, and the next charger boot would
+# have nothing to compare against — an unbounded loop with no frontend and no
+# adb to recover from.
+stamp_write="$(lineof "$RCS" '> /data/charger-off-stamp')"
+[ -n "$stamp_write" ] || fail "rcS no longer records the charger-off loop stamp"
+[ "$stamp_write" -lt "$pmic_write" ] || fail "rcS cuts power before recording the loop stamp: the loop guard would have no memory"
+
+# --- 11. the settle wait sits between the PMIC write and the remount ------
+# axp-off returns as soon as the i2c write completes, milliseconds before the
+# rails drop. Remounting /data rw inside that gap puts a writable filesystem
+# back underneath a cut that is still landing — the exact race the unmount
+# above exists to avoid.
+settle="$(lineof "$RCS" 'sleep 5')"
+remount="$(lineof "$RCS" 'remount,rw /data')"
+[ -n "$settle" ] || fail "rcS no longer waits for the PMIC cut to land"
+[ -n "$remount" ] || fail "rcS no longer puts /data back when the cut does not take"
+[ "$pmic_write" -lt "$settle" ] || fail "rcS waits before it writes the PMIC, which only delays the boot"
+[ "$settle" -lt "$remount" ] || fail "rcS remounts /data rw without waiting for the cut to land"
+
+# --- 12. rcK closes its filesystems before it cuts power ------------------
 # BusyBox init runs the shutdown action before its SIGTERM sweep, so the
 # frontend is still live on the card here. These two unmounts are what stand
 # between the rails dropping and a mounted, writable vfat/ext4 — degraded to
@@ -141,15 +184,28 @@ rck_data_close="$(lineof "$RCK" 'umount -r /data')"
 [ "$card_close" -lt "$write" ] || fail "rcK cuts power before closing the card: the rails drop on a live vfat mount"
 [ "$rck_data_close" -lt "$write" ] || fail "rcK cuts power before closing /data: the rails drop on a live ext4 mount"
 
-# --- 9. rcK gates on the unarmed probe before its first unmount -----------
+# --- 13. the charger branch refuses to fire while MENU is held ------------
+# MENU-held is how a powered-off device reaches the documented USB
+# mass-storage recovery (connect the cable, then hold MENU from power-on).
+# Without this precondition the charger branch would power the device off
+# before rcS ever looks at the button, breaking that path.
+menu_held="$(lineof "$RCS" 'boot-menu-held')"
+[ -n "$menu_held" ] || fail "rcS no longer tests boot-menu-held before ending a charger boot"
+[ "$charger" -lt "$menu_held" ] || fail "rcS tests boot-menu-held outside the charger branch"
+[ "$menu_held" -lt "$pmic_write" ] || fail "rcS writes the PMIC before checking whether MENU is held"
+
+# --- 14. both callers gate on the unarmed probe before their first unmount -
 # axp-off run with no --now writes nothing and returns 0 only after it found
 # the driver's client, matched the address and the part name it publishes,
 # opened /dev/i2c-N and read REG27H — the guard that stands between a board
 # this was never measured on and an unmounted filesystem. Losing it here still
 # leaves the write itself behind --now, but every unmeasured board would
 # unmount its filesystems for nothing.
+probe_rcs="$(lineof "$RCS" 'axp-off >/dev/null 2>&1')"
 probe_rck="$(lineof "$RCK" 'axp-off >/dev/null 2>&1')"
+[ -n "$probe_rcs" ] || fail "rcS no longer probes axp-off before ending a charger boot"
 [ -n "$probe_rck" ] || fail "rcK no longer probes axp-off before cutting power"
+[ "$probe_rcs" -lt "$data_close" ] || fail "rcS unmounts /data before probing axp-off: an unmeasured board would lose its filesystem for nothing"
 [ "$probe_rck" -lt "$card_close" ] || fail "rcK unmounts the card before probing axp-off: an unmeasured board would lose its filesystem for nothing"
 
 echo "poweroff policy tests passed"
