@@ -26,7 +26,7 @@ By comparison, stock Anbernic OS + NextUI takes 17.5 sec (manually measured with
 - Lowest possible resource and battery usage.
 - Takes 5 sec to install.
 - Full support for the handheld's display, sound, controls, networking, HDMI, LEDs,
-  deep sleep and other features. No comporise on that front.
+  deep sleep and other features. No compromise on that front.
 - First-boot expansion of the data partition to fill the SD card.
 - Easy updates: copy one file onto the card and reboot. No reflashing, and
   your ROMs, saves and settings are untouched.
