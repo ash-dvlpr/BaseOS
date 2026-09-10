@@ -1,0 +1,6 @@
+# Keep text files LF in the repository and in every working tree. The build
+# scripts, overlay init scripts and device-side helpers are executed by Linux
+# (containers on the host, BusyBox on the handheld), where a CRLF shebang is a
+# hard failure. eol=lf prevents Git for Windows from re-introducing CRLF on
+# checkout, which is exactly what made a Windows clone unbuildable under WSL.
+* text=auto eol=lf
