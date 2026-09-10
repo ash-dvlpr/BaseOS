@@ -103,6 +103,9 @@ ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt100   # serial console (harmless wi
 5. restore the entropy seed; `hwclock -s` (background); `insmod 8821cs.ko` (background)
 6. `machine-id`: reuse `/data/machine-id` or generate one; symlink `/etc/machine-id`
    and `/var/lib/dbus/machine-id → /run/machine-id`
+6a. apply the persisted hostname from `/data/hostname` ([05](05-runtime-power-network.md) §3):
+   set by a `rename_hostname` file on the card, it is applied before any service
+   starts so any hostname aware daemons see the right name from the start
 7. **first-boot expand-to-fill** (`expand-storage`, [03](03-first-boot-and-expand.md))
    — runs *before* the card mount; a no-op once the card is provisioned
 8. sample the built-in MENU button's current evdev state once; when held, enter a
@@ -111,7 +114,12 @@ ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt100   # serial console (harmless wi
 8a. on a normal boot, mount the NextUI card: TF2 (`/dev/mmcblk1p1`) if present,
     else this card's own `/dev/mmcblk0p7` → `/mnt/sdcard`, plus the `/mnt/SDCARD`
     compat symlink; write a boot breadcrumb to the card
-8b. `baseos-update apply` — one failed glob on an ordinary boot; when the user has
+8b. optional hostname rename: if the card root carries a `rename_hostname` file,
+    validate it, persist it to `/data/hostname` and remove the card file; rcS then
+    reboots after the update step below, so the next boot's 6a applies the new hostname.
+    A pending system update reboots first (8c) and applies the new name itself,
+    so there is no second reboot. Nothing has started yet, so no services are restarted
+8c. `baseos-update apply` — one failed glob on an ordinary boot; when the user has
    copied a `*.bosupd` payload onto the card it writes the inactive rootfs slot,
    verifies it, flips the GPT and reboots; deferred while USB storage is active
    ([07](07-partition-layout-and-updates.md))
