@@ -97,6 +97,9 @@ fi
 /bin/mkdir -p /run/dbus /var/lib/dbus
 /bin/ln -sf /run/machine-id /var/lib/dbus/machine-id
 
+# Hostname override: apply the persisted hostname override to the tmpfs.
+[ -x /usr/sbin/rename-hostname ] && /usr/sbin/rename-hostname apply
+
 # First boot on a fresh flash: grow this card's data partition to fill the
 # whole card (leaving it empty for the user to add a frontend). No-op once the
 # card already fills the disk.
@@ -139,6 +142,14 @@ if [ "$USB_STORAGE_MODE" -eq 0 ]; then
 fi
 /bin/ln -sfn /mnt/sdcard /mnt/SDCARD
 
+# Optional hostname rename from the card root. rcS consumes it once the card is
+# mounted and before any service starts, persists it to /data, and reboots
+# below so the next boot applies it. Nothing has started yet, so no services are affected
+RENAMED=0
+if [ "$USB_STORAGE_MODE" -eq 0 ]; then
+	[ -x /usr/sbin/rename-hostname ] && /usr/sbin/rename-hostname consume && RENAMED=1
+fi
+
 # System update: apply a *.bosupd payload the user copied onto the card. Costs
 # one failed glob on an ordinary boot; when a payload is present it writes the
 # inactive rootfs slot, verifies it, flips the GPT and reboots. Storage mode
@@ -146,6 +157,15 @@ fi
 # boot after the user ejects and restarts without MENU.
 if [ "$USB_STORAGE_MODE" -eq 0 ]; then
 	[ -x /usr/sbin/baseos-update ] && /usr/sbin/baseos-update apply
+fi
+
+# A hostname rename needs a clean boot to take effect on a previous step.
+# The update above does not return once it reboots, and it applies the new name
+# itself, so reaching this point with RENAMED=1 means no update was applied.
+if [ "$RENAMED" -eq 1 ]; then
+	sync
+	reboot
+	sleep 10
 fi
 
 # Dev image extras (serial getty is in inittab; this starts SSH).

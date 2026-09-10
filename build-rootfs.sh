@@ -114,7 +114,7 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
             "$R/usr/sbin/baseos-ntp" "$R/usr/sbin/baseos-ntp-notify" \
             "$R/usr/sbin/nextui-session" "$R/usr/sbin/systemctl" \
             "$R/usr/sbin/expand-storage" "$R/usr/sbin/baseos-update" \
-            "$R/usr/sbin/boot-menu-held" \
+            "$R/usr/sbin/boot-menu-held" "$R/usr/sbin/rename-hostname" \
             "$R/usr/sbin/usb-gadget-adb" "$R/usr/sbin/usb-storage-mode" \
             "$R/mnt/vendor/ctrl/setBluetooth.sh" \
             "$R/usr/share/udhcpc/default.script"
@@ -125,7 +125,7 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
            /usr/bin/baseos-splash /usr/bin/timedatectl \
            /usr/sbin/baseos-ntp /usr/sbin/baseos-ntp-notify \
            /usr/sbin/expand-storage /usr/sbin/baseos-update /usr/sbin/systemctl \
-           /usr/sbin/boot-menu-held \
+           /usr/sbin/boot-menu-held /usr/sbin/rename-hostname \
            /usr/sbin/usb-gadget-adb /usr/sbin/usb-storage-mode \
            /mnt/vendor/ctrl/setBluetooth.sh; do
     [ -x "$R$s" ] || { echo "FATAL: $s is not executable in rootfs"; exit 1; }

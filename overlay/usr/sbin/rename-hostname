@@ -1,0 +1,121 @@
+#!/bin/sh
+# Optional hostname override, triggered by a file on the card root.
+#
+# Commands:
+#   apply    after machine-id is set: apply the persisted /data/hostname, so
+#            every later service starts with the right name
+#   consume  after the card is mounted: validate <card>/rename_hostname,
+#            persist it to /data/hostname, remove the card file, and report
+#            that a reboot is needed so the next boot's `apply` names every
+#            service from the outset
+#
+# The root filesystem is assumed to be read-only; the name lives on the persistent /data
+# partition. The card file is consumed once, so editing it again is how the name is 
+# changed. No hostname aware-services must have started before calling any of these commands; 
+# all daemons that make use of the hostname should start after the `apply` call, 
+# so that no service restarts are needed.
+#
+# consume exit codes: 0 = a rename was consumed (caller should reboot),
+# 1 = nothing to do (no file, invalid file, or the file could not be removed).
+set -eu
+
+DATA_DIR="${BASEOS_DATA_DIR:-/data}"
+SD="${BASEOS_SDCARD_DIR:-/mnt/sdcard}"
+RENAME_FILE="${BASEOS_RENAME_FILE:-$SD/rename_hostname}"
+PERSIST="$DATA_DIR/hostname"
+HOSTNAME_BIN="${BASEOS_HOSTNAME_BIN:-/bin/hostname}"
+LOG="${BASEOS_HOSTNAME_LOG:-/tmp/rename-hostname.log}"
+
+log() {
+	line="$(cut -d' ' -f1 /proc/uptime 2>/dev/null || echo 0) rename-hostname: $*"
+	echo "$line" >> "$LOG" 2>/dev/null || true
+	[ -d "$DATA_DIR" ] && echo "$line" >> "$DATA_DIR/rename-hostname.log" 2>/dev/null || true
+	return 0
+}
+
+# Validate the rules from hostname(7): Valid characters for hostnames are ASCII letters
+# from a to z, the digits from 0 to 9, and the hyphen (-).  A hostname may not
+# start nor end with a hyphen.
+valid_hostname() {
+	hostname="$1"
+
+	# Total length: 1-63 ASCII characters
+	[ -n "$hostname" ] || return 1
+	[ "${#hostname}" -le 63 ] || return 1
+
+	# Validate there are no leading/trailing hyphens
+	case "$hostname" in
+		-*|*-) return 1 ;;
+		*[!A-Za-z0-9-]*) return 1 ;;
+	esac
+	return 0
+}
+
+apply_persisted() {
+	[ -s "$PERSIST" ] || return 0
+	
+	if "$HOSTNAME_BIN" -F "$PERSIST" 2>/dev/null; then
+		log "applied persisted hostname from '$PERSIST'"
+	else
+		log "could not apply persisted hostname from '$PERSIST'"
+	fi
+	
+	return 0
+}
+
+# First line only, with CR/LF and surrounding whitespace stripped, so a file
+# copied from Windows works.
+read_hostname() {
+	head -n 1 "$1" 2>/dev/null | 
+		tr -d '\r\n' |
+		sed 's/^[[:space:]]*//; s/[[:space:]]*$//'
+}
+
+consume() {
+	[ -f "$RENAME_FILE" ] || return 1
+	new_hostname="$(read_hostname "$RENAME_FILE")"
+	if ! valid_hostname "$new_hostname"; then
+		log "invalid hostname in $RENAME_FILE - file left in place"
+		return 1
+	fi
+
+	mkdir -p "$DATA_DIR" 2>/dev/null || true
+	tmp="$PERSIST.$$"
+	trap 'rm -f "$tmp"' EXIT HUP INT TERM
+
+	if ! printf '%s\n' "$new_hostname" > "$tmp" 2>/dev/null \
+		|| ! chmod 644 "$tmp" 2>/dev/null \
+		|| ! mv -f "$tmp" "$PERSIST" 2>/dev/null; then
+		rm -f "$tmp" 2>/dev/null || true
+		log "could not persist hostname to $PERSIST"
+		return 1
+	fi
+	trap - EXIT HUP INT TERM
+
+	# Apply now as well: the caller reboots for a clean next boot, but if the
+	# card file cannot be removed below we stay up and this boot is already
+	# consistent.
+	"$HOSTNAME_BIN" "$new_hostname" 2>/dev/null || log "could not apply hostname '$new_hostname'"
+
+	rm -f "$RENAME_FILE" 2>/dev/null || true
+	sync
+	if [ -e "$RENAME_FILE" ]; then
+		# Never report success here: the caller would reboot, and a file that
+		# survives deletion would be consumed and rebooted on every boot. The
+		# persisted name is applied by `apply` on the next boot regardless.
+		log "could not remove $RENAME_FILE - rename applies from $PERSIST next boot"
+		return 1
+	fi
+
+	log "consumed hostname '$new_hostname' from $RENAME_FILE; reboot required"
+	return 0
+}
+
+case "${1:-}" in
+	apply) apply_persisted ;;
+	consume) consume ;;
+	*)
+		echo "usage: $0 apply|consume" >&2
+		exit 2
+		;;
+esac
