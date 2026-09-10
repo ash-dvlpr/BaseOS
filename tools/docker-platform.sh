@@ -15,3 +15,12 @@ case "$(uname -m)" in
     exit 1
     ;;
 esac
+
+# Portable file size in bytes. BSD/macOS stat spells this -f %z and GNU/Linux
+# -c %s; GNU stat's -f means filesystem, so the two cannot share one form.
+file_size() {
+  case "$(uname -s)" in
+    Darwin|*BSD) stat -f %z "$1" ;;
+    *)           stat -c %s "$1" ;;
+  esac
+}

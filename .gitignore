@@ -1,5 +1,13 @@
-work/
+# OS Specific
 .DS_Store
-*.o
+
+# IDE Specific
+**/.vscode/
+
+# Python
 __pycache__/
 *.pyc
+
+# Artifacts
+work/
+*.o
