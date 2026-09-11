@@ -132,15 +132,19 @@ frontend's own scripts.
 
 ### Hostname and mDNS
 
-The baked hostname is `nextui` (`/etc/hostname`, applied at the top of `rcS`). It can
-be overridden per device without writing the rootfs: a one-line `rename_hostname` file
-in the root of the card Base OS mounts (the second card first, otherwise TF1 p7). `rcS`
-validates it — a single DNS label, 1–63 characters, letters/digits/hyphen, no leading
-or trailing hyphen — persists it to `/data/hostname`, removes the card file and reboots
-once; every later boot applies `/data/hostname` right after `machine-id` is set, before
-any service starts. An invalid file is left in place and logged to
-`/data/rename-hostname.log`; nothing is renamed or restarted. Delete `/data/hostname`
-to return to the default.
+The baked default hostname is `nextui` (`/usr/share/baseos/default-hostname`, seeded
+into `/run/hostname` and applied at the top of `rcS`). Because the rootfs is
+read-only, `/etc/hostname` and `/etc/hosts` are baked symlinks into `/run`; the apply
+step below regenerates both mirrors from the live name — `/etc/hosts` from
+`/usr/share/baseos/hosts.template`, and the shell prompt resolves the name via `\h` in
+`/etc/profile`. It can be overridden per device without writing the rootfs: a one-line
+`rename_hostname` file in the root of the card Base OS mounts (the second card first,
+otherwise TF1 p7). `rcS` validates it — a single DNS label, 1–63 characters,
+letters/digits/hyphen, no leading or trailing hyphen — persists it to `/data/hostname`,
+removes the card file and reboots once; every later boot applies `/data/hostname` right
+after `machine-id` is set, before any service starts. An invalid file is left in place
+and logged to `/tmp/rename-hostname.log`; nothing is renamed or restarted. Delete
+`/data/hostname` to return to the default.
 
 The reboot is what keeps this simple: it happens before `dev` starts anything that
 could cache the name, and a pending system update's own reboot applies the new name

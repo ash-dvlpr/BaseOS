@@ -85,7 +85,8 @@ ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt100   # serial console (harmless wi
 ## 5. `rcS` — early init (target well under 1 s)
 
 1. mount `proc`, `sysfs`, `devtmpfs`, `devpts`, `debugfs`, tmpfs on `/dev/shm` `/tmp`
-   `/run` `/var`; hostname
+   `/run` `/var`; seed the kernel hostname from the baked default (6a refreshes it,
+   and `/etc/hostname` + `/etc/hosts` are baked symlinks into `/run`)
 1a. `debugfs` is not a debugging nicety here: `/sys/kernel/debug/dispdbg` is the sunxi
    disp2 driver's **only** output-switch control surface, so it is what moves `disp0`
    between the LCD and the HDMI TX. The stock OS got the mount for free from systemd;
@@ -104,8 +105,9 @@ ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt100   # serial console (harmless wi
 6. `machine-id`: reuse `/data/machine-id` or generate one; symlink `/etc/machine-id`
    and `/var/lib/dbus/machine-id → /run/machine-id`
 6a. apply the persisted hostname from `/data/hostname` ([05](05-runtime-power-network.md) §3):
-   set by a `rename_hostname` file on the card, it is applied before any service
-   starts so any hostname aware daemons see the right name from the start
+    set by a `rename_hostname` file on the card, it is applied before any service
+    starts so any hostname aware daemons see the right name from the start, and the
+    `/run` mirrors of `/etc/hostname` and `/etc/hosts` are regenerated
 7. **first-boot expand-to-fill** (`expand-storage`, [03](03-first-boot-and-expand.md))
    — runs *before* the card mount; a no-op once the card is provisioned
 8. sample the built-in MENU button's current evdev state once; when held, enter a

@@ -30,6 +30,9 @@ grep -q ' /dev devtmpfs ' /proc/mounts || /bin/mount -t devtmpfs dev /dev
 /bin/mkdir -p /var/lib /var/log /var/tmp /var/lib/alsa /var/lib/bluealsa /var/empty
 /bin/ln -s /run /var/run
 
+# Hostname: /etc/hostname is a baked symlink into /run: seed the tmpfs mirror
+# from the default before reading it. The rename-hostname below overwrites this.
+/bin/cp /usr/share/baseos/default-hostname /run/hostname
 /bin/hostname -F /etc/hostname
 
 # GPU: needed by the frontend's first frame (~2s away), not before, and the

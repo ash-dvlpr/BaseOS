@@ -2,21 +2,27 @@
 # Optional hostname override, triggered by a file on the card root.
 #
 # Commands:
-#   apply    after machine-id is set: apply the persisted /data/hostname, so
-#            every later service starts with the right name
+#   apply    after machine-id is set: choose the persisted /data/hostname if
+#            available, otherwise the baked default, then apply it and
+#            regenerate the /run copies of /etc/hostname and /etc/hosts.
+#
 #   consume  after the card is mounted: validate <card>/rename_hostname,
-#            persist it to /data/hostname, remove the card file, and report
-#            that a reboot is needed so the next boot's `apply` names every
-#            service from the outset
+#            persist it to /data/hostname, apply it, regenerate the /run
+#            mirrors, remove the card file, and report that a reboot is needed
+#            so the next boot's `apply` names every service from the outset.
 #
-# The root filesystem is assumed to be read-only; the name lives on the persistent /data
-# partition. The card file is consumed once, so editing it again is how the name is 
-# changed. No hostname aware-services must have started before calling any of these commands; 
-# all daemons that make use of the hostname should start after the `apply` call, 
-# so that no service restarts are needed.
+# The root filesystem is assumed to be read-only. The hostname lives on the
+# persistent /data partition, and /etc/hostname + /etc/hosts are baked
+# symlinks into /run that these commands regenerate. The card file is consumed
+# once, so editing it again is how the name is changed. No hostname-aware
+# services must have started before calling any of these commands; all daemons
+# that make use of the hostname should start after the `apply` call, so that no
+# service restarts are needed.
 #
-# consume exit codes: 0 = a rename was consumed (caller should reboot),
-# 1 = nothing to do (no file, invalid file, or the file could not be removed).
+# consume exit codes:
+#   0 = a rename was consumed (caller should reboot)
+#   1 = nothing to do (no file, or the file could not be removed)
+#   2 = invalid rename file
 set -eu
 
 DATA_DIR="${BASEOS_DATA_DIR:-/data}"
@@ -26,10 +32,15 @@ PERSIST="$DATA_DIR/hostname"
 HOSTNAME_BIN="${BASEOS_HOSTNAME_BIN:-/bin/hostname}"
 LOG="${BASEOS_HOSTNAME_LOG:-/tmp/rename-hostname.log}"
 
+# Runtime data for the baked /etc/hostname and /etc/hosts symlinks.
+RUN_HOSTS="${BASEOS_HOSTS_FILE:-/run/hosts}"
+RUN_HOSTNAME="${BASEOS_RUN_HOSTNAME:-/run/hostname}"
+HOSTS_TEMPLATE="${BASEOS_HOSTS_TEMPLATE:-/usr/share/baseos/hosts.template}"
+DEFAULT_HOSTNAME_FILE="${BASEOS_DEFAULT_HOSTNAME_FILE:-/usr/share/baseos/default-hostname}"
+
 log() {
 	line="$(cut -d' ' -f1 /proc/uptime 2>/dev/null || echo 0) rename-hostname: $*"
 	echo "$line" >> "$LOG" 2>/dev/null || true
-	[ -d "$DATA_DIR" ] && echo "$line" >> "$DATA_DIR/rename-hostname.log" 2>/dev/null || true
 	return 0
 }
 
@@ -51,18 +62,6 @@ valid_hostname() {
 	return 0
 }
 
-apply_persisted() {
-	[ -s "$PERSIST" ] || return 0
-	
-	if "$HOSTNAME_BIN" -F "$PERSIST" 2>/dev/null; then
-		log "applied persisted hostname from '$PERSIST'"
-	else
-		log "could not apply persisted hostname from '$PERSIST'"
-	fi
-	
-	return 0
-}
-
 # First line only, with CR/LF and surrounding whitespace stripped, so a file
 # copied from Windows works.
 read_hostname() {
@@ -71,43 +70,137 @@ read_hostname() {
 		sed 's/^[[:space:]]*//; s/[[:space:]]*$//'
 }
 
-consume() {
-	[ -f "$RENAME_FILE" ] || return 1
-	new_hostname="$(read_hostname "$RENAME_FILE")"
-	if ! valid_hostname "$new_hostname"; then
-		log "invalid hostname in $RENAME_FILE - file left in place"
+# Regenerate the runtime hostname files from a valid hostname_file ($1)
+#
+# This function is deliberately only responsible for the files. The kernel
+# hostname is applied by apply_hostname().
+#
+# The files are replaced atomically through temporary files.
+write_runtime_hostname_files() {
+	hostname_file="$1"
+
+	tmp_hostname="$RUN_HOSTNAME.$$"
+	tmp_hosts="$RUN_HOSTS.$$"
+
+	# Prepare both files completely before applying anyone of them
+	trap 'rm -f "$tmp_hostname" "$tmp_hosts"' EXIT HUP INT TERM
+
+	# Prepare hostname file
+	if ! cp "$hostname_file" "$tmp_hostname" 2>/dev/null \
+		|| ! chmod 644 "$tmp_hostname" 2>/dev/null
+	then
+		rm -f "$tmp_hostname" 2>/dev/null || true
+		trap - EXIT HUP INT TERM
+		log "could not prepare runtime hostname file from '$hostname_file'"
 		return 1
 	fi
 
-	mkdir -p "$DATA_DIR" 2>/dev/null || true
+	# Prepare hosts file from the template
+	hostname="$(read_hostname "$hostname_file")"
+	if ! awk -v name="$hostname" \
+		'{ gsub(/@HOSTNAME@/, name); print }' \
+		"$HOSTS_TEMPLATE" > "$tmp_hosts" 2>/dev/null \
+		|| ! chmod 644 "$tmp_hosts" 2>/dev/null
+	then
+		rm -f "$tmp_hostname" "$tmp_hosts" 2>/dev/null || true
+		trap - EXIT HUP INT TERM
+		log "could not prepare runtime hosts file for '$hostname'"
+		return 1
+	fi
+
+	# Apply finalized hostname and hosts files
+	if ! mv -f "$tmp_hostname" "$RUN_HOSTNAME" 2>/dev/null \
+		|| ! mv -f "$tmp_hosts" "$RUN_HOSTS" 2>/dev/null
+	then
+		rm -f "$tmp_hostname" "$tmp_hosts" 2>/dev/null || true
+		trap - EXIT HUP INT TERM
+		log "could not replace runtime hostname files for '$hostname'"
+		return 1
+	fi
+
+	trap - EXIT HUP INT TERM
+	return 0
+}
+
+# Apply the specified hostname file ($1) to the running system.
+#
+# Failure to update the runtime files makes the hostname application itself fail,
+# since it may been left in an unknown state.
+apply_hostname() {
+	hostname_file="$1"
+
+	if ! "$HOSTNAME_BIN" -F "$hostname_file" 2>/dev/null; then
+		log "could not apply hostname from '$hostname_file'"
+		return 1
+	fi
+
+	if ! write_runtime_hostname_files "$hostname_file"; then
+		log "could not update runtime files from '$hostname_file'"
+		return 1
+	fi
+
+	return 0
+}
+
+apply_persisted() {
+	if [ -s "$PERSIST" ]; then
+		apply_hostname "$PERSIST" || {
+			log "could not apply persisted hostname; using default"
+			apply_hostname "$DEFAULT_HOSTNAME_FILE" || true
+		}
+	else
+		apply_hostname "$DEFAULT_HOSTNAME_FILE" || true
+	fi
+
+	sync
+	return 0
+}
+
+consume() {
+	# If there's no rename trigger file, do nothing
+	[ -f "$RENAME_FILE" ] || return 1
+
+	new_hostname="$(read_hostname "$RENAME_FILE")"
+	if ! valid_hostname "$new_hostname"; then
+		log "invalid hostname in $RENAME_FILE - file left in place"
+		return 2
+	fi
+
+	if ! mkdir -p "$DATA_DIR" 2>/dev/null; then
+		log "could not create data directory $DATA_DIR"
+		return 1
+	fi
+
 	tmp="$PERSIST.$$"
 	trap 'rm -f "$tmp"' EXIT HUP INT TERM
 
 	if ! printf '%s\n' "$new_hostname" > "$tmp" 2>/dev/null \
 		|| ! chmod 644 "$tmp" 2>/dev/null \
-		|| ! mv -f "$tmp" "$PERSIST" 2>/dev/null; then
+		|| ! mv -f "$tmp" "$PERSIST" 2>/dev/null
+	then
 		rm -f "$tmp" 2>/dev/null || true
+		trap - EXIT HUP INT TERM
 		log "could not persist hostname to $PERSIST"
 		return 1
 	fi
+
 	trap - EXIT HUP INT TERM
 
-	# Apply now as well: the caller reboots for a clean next boot, but if the
-	# card file cannot be removed below we stay up and this boot is already
-	# consistent.
-	"$HOSTNAME_BIN" "$new_hostname" 2>/dev/null || log "could not apply hostname '$new_hostname'"
+	# Apply the persisted file we just generated.
+	if ! apply_hostname "$PERSIST"; then
+		log "could not apply hostname from $PERSIST"
+		return 1
+	fi
 
 	rm -f "$RENAME_FILE" 2>/dev/null || true
 	sync
+
 	if [ -e "$RENAME_FILE" ]; then
-		# Never report success here: the caller would reboot, and a file that
-		# survives deletion would be consumed and rebooted on every boot. The
-		# persisted name is applied by `apply` on the next boot regardless.
 		log "could not remove $RENAME_FILE - rename applies from $PERSIST next boot"
 		return 1
 	fi
 
-	log "consumed hostname '$new_hostname' from $RENAME_FILE; reboot required"
+	log "consumed $RENAME_FILE; reboot required"
 	return 0
 }
 
