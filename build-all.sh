@@ -41,8 +41,13 @@ done
 # edit, and a stale binary beside fresh overlay scripts fails only on a device.
 if [ ! -x "$HERE/work/tools/busybox" ] \
   || [ ! -x "$HERE/work/tools/dropbearmulti" ] \
+  || [ ! -x "$HERE/work/tools/curl" ] \
   || [ ! -x "$HERE/work/tools/fbsplash" ] \
   || [ ! -x "$HERE/work/tools/gptgrow" ] \
+  || [ ! -x "$HERE/work/tools/gptslot" ] \
+  || [ ! -x "$HERE/work/tools/sftp-server" ] \
+  || [ ! -x "$HERE/work/tools/adbd" ] \
+  || [ ! -x "$HERE/work/tools/avahi-daemon" ] \
   || ! "$HERE/tools/tools-stamp.sh" | cmp -s - "$HERE/work/tools/.stamp"; then
   "$HERE/build-tools.sh"
 else
