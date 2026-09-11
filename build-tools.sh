@@ -10,6 +10,7 @@
 #   work/tools/gptslot        (A/B root-slot geometry + flip for updates)
 #   work/tools/sftp-server    (OpenSSH sftp subsystem child for dropbear)
 #   work/tools/adbd           (Android adb daemon, USB-only, static)
+#   work/tools/avahi-daemon   (mDNS responder for <hostname>.local, static)
 # Must use --platform linux/arm64 so the produced binaries are aarch64 for the
 # handheld (native on Apple Silicon; QEMU on Intel hosts).
 set -eu
@@ -143,9 +144,61 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
   chmod 755 /out/adbd
 '
 
+# avahi-daemon: publishes only the device's <hostname>.local A/AAAA + reverse
+# records. Built without D-Bus so no service announcements can exist at all,
+# and fully static (musl). Uses only the libdaemon single-file daemonize lib;
+# libdaemon ships no .pc file and its test/ directory needs glibc headers, so
+# only the library subdir is built here.
+docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
+  -v "$TOOLS":/out alpine:3.20 sh -euc '
+  apk add -q build-base pkgconf \
+    expat-dev expat-static libevent-dev libevent-static linux-headers
+
+  LIBDAEMON_VERSION=0.14
+  LIBDAEMON_SHA256=fd23eb5f6f986dcc7e708307355ba3289abe03cc381fc47a80bca4a50aa6b834
+  cd /tmp
+  wget -q "https://0pointer.de/lennart/projects/libdaemon/libdaemon-$LIBDAEMON_VERSION.tar.gz"
+  echo "$LIBDAEMON_SHA256  libdaemon-$LIBDAEMON_VERSION.tar.gz" | sha256sum -c -
+  tar xf "libdaemon-$LIBDAEMON_VERSION.tar.gz"
+  cd "libdaemon-$LIBDAEMON_VERSION"
+  # The 2008-era config.guess cannot parse a modern kernel release string.
+  ./configure --build=aarch64-unknown-linux-gnu \
+    --disable-shared --enable-static --prefix=/usr >/dev/null
+  make -C libdaemon -j"$(nproc)" >/dev/null
+  make -C libdaemon install >/dev/null
+
+  AVAHI_VERSION=0.8
+  AVAHI_SHA256=060309d7a333d38d951bc27598c677af1796934dbd98e1024e7ad8de798fedda
+  cd /tmp
+  wget -q "https://github.com/lathiat/avahi/releases/download/v$AVAHI_VERSION/avahi-$AVAHI_VERSION.tar.gz"
+  echo "$AVAHI_SHA256  avahi-$AVAHI_VERSION.tar.gz" | sha256sum -c -
+  tar xf "avahi-$AVAHI_VERSION.tar.gz"
+  cd "avahi-$AVAHI_VERSION"
+  ./configure --build=aarch64-unknown-linux-gnu \
+    --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
+    --disable-dbus --disable-glib --disable-gobject --disable-gtk3 \
+    --disable-qt4 --disable-qt5 \
+    --disable-python --disable-python-dbus --disable-pygobject \
+    --disable-gdbm \
+    --disable-manpages --disable-doxygen-doc --disable-xmltoman \
+    --disable-compat-howl --disable-compat-libdns_sd \
+    --disable-shared --enable-static \
+    --with-distro=none \
+    LIBDAEMON_CFLAGS=-I/usr/include \
+    LIBDAEMON_LIBS=-ldaemon >/dev/null
+  make -j"$(nproc)" >/dev/null
+  # libtool eats a bare -static on program links; relink the daemon fully
+  # static so it carries no runtime library dependencies.
+  touch avahi-daemon/main.c
+  make -C avahi-daemon LDFLAGS=-all-static avahi-daemon >/dev/null
+  strip avahi-daemon/avahi-daemon
+  cp avahi-daemon/avahi-daemon /out/avahi-daemon
+  chmod 755 /out/avahi-daemon
+'
+
 file "$TOOLS/busybox" "$TOOLS/dropbearmulti" "$TOOLS/curl" \
   "$TOOLS/fbsplash" "$TOOLS/gptgrow" "$TOOLS/gptslot" "$TOOLS/sftp-server" \
-  "$TOOLS/adbd" 2>/dev/null || true
+  "$TOOLS/adbd" "$TOOLS/avahi-daemon" 2>/dev/null || true
 [ -x "$TOOLS/gptslot" ] || { echo "gptslot build did not produce an executable" >&2; exit 1; }
 [ -x "$TOOLS/curl" ] || { echo "curl build did not produce an executable" >&2; exit 1; }
 file "$TOOLS/curl" | grep -q "statically linked" \
@@ -158,6 +211,9 @@ file "$TOOLS/sftp-server" | grep -q "statically linked" \
 [ -x "$TOOLS/adbd" ] || { echo "adbd build did not produce an executable" >&2; exit 1; }
 file "$TOOLS/adbd" | grep -q "statically linked" \
   || { echo "adbd build is not static" >&2; exit 1; }
+[ -x "$TOOLS/avahi-daemon" ] || { echo "avahi-daemon build did not produce an executable" >&2; exit 1; }
+file "$TOOLS/avahi-daemon" | grep -q "statically linked" \
+  || { echo "avahi-daemon build is not static" >&2; exit 1; }
 
 # Record the sources these binaries came from so the build scripts can tell a
 # reusable work/tools from a stale one.
