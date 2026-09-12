@@ -172,9 +172,10 @@ if [ "$RENAMED" -eq 1 ]; then
 fi
 
 # mDNS: The hostname was applied above, before starting the daemon; avahi watches netlink,
-# so wlan0 arriving later is fine. Logs go to syslog which BaseOS does not have.
+# so wlan0 arriving later is fine. Logs go to syslog which BaseOS does not have; the avahi
+# user & group must exist or initialization will fail, even with --no-drop-root
 mkdir -p /run/avahi-daemon 2>/dev/null || true
-[ -x /usr/sbin/avahi-daemon ] && /usr/sbin/avahi-daemon -D --no-chroot --no-drop-root
+[ -x /usr/sbin/avahi-daemon ] && /usr/sbin/avahi-daemon -D --no-drop-root --no-proc-title
 
 # Dev image extras (serial getty is in inittab; this starts SSH).
 [ -x /etc/init.d/dev ] && /etc/init.d/dev &
