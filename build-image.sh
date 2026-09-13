@@ -20,7 +20,7 @@ OUT="$WORK/baseos-$TARGET.img"
 [ -f "$WORK/rootfs.tar" ] || { echo "missing $WORK/rootfs.tar (run build-rootfs.sh $TARGET)" >&2; exit 1; }
 python3 "$HERE/tools/source_manifest.py" verify "$SOURCE" "$TARGET"
 eval "$(python3 "$HERE/tools/source_manifest.py" shell "$SOURCE" "$TARGET")"
-[ "$(stat -f %z "$BOOT_PREFIX")" -eq "$SOURCE_BOOT_PREFIX_SIZE" ] || {
+[ "$(file_size "$BOOT_PREFIX")" -eq "$SOURCE_BOOT_PREFIX_SIZE" ] || {
   echo "boot-prefix size no longer matches source.json" >&2; exit 1;
 }
 

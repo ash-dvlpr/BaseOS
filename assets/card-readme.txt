@@ -46,3 +46,20 @@ adb remains available at the same time.
 
 Safely eject the disk on the computer, then restart without MENU to return to
 normal. Never restart or unplug the cable while the computer is writing.
+
+Custom hostname
+---------------
+
+To rename this device, put a file named "rename_hostname" on the root of this card
+(the second card if you have one) with the desired new hostname on the first line.
+
+Valid hostnames follow these rules:
+
+    - ASCII characters from A to Z, including lowercase
+    - Digits from 0 to 9, and hyphens (-)
+    - Up to 63 characters long
+
+Base OS detects this file, persists the new hostname during boot and restarts to apply it.
+
+To rename again, simply drop a new rename_hostname file and reboot. To return to the
+default name, use "nextui" as the new hostname.
