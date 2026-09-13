@@ -16,9 +16,11 @@ fbsplash <progress 0-100|-1> <message>  compact status pill overlay
 
 **The message selects the mode, not a flag.** With a message the renderer overlays a
 pill and preserves everything else; with none it repaints the whole screen. The
-full-screen form exists only as the offline source for the generated boot logo —
-runtime boot scripts always pass a message, through `baseos-splash`, and only for
-exceptional work or a state that needs action.
+full-screen form generates the offline boot logo. The charger fallback also uses
+that form once POWER is accepted, through `baseos-splash --charger-boot`, to
+replace the vendor battery image with the same fully illuminated logo. Other
+runtime calls pass a message through `baseos-splash` for exceptional work or a
+state that needs action.
 
 The renderer accepts **no options**, and treats any option-shaped argument as a fatal
 error (exit 2, nothing drawn). This is deliberate: `atoi("--pill")` is `0`, so a caller
@@ -149,8 +151,9 @@ every target.
 
 ## 3. Exceptional-state mapping
 
-There are no routine splash stages. The only framebuffer writes before frontend
-hand-off are discrete, synchronous pill overlays:
+There are no routine splash stages. Apart from the one logo drawn when leaving
+the charger wait, framebuffer writes before frontend hand-off are discrete,
+synchronous pill overlays:
 
 | condition | pill copy | progress track |
 |---|---|---|

@@ -218,9 +218,12 @@ stays in a minimal charging state. The helper closes `/data` where possible,
 selects the CPU's `powersave` governor, and blanks the backlight. H700's vendor
 kernel uses the Allwinner disp2 brightness ioctls on `/dev/disp`; generic
 backlight sysfs nodes are also handled when present. The input helper discovers
-the PMIC's `axp*-pek` evdev device and blocks in `poll()` without periodic
-wakeups. A fresh POWER hold of at least half a second followed by release
-continues the same boot, restoring brightness and the previous CPU governor.
+the PMIC's `axp*-pek` evdev device and blocks in `poll()` without idle timer
+wakeups. A fresh POWER press arms a one-second deadline. Reaching it continues
+the same boot while the button is still held, restoring brightness and the
+previous CPU governor, lighting the power LED, and drawing the BaseOS logo once.
+Releasing early cancels the hold; repeats do not extend its deadline. Evdev uses
+monotonic timestamps so queued input retains its actual hold duration.
 Missing/disconnected input retries once a minute; an error is never treated
 as boot intent. A hardware long press remains available.
 

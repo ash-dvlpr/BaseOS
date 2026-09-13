@@ -1,5 +1,5 @@
-/* Exceptional charger boot: block until a fresh POWER hold and release.
- * No timer wakeups, graphics, or service loop. The caller owns power policy.
+/* Exceptional charger boot: block until a fresh POWER hold reaches one second.
+ * No idle timer wakeups or service loop. The caller owns power policy.
  */
 #include <errno.h>
 #include <fcntl.h>
@@ -17,6 +17,7 @@
  */
 #define DISP_LCD_SET_BRIGHTNESS 0x102
 #define DISP_LCD_GET_BRIGHTNESS 0x103
+#define POWER_HOLD_MS 1000
 
 static int set_brightness(int fd, unsigned brightness)
 {
@@ -46,8 +47,12 @@ static int power_input(void)
 		if (fd < 0)
 			continue;
 		if (ioctl(fd, EVIOCGNAME(sizeof name), name) >= 0 &&
-		    !strncmp(name, "axp", 3) && strstr(name, "-pek"))
-			break;
+		    !strncmp(name, "axp", 3) && strstr(name, "-pek")) {
+			/* Use event time for holds queued while we were descheduled. */
+			int clock = CLOCK_MONOTONIC;
+			if (ioctl(fd, EVIOCSCLOCKID, &clock) == 0)
+				break;
+		}
 		close(fd);
 		fd = -1;
 	}
@@ -55,10 +60,13 @@ static int power_input(void)
 	return fd;
 }
 
-static int held_long_enough(const struct timespec *start, const struct timespec *end)
+static int hold_remaining(const struct timespec *start, const struct timespec *now)
 {
-	return (end->tv_sec - start->tv_sec) * 1000 +
-		(end->tv_nsec - start->tv_nsec) / 1000000 >= 500;
+	long long ns = POWER_HOLD_MS * 1000000LL -
+		(now->tv_sec - start->tv_sec) * 1000000000LL -
+		(now->tv_nsec - start->tv_nsec);
+	/* Round up: a sub-millisecond remainder must not accept a short hold. */
+	return ns > 0 ? (int)((ns + 999999) / 1000000) : 0;
 }
 
 static int wait_for_power(int fd)
@@ -74,13 +82,24 @@ static int wait_for_power(int fd)
 	while (read(fd, &event, sizeof event) == sizeof event)
 		;
 	for (;;) {
-		if (poll(&pfd, 1, -1) < 0) {
+		int timeout = -1;
+		if (pressed) {
+			if (clock_gettime(CLOCK_MONOTONIC, &now))
+				return 1;
+			timeout = hold_remaining(&start, &now);
+		}
+		int ready = poll(&pfd, 1, timeout);
+		if (ready < 0) {
 			if (errno == EINTR)
 				continue;
 			return 1;
 		}
 		if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL))
 			return 1;
+		/* A hold has a deadline; idle input does not. Check readable events
+		 * first so a queued release or SYN_DROPPED can cancel the hold. */
+		if (ready == 0)
+			return 0;
 		while ((n = read(fd, &event, sizeof event)) == sizeof event) {
 			if (event.type == EV_SYN && event.code == SYN_DROPPED) {
 				pressed = 0;
@@ -93,13 +112,13 @@ static int wait_for_power(int fd)
 			}
 			if (event.type != EV_KEY || event.code != KEY_POWER)
 				continue;
-			if (clock_gettime(CLOCK_MONOTONIC, &now))
-				return 1;
+			now.tv_sec = event.time.tv_sec;
+			now.tv_nsec = event.time.tv_usec * 1000;
 			if (event.value == 1 && !pressed) {
 				start = now;
 				pressed = 1;
 			} else if (event.value == 0) {
-				if (pressed && held_long_enough(&start, &now))
+				if (pressed && hold_remaining(&start, &now) == 0)
 					return 0;
 				pressed = 0;
 			}

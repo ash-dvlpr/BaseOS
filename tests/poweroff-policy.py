@@ -37,12 +37,14 @@ class Boot:
             self.write("sys/class/power_supply/axp2202-battery/boot_mode", mode + "\n")
         self.write("sys/class/rtc/rtc0/since_epoch", "1000\n")
         self.write("sys/class/backlight/backlight/brightness", "180\n")
+        self.write("sys/class/power_supply/axp2202-battery/work_led", "0\n")
         self.write("sys/devices/system/cpu/cpufreq/policy0/scaling_governor", "performance\n")
         self.write("dev/null", "")
         self.write("dev/console", "")
         self.write("dev/urandom", "seed")
         self.write("etc/hostname", "baseos\n")
-        for script in ("etc/init.d/rcS", "etc/init.d/rcK", "usr/sbin/baseos-charger"):
+        for script in ("etc/init.d/rcS", "etc/init.d/rcK", "usr/sbin/baseos-charger",
+                       "usr/bin/baseos-splash"):
             self.write(script, (ROOT / "overlay" / script).read_bytes(), executable=True)
         self.stub("bin/mount", '''
 case "$*" in
@@ -71,6 +73,13 @@ while [ ! -e /run/allow-boot ]; do /test/busybox sleep 0.01; done
 if [ "$1" = 60 ]; then
   while [ ! -e /run/allow-retry ]; do /test/busybox sleep 0.01; done
 fi
+''')
+        self.stub("usr/bin/fbsplash", '''
+[ "$(cat /sys/devices/system/cpu/cpufreq/policy0/scaling_governor)" = performance ] || exit 2
+[ "$(cat /sys/class/backlight/backlight/brightness)" = 180 ] || exit 2
+[ "$(cat /sys/class/power_supply/axp2202-battery/work_led)" = 1 ] || exit 2
+: > /run/boot-feedback
+exit "${SPLASH_STATUS:-0}"
 ''')
         for command in ("usr/bin/busybox", "bin/sync", "sbin/swapoff", "sbin/insmod",
                         "sbin/hwclock", "bin/hostname", "bin/rfkill", "bin/ip",
@@ -117,6 +126,8 @@ fi
         assert self.proc.poll() is None
         calls = self.calls()
         assert "insmod" not in calls and "baseos-update" not in calls, calls
+        assert "fbsplash" not in calls, calls
+        assert self.read("sys/class/power_supply/axp2202-battery/work_led") == "0"
         assert self.read("sys/class/backlight/backlight/brightness") == "0"
         assert self.read("sys/devices/system/cpu/cpufreq/policy0/scaling_governor") == "powersave"
 
@@ -130,6 +141,12 @@ fi
         assert "baseos-update boot-check" in self.calls()
         assert self.read("sys/class/backlight/backlight/brightness") == "180"
         assert self.read("sys/devices/system/cpu/cpufreq/policy0/scaling_governor") == "performance"
+        if "usr/sbin/charger-wait" in self.calls():
+            assert (self.root / "run/boot-feedback").exists()
+            assert self.calls().count("usr/bin/fbsplash 100\n") == 1
+            assert self.calls().index("usr/bin/fbsplash") < self.calls().index("sbin/insmod")
+        else:
+            assert "fbsplash" not in self.calls()
 
     def close(self):
         if self.proc:
@@ -175,6 +192,7 @@ check("missing data stays charging", {"env": {"DATA_FAIL": "1"}})
 check("read-only data stays charging", {"env": {"REMOUNT_FAIL": "1"}})
 check("PMIC probe failure stays charging", {"env": {"PROBE_STATUS": "1"}})
 check("input helper failure cannot start frontend", {"env": {"WAIT_FAIL_FIRST": "1"}, "cut": True})
+check("failed boot-logo draw does not prevent startup", {"env": {"SPLASH_STATUS": "1"}, "cut": True})
 check("opt-out boots normally", {"files": {"data/no-charger-off": ""}, "wait": False})
 check("MENU intent survives early release", {"env": {"MENU_STATUS": "0"}, "wait": False, "menu": True})
 
