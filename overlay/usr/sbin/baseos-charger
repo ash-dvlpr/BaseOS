@@ -1,0 +1,63 @@
+#!/bin/sh
+# Called only for a latched charger boot, before GPU, services or update trials.
+# Return success only for MENU, the persistent opt-out, or a fresh POWER hold.
+
+if /usr/sbin/boot-menu-held; then
+	: > /run/boot-menu-held
+	exit 0
+fi
+
+data_mounted=0
+if /bin/mount -t ext4 -o ro,noatime /dev/mmcblk0p6 /data 2>/dev/null; then
+	data_mounted=1
+	if [ -e /data/no-charger-off ]; then
+		/bin/umount /data || exit 1
+		exit 0
+	fi
+
+	now=0 last=0
+	read -r now < /sys/class/rtc/rtc0/since_epoch 2>/dev/null || now=0
+	[ ! -e /data/charger-off-stamp ] || read -r last < /data/charger-off-stamp
+	case "$now" in ''|*[!0-9]*|0?*|???????????*) now=0 ;; esac
+	case "$last" in ''|*[!0-9]*|0?*|???????????*) last=0 ;; esac
+	# A recent or future stamp may be a failed poweroff/reboot loop. A rapid
+	# deliberate replug is indistinguishable, so both wait for explicit input.
+	if [ "$now" -gt 0 ] && { [ "$last" -eq 0 ] || [ "$((now - last))" -ge 120 ]; } \
+		&& /usr/sbin/axp-off >/dev/null 2>&1 \
+		&& /bin/mount -o remount,rw /data \
+		&& printf '%s\n' "$now" > /data/charger-off-stamp.new \
+		&& /bin/mv /data/charger-off-stamp.new /data/charger-off-stamp; then
+		# axp-off flushes and makes every persistent mount read-only, including
+		# /, before writing the PMIC. A failure never starts a frontend.
+		/usr/sbin/axp-off --now
+	fi
+fi
+
+# PMIC unavailable, unusable storage/clock, recent bounce, or unsuccessful cut.
+# Keep the fallback quiet: no GPU/Wi-Fi modules or userspace services exist yet.
+if [ "$data_mounted" -eq 1 ] && /bin/umount /data; then
+	data_mounted=0
+fi
+echo 'BaseOS: charging; hold POWER for half a second and release to boot' > /dev/console
+/bin/mkdir -p /run/charger
+: > /run/charger/restore
+for setting in /sys/class/backlight/*/brightness \
+	/sys/devices/system/cpu/cpufreq/policy*/scaling_governor; do
+	[ -r "$setting" ] && [ -w "$setting" ] || continue
+	read -r old < "$setting" || continue
+	case "$setting" in
+		*/brightness) value=0 ;;
+		*) value=powersave ;;
+	esac
+	printf '%s %s\n' "$setting" "$old" >> /run/charger/restore || continue
+	printf '%s\n' "$value" > "$setting" 2>/dev/null
+done
+
+# poll() blocks on evdev. Missing/disconnected input retries only once a minute;
+# neither a helper error nor elapsed time is permission to boot normally.
+while ! /usr/sbin/charger-wait; do /bin/sleep 60; done
+while read -r setting old; do
+	printf '%s\n' "$old" > "$setting" 2>/dev/null
+done < /run/charger/restore
+[ "$data_mounted" -eq 0 ] || /bin/umount /data || exit 1
+exit 0

@@ -12,7 +12,7 @@ HERE="$(cd "$(dirname "$0")/.." && pwd)"
 # host-arch build exercises exactly the same logic as the aarch64 one.
 docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_HOST" \
   -v "$HERE/src":/src:ro alpine:3.20 sh -euc '
-  apk add -q build-base
+  apk add -q build-base linux-headers
   gcc -static -O2 -Wall -Wextra -Werror -o /usr/local/bin/axp-off /src/axp-off.c
 
   fail() { echo "FAIL: $1" >&2; exit 1; }
