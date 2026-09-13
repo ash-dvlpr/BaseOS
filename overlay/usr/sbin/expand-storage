@@ -52,6 +52,7 @@ dst=/tmp/.cardnew
 mkdir -p "$dst"
 if mount -t vfat -o rw "$CARD" "$dst" 2>/dev/null; then
 	[ -f "$README" ] && cp "$README" "$dst/README.txt"
+	[ -f /usr/share/baseos/baseos.conf ] && cp /usr/share/baseos/baseos.conf "$dst/baseos.conf"
 	sync
 	umount "$dst" 2>/dev/null
 fi

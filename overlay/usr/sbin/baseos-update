@@ -30,6 +30,7 @@
 DISK=/dev/mmcblk0
 OWN_FAT=/dev/mmcblk0p7
 OWN_MNT=/tmp/.baseos-own
+OWN_MOUNTED=0
 CARD=/mnt/sdcard
 STATE_DIR=/data/update
 STATE="$STATE_DIR/state"
@@ -76,7 +77,10 @@ splash() {
 
 field() { sed -n "s/^$2=//p" "$1" 2>/dev/null | head -1; }
 
-cleanup() { umount "$OWN_MNT" 2>/dev/null; return 0; }
+cleanup() {
+	[ "$OWN_MOUNTED" -eq 0 ] || umount "$OWN_MNT" 2>/dev/null
+	return 0
+}
 
 # Slot geometry comes from the GPT itself; gptslot refuses any layout that is
 # not a BaseOS A/B layout, which is what stops this touching a pre-1.0 card.
@@ -89,12 +93,23 @@ load_geometry() {
 
 # Directories that may hold payloads: the mounted content card first, then this
 # card's own FAT volume if it is not already that card (the two-card layout
-# mounts TF2 at /mnt/sdcard). Sets $DIRS.
+# mounts TF2 at /mnt/sdcard). Reuse rcS's TF1 config mount when present; a
+# standalone invocation mounts its own copy and cleans up only that. Sets $DIRS.
 scan_dirs() {
+	# The USB host owns card files for this whole maintenance boot, including
+	# when status/apply is invoked manually over adb.
+	DIRS=
+	[ ! -e /run/usb-storage-device ] || return 0
 	DIRS="$CARD"
-	if ! grep -q "^$OWN_FAT $CARD " /proc/mounts 2>/dev/null && [ -b "$OWN_FAT" ]; then
+	own_mount="$(awk -v device="$OWN_FAT" '$1 == device { print $2; exit }' /proc/mounts 2>/dev/null)"
+	if [ -n "$own_mount" ]; then
+		[ "$own_mount" = "$CARD" ] || DIRS="$DIRS $own_mount"
+	elif [ -b "$OWN_FAT" ]; then
 		mkdir -p "$OWN_MNT"
-		mount -t vfat -o ro "$OWN_FAT" "$OWN_MNT" 2>/dev/null && DIRS="$DIRS $OWN_MNT"
+		if mount -t vfat -o ro "$OWN_FAT" "$OWN_MNT" 2>/dev/null; then
+			OWN_MOUNTED=1
+			DIRS="$DIRS $OWN_MNT"
+		fi
 	fi
 	return 0
 }

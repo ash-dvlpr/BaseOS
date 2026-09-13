@@ -48,11 +48,6 @@ fi
 /bin/mkdir -p /var/lib /var/log /var/tmp /var/lib/alsa /var/lib/bluealsa /var/empty
 /bin/ln -s /run /var/run
 
-# Hostname: /etc/hostname is a baked symlink into /run: seed the tmpfs mirror
-# from the default before reading it. The rename-hostname below overwrites this.
-/bin/cp /usr/share/baseos/default-hostname /run/hostname
-/bin/hostname -F /etc/hostname
-
 # GPU: needed by the frontend's first frame (~2s away), not before, and the
 # insmod costs ~0.7s. Load it in the background so it overlaps the card mount
 # and launch.sh; nextui-session waits for /dev/mali0 before handing off.
@@ -118,9 +113,6 @@ fi
 /bin/mkdir -p /run/dbus /var/lib/dbus
 /bin/ln -sf /run/machine-id /var/lib/dbus/machine-id
 
-# Hostname override: apply the persisted hostname override to the tmpfs.
-[ -x /usr/sbin/rename-hostname ] && /usr/sbin/rename-hostname apply
-
 # First boot on a fresh flash: grow this card's data partition to fill the
 # whole card (leaving it empty for the user to add a frontend). No-op once the
 # card already fills the disk.
@@ -162,13 +154,23 @@ if [ "$USB_STORAGE_MODE" -eq 0 ]; then
 fi
 /bin/ln -sfn /mnt/sdcard /mnt/SDCARD
 
-# Optional hostname rename from the card root. rcS consumes it once the card is
-# mounted and before any service starts, persists it to /data, and reboots
-# below so the next boot applies it. Nothing has started yet, so no services are affected
-RENAMED=0
+# BaseOS settings always come from TF1, even when TF2 holds the frontend. Reuse
+# TF1 at /mnt/sdcard, or briefly mount it read-only for config and update scans.
+# Maintenance boots use defaults without opening or mounting exported storage.
+BASEOS_CONFIG=/dev/null
+TF1_CONFIG_MOUNTED=0
 if [ "$USB_STORAGE_MODE" -eq 0 ]; then
-	[ -x /usr/sbin/rename-hostname ] && /usr/sbin/rename-hostname consume && RENAMED=1
+	if grep -q '^/dev/mmcblk0p7 /mnt/sdcard ' /proc/mounts; then
+		BASEOS_CONFIG=/mnt/sdcard/baseos.conf
+	else
+		/bin/mkdir -p /mnt/system
+		if /bin/mount -t vfat -o ro /dev/mmcblk0p7 /mnt/system 2>/dev/null; then
+			TF1_CONFIG_MOUNTED=1
+			BASEOS_CONFIG=/mnt/system/baseos.conf
+		fi
+	fi
 fi
+[ -x /usr/sbin/baseos-config ] && /usr/sbin/baseos-config "$BASEOS_CONFIG"
 
 # System update: apply a *.bosupd payload the user copied onto the card. Costs
 # one failed glob on an ordinary boot; when a payload is present it writes the
@@ -178,21 +180,7 @@ fi
 if [ "$USB_STORAGE_MODE" -eq 0 ]; then
 	[ -x /usr/sbin/baseos-update ] && /usr/sbin/baseos-update apply
 fi
-
-# A hostname rename needs a clean boot to take effect on a previous step.
-# The update above does not return once it reboots, and it applies the new name
-# itself, so reaching this point with RENAMED=1 means no update was applied.
-if [ "$RENAMED" -eq 1 ]; then
-	sync
-	reboot
-	sleep 10
-fi
-
-# mDNS: The hostname was applied above, before starting the daemon; avahi watches netlink,
-# so wlan0 arriving later is fine. Logs go to syslog which BaseOS does not have; the avahi
-# user & group must exist or initialization will fail, even with --no-drop-root
-mkdir -p /run/avahi-daemon 2>/dev/null || true
-[ -x /usr/sbin/avahi-daemon ] && /usr/sbin/avahi-daemon -D --no-drop-root --no-proc-title
+[ "$TF1_CONFIG_MOUNTED" -eq 0 ] || /bin/umount /mnt/system
 
 # Dev image extras (serial getty is in inittab; this starts SSH).
 [ -x /etc/init.d/dev ] && /etc/init.d/dev &

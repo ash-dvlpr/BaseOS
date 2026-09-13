@@ -9,6 +9,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 # Host-native: shell script + stubs only; no aarch64 device binaries.
 docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_HOST" \
   -v "$HERE/overlay/usr/sbin/expand-storage":/test/expand-storage:ro \
+  -v "$HERE/assets/baseos.conf":/usr/share/baseos/baseos.conf:ro \
   alpine:3.20 sh -euc '
   mknod /dev/mmcblk0 b 7 0
   mknod /dev/mmcblk0p7 b 7 1
@@ -21,6 +22,8 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_HOST" \
   make_stub /usr/bin/baseos-splash "printf \"%s\\n\" \"\$*\" >> /tmp/splash.log"
   make_stub /usr/local/bin/mkfs.vfat "printf \"%s\\n\" \"\$*\" >> /tmp/mkfs.log"
   make_stub /usr/local/bin/partprobe "exit 0"
+  make_stub /usr/local/bin/mount "exit 0"
+  make_stub /usr/local/bin/umount "exit 0"
 
   # Subsequent boot: gptgrow reports that p7 already fills the disk. There
   # must be no expansion splash and no format attempt.
@@ -36,6 +39,14 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_HOST" \
   /bin/sh /test/expand-storage
   grep -qx -- "--important 45 EXPANDING STORAGE" /tmp/splash.log
   grep -qx -- "-F 32 -n BASEOS /dev/mmcblk0p7" /tmp/mkfs.log
+  cmp /usr/share/baseos/baseos.conf /tmp/.cardnew/baseos.conf
+
+  # Existing cards keep user configuration; defaults are only copied after
+  # first-boot formatting, never on an ordinary boot or system update.
+  printf "mdns=false\n" > /tmp/.cardnew/baseos.conf
+  make_stub /usr/sbin/gptgrow "exit 1"
+  /bin/sh /test/expand-storage
+  grep -qx "mdns=false" /tmp/.cardnew/baseos.conf
 
   # A real gptgrow error is neither an already-expanded card nor a reason to
   # display progress or format anything.

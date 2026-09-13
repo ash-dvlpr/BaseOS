@@ -191,7 +191,8 @@ Run checks relevant to the files changed. The main test entry points are:
 ```sh
 ./test-prepare-stock.sh
 ./test-expand-storage.sh
-./tests/test-rename-hostname.sh
+./tests/test-baseos-config.sh
+./tests/test-baseos-mdns.sh
 ./tests/test-boot-splash-policy.sh
 ./tests/test-splash-rotation.sh
 ./tests/test-baseos-ntp.sh

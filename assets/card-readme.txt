@@ -47,19 +47,23 @@ adb remains available at the same time.
 Safely eject the disk on the computer, then restart without MENU to return to
 normal. Never restart or unplug the cable while the computer is writing.
 
-Custom hostname
----------------
+Base OS settings
+----------------
 
-To rename this device, put a file named "rename_hostname" on the root of this card
-(the second card if you have one) with the desired new hostname on the first line.
+Edit baseos.conf at the root of this card (TF1), then restart normally:
 
-Valid hostnames follow these rules:
+    hostname=MyHandheld
+    mdns=true
 
-    - ASCII characters from A to Z, including lowercase
-    - Digits from 0 to 9, and hyphens (-)
-    - Up to 63 characters long
+TF1 always supplies these settings, even when the frontend lives on TF2.
+The file stays on the card and survives Base OS updates. The hostname defaults
+to the lowercase device model ID, such as rg34xxsp, and mDNS is enabled. Missing
+files, missing keys and invalid values use these defaults. Leave the supplied
+example lines commented out to keep the defaults.
 
-Base OS detects this file, persists the new hostname during boot and restarts to apply it.
+Hostnames accept 1-63 ASCII letters, digits and hyphens, with no hyphen at
+either end. Set mdns=false to disable the Wi-Fi .local name, such as
+rg34xxsp.local. Spaces around keys and values, # comments, and Windows line
+endings are supported. Unknown keys are ignored.
 
-To rename again, simply drop a new rename_hostname file and reboot. To return to the
-default name, use "nextui" as the new hostname.
+USB-storage maintenance boots use the defaults until the next normal boot.

@@ -86,8 +86,8 @@ ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt100   # serial console (harmless wi
 ## 5. `rcS` — early init (target well under 1 s)
 
 1. mount `proc`, `sysfs`, `devtmpfs`, `devpts`, `debugfs`, tmpfs on `/dev/shm` `/tmp`
-   `/run` `/var`; seed the kernel hostname from the baked default (6a refreshes it,
-   and `/etc/hostname` + `/etc/hosts` are baked symlinks into `/run`)
+   `/run` `/var`; `/etc/hostname` and `/etc/hosts` are baked symlinks into `/run`,
+   populated from device configuration after the card mount below
 1a. `debugfs` is not a debugging nicety here: `/sys/kernel/debug/dispdbg` is the sunxi
    disp2 driver's **only** output-switch control surface, so it is what moves `disp0`
    between the LCD and the HDMI TX. The stock OS got the mount for free from systemd;
@@ -115,10 +115,6 @@ ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt100   # serial console (harmless wi
 5. restore the entropy seed; `hwclock -s` (background); `insmod 8821cs.ko` (background)
 6. `machine-id`: reuse `/data/machine-id` or generate one; symlink `/etc/machine-id`
    and `/var/lib/dbus/machine-id → /run/machine-id`
-6a. apply the persisted hostname from `/data/hostname` ([05](05-runtime-power-network.md) §3):
-    set by a `rename_hostname` file on the card, it is applied before any service
-    starts so any hostname aware daemons see the right name from the start, and the
-    `/run` mirrors of `/etc/hostname` and `/etc/hosts` are regenerated
 7. **first-boot expand-to-fill** (`expand-storage`, [03](03-first-boot-and-expand.md))
    — runs *before* the card mount; a no-op once the card is provisioned
 8. sample the built-in MENU button's current evdev state once; when held, enter a
@@ -127,15 +123,18 @@ ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt100   # serial console (harmless wi
 8a. on a normal boot, mount the NextUI card: TF2 (`/dev/mmcblk1p1`) if present,
     else this card's own `/dev/mmcblk0p7` → `/mnt/sdcard`, plus the `/mnt/SDCARD`
     compat symlink; write a boot breadcrumb to the card
-8b. optional hostname rename: if the card root carries a `rename_hostname` file,
-    validate it, persist it to `/data/hostname` and remove the card file; rcS then
-    reboots after the update step below, so the next boot's 6a applies the new hostname.
-    A pending system update reboots first (8c) and applies the new name itself,
-    so there is no second reboot. Nothing has started yet, so no services are restarted
+8b. read `baseos.conf` from TF1 p7, even when the frontend uses TF2. Reuse the
+    existing TF1 mount, or briefly mount it read-only at `/mnt/system`. Apply the
+    validated hostname once and populate `/run/{hostname,hosts,baseos.conf}` before
+    services start. Missing settings use the lowercase device model ID as the
+    hostname (for example `rg34xxsp`) and `mdns=true`; USB
+    storage mode uses defaults without touching exported storage. The file remains
+    on TF1 and changing it requires only the next ordinary boot
 8c. `baseos-update apply` — one failed glob on an ordinary boot; when the user has
    copied a `*.bosupd` payload onto the card it writes the inactive rootfs slot,
    verifies it, flips the GPT and reboots; deferred while USB storage is active
-   ([07](07-partition-layout-and-updates.md))
+   ([07](07-partition-layout-and-updates.md)); reuse the TF1 configuration mount
+   for update discovery, then release it
 9. start dev extras (`/etc/init.d/dev` → dropbear SSH/sftp-server and the
    backgrounded adb-over-USB gadget via `usb-gadget-adb`, see
    [05](05-runtime-power-network.md) §6) in the background
@@ -143,6 +142,9 @@ ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt100   # serial console (harmless wi
 No udev, no mdev: devtmpfs auto-creates nodes, SDL runs with
 `SDL_JOYSTICK_DISABLE_UDEV=1`, BlueZ makes its own uinput nodes, and `dbus-daemon`
 starts on demand from the BT path — not at boot.
+
+Avahi starts asynchronously from the Wi-Fi DHCP event hook after an address is
+assigned, when `mdns=true`. It adds no foreground startup wait to `rcS`.
 
 ## 6. `nextui-session` — the frontend loop
 

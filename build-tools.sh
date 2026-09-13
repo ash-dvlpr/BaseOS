@@ -155,11 +155,9 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
   chmod 755 /out/adbd
 '
 
-# avahi-daemon: publishes only the device's <hostname>.local A/AAAA + reverse
-# records. Built without D-Bus so no service announcements can exist at all,
-# and fully static (musl). Uses only the libdaemon single-file daemonize lib;
-# libdaemon ships no .pc file and its test/ directory needs glibc headers, so
-# only the library subdir is built here.
+# avahi-daemon: fully static (musl), without D-Bus. Runtime configuration limits
+# publishing to the WiFi hostname/address records; no static service definitions
+# are shipped. Build just libdaemon's library: its legacy tests need glibc headers.
 docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
   -v "$TOOLS":/out alpine:3.20 sh -euc '
   apk add -q build-base pkgconf \
