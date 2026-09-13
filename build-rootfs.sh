@@ -71,6 +71,8 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
 
   ## 3. Stock harvest on top
   tar -xf /work/stock-harvest.tar -C "$R"
+  # This alias is fixed; bake it in instead of recreating it on every boot.
+  ln -sfn /mnt/sdcard "$R/mnt/SDCARD"
   # Keep the prepared stock harvest pristine. Only remove GPU debug data from
   # this build copy, and fail rather than ship a changed module ABI/signature.
   GPU="$R/usr/lib/modules/mali_kbase.ko"

@@ -1,96 +1,61 @@
 #!/bin/sh
 # H700 base OS early init. Normal-boot budget: well under one second — no
 # sleeps, anything slow runs in the background. The requested USB-storage path
-# may wait briefly for TF2 enumeration. Root filesystem is read-only; all
-# writable state is tmpfs or /data (p6, ext4).
+# may wait briefly for TF2 enumeration. Runtime state uses tmpfs or /data
+# (p6, ext4); the vendor initramfs controls the root mount flags.
 
-. /usr/sbin/baseos-boot-profile
-BASEOS_BOOT_PROFILE_FILE=/dev/.baseos-boot-profile.tsv
-baseos_boot_mark rcS.start
 /bin/mount -t proc -o nodev,noexec,nosuid proc /proc
-baseos_boot_mark rcS.proc.ready
 /bin/mount -t sysfs -o nodev,noexec,nosuid sys /sys
-baseos_boot_mark rcS.sys.ready
 # The SP vendor kernels expose a low-power suspend policy switch. Stock applies
 # its persisted Super Standby bit as value 16; non-SP kernels have no such file
 # and already fully stop their USB host controllers during `mem` suspend.
 os_sleep=/sys/class/power_supply/axp2202-battery/os_sleep
 [ -w "$os_sleep" ] && printf '16' > "$os_sleep"
 grep -q ' /dev devtmpfs ' /proc/mounts || /bin/mount -t devtmpfs dev /dev
-baseos_boot_mark rcS.dev.ready
 /bin/mkdir -p /dev/pts /dev/shm
 /bin/mount -t devpts -o gid=5,mode=620 devpts /dev/pts
-baseos_boot_mark rcS.devpts.ready
 # debugfs: the sunxi disp2 driver's only display-output control surface is
 # /sys/kernel/debug/dispdbg — it is what switches disp0 between the LCD and the
 # HDMI TX. The stock OS got this mount for free from systemd; without it the
 # frontend's HDMI switch silently no-ops and a plugged-in TV stays dark while
 # the 720p UI is scaled onto the internal panel (issue #10).
 /bin/mount -t debugfs -o nodev,noexec,nosuid debugfs /sys/kernel/debug
-baseos_boot_mark rcS.debugfs.ready
 /bin/mount -t tmpfs -o mode=1777,size=256m tmpfs /dev/shm
-baseos_boot_mark rcS.shm.ready
 /bin/mount -t tmpfs -o mode=1777,size=256m tmpfs /tmp
-baseos_boot_mark rcS.tmp.ready
 /bin/mount -t tmpfs -o mode=755,size=32m tmpfs /run
-baseos_boot_legacy_mark /run/boot-rcS-start
-baseos_boot_mark rcS.run.ready
-baseos_boot_profile_import /run/boot-profile.tsv
-baseos_boot_mark rcS.profile.ready
 /bin/mount -t tmpfs -o mode=755,size=64m tmpfs /var
-baseos_boot_mark rcS.var.ready
 
 # /var skeleton (tmpfs). Persistent pieces live on /data and are linked below.
 /bin/mkdir -p /var/lib /var/log /var/tmp /var/lib/alsa /var/lib/bluealsa /var/empty
 /bin/ln -s /run /var/run
 
 /bin/hostname -F /etc/hostname
-baseos_boot_mark rcS.skeleton.ready
 
-# GPU: the unstripped vendor module takes ~0.7s to load; --strip-debug brings
-# that to ~0.05s on RG34XXSP. Keep loading in the background to overlap other
-# startup work; nextui-session waits for /dev/mali0 before handing off.
-baseos_boot_mark gpu.request
-if [ "$BASEOS_BOOT_PROFILE_ENABLED" = 1 ]; then
-	(
-		baseos_boot_mark gpu.insmod.start
-		/sbin/insmod /lib/modules/mali_kbase.ko 2>/dev/null
-		baseos_boot_mark gpu.insmod.done "status=$?"
-	) &
-else
-	/sbin/insmod /lib/modules/mali_kbase.ko 2>/dev/null &
-fi
+# GPU: the build strips debug data from the vendor module. Load it in the
+# background to overlap startup; nextui-session waits for /dev/mali0.
+/sbin/insmod /lib/modules/mali_kbase.ko 2>/dev/null &
 
 # Persistent state partition (p6, label "userdata"). It survives system
 # updates: an A/B slot flip only moves the rootfs partition.
 /bin/mkdir -p /data
-baseos_boot_mark data.mount.start
 if ! /bin/mount -t ext4 -o rw,noatime /dev/mmcblk0p6 /data 2>/dev/null; then
-	baseos_boot_mark data.mount.fallback
 	/bin/mount -t tmpfs tmpfs /data
 fi
-baseos_boot_mark data.mount.done
 /bin/mkdir -p /data/bluetooth /data/bluealsa /data/dropbear
 /bin/ln -sfn /data/bluetooth /var/lib/bluetooth
-baseos_boot_mark data.setup.done
 
 # A freshly updated slot is on trial until a frontend session starts. Count the
 # boots that never got that far and restore the previous slot if this one
 # cannot. No-op unless an update is in its trial window.
-baseos_boot_mark update.boot-check.start
 [ -x /usr/sbin/baseos-update ] && /usr/sbin/baseos-update boot-check
-baseos_boot_mark update.boot-check.done "status=$?"
 
 # Restore the selected timezone. /etc/localtime is baked as a symlink to
 # /run/localtime because the root filesystem is read-only; timedatectl keeps
 # the selected zone name on the persistent /data partition.
-baseos_boot_mark timezone.apply.start
 [ -x /usr/bin/timedatectl ] && /usr/bin/timedatectl apply 2>/dev/null
-baseos_boot_mark timezone.apply.done "status=$?"
 
 # Entropy: restore last boot's seed (kernel 4.9 is slow to gather on its own).
 [ -f /data/random-seed ] && /bin/cat /data/random-seed > /dev/urandom 2>/dev/null
-baseos_boot_mark entropy.restore.done
 
 # System clock from RTC (stock delegated this to systemd; rc.local had it disabled).
 # -u is mandatory: the RTC holds UTC (baseos-ntp-notify writes it with -u -w), and
@@ -99,7 +64,6 @@ baseos_boot_mark entropy.restore.done
 # usual alternative — an adjtime file declaring UTC — cannot work here: this
 # busybox looks for it at /var/lib/hwclock/adjtime, and /var is tmpfs.
 /sbin/hwclock -u -s 2>/dev/null &
-baseos_boot_mark rtc.request
 
 # WiFi: BaseOS owns the wlan0 interface so a frontend never has to wait for it
 # (removing any dependency on the frontend's wifi script being race-hardened).
@@ -107,28 +71,20 @@ baseos_boot_mark rtc.request
 # couple of seconds later; a background task waits for it and brings it up
 # (rfkill-unblock + link up). The frontend then only runs wpa_supplicant/DHCP on
 # an already-present, up interface. `ip`/`rfkill` are busybox applets on PATH.
-baseos_boot_mark wifi.request
 (
-	baseos_boot_mark wifi.insmod.start
 	/sbin/insmod /lib/modules/8821cs.ko 2>/dev/null
-	baseos_boot_mark wifi.insmod.done "status=$?"
 	wifi_wait=0
 	while [ ! -d /sys/class/net/wlan0 ] && [ "$wifi_wait" -lt 40 ]; do
 		sleep 0.25 2>/dev/null || sleep 1
 		wifi_wait=$((wifi_wait + 1))
 	done
 	if [ -d /sys/class/net/wlan0 ]; then
-		baseos_boot_mark wifi.interface.ready "polls=$wifi_wait"
 		rfkill unblock wifi 2>/dev/null || true
 		ip link set wlan0 up 2>/dev/null || true
-		baseos_boot_mark wifi.link.done
-	else
-		baseos_boot_mark wifi.interface.timeout "polls=$wifi_wait"
 	fi
 ) &
 
 # machine-id (dbus/BlueZ). /etc/machine-id is a baked symlink into /run.
-baseos_boot_mark machine-id.start
 if [ -s /data/machine-id ]; then
 	/bin/cp /data/machine-id /run/machine-id
 else
@@ -138,14 +94,11 @@ else
 fi
 /bin/mkdir -p /run/dbus /var/lib/dbus
 /bin/ln -sf /run/machine-id /var/lib/dbus/machine-id
-baseos_boot_mark machine-id.done
 
 # First boot on a fresh flash: grow this card's data partition to fill the
 # whole card (leaving it empty for the user to add a frontend). No-op once the
 # card already fills the disk.
-baseos_boot_mark expansion.start
 [ -x /usr/sbin/expand-storage ] && /usr/sbin/expand-storage
-baseos_boot_mark expansion.done "status=$?"
 
 # MENU held from power-on selects a one-boot USB-storage maintenance mode. Check
 # the current evdev state once: no timing window, input loop, or normal-boot
@@ -153,19 +106,16 @@ baseos_boot_mark expansion.done "status=$?"
 # a complete disk (partition table included); without TF2, export TF1's p7.
 USB_STORAGE_MODE=0
 /bin/mkdir -p /mnt/sdcard
-baseos_boot_mark menu.probe.start
 if [ -x /usr/sbin/boot-menu-held ] \
 	&& /usr/sbin/boot-menu-held \
 	&& [ -x /usr/sbin/usb-storage-mode ] \
 	&& /usr/sbin/usb-storage-mode prepare; then
 	USB_STORAGE_MODE=1
 fi
-baseos_boot_mark menu.probe.done "usb_storage=$USB_STORAGE_MODE"
 
 # Normal boot mounts the frontend/data card: TF2 p1 wins if usable, else this
 # card's own "primary" FAT partition (p7).
 if [ "$USB_STORAGE_MODE" -eq 0 ]; then
-	baseos_boot_mark frontend.card.mount.start
 	for dev in /dev/mmcblk1p1 /dev/mmcblk0p7; do
 		[ -b "$dev" ] || continue
 		if /bin/mount -t vfat -o rw,utf8,noatime,shortname=mixed "$dev" /mnt/sdcard 2>/dev/null \
@@ -175,20 +125,13 @@ if [ "$USB_STORAGE_MODE" -eq 0 ]; then
 		# One repair attempt, then retry once.
 		/usr/sbin/fsck.fat -a "$dev" >/dev/null 2>&1
 		if /bin/mount -t vfat -o rw,utf8,noatime,shortname=mixed "$dev" /mnt/sdcard 2>/dev/null \
-			|| /bin/mount -t auto "$dev" /mnt/sdcard 2>/dev/null; then
+			|| /bin/mount -t auto -o noatime "$dev" /mnt/sdcard 2>/dev/null; then
 			break
 		fi
 	done
-	baseos_boot_mark frontend.card.mount.done
-
-	# Boot breadcrumb on the card (readable from any computer).
-	if /bin/mountpoint -q /mnt/sdcard 2>/dev/null; then
-		echo "$(/bin/cut -d' ' -f1 /proc/uptime) rcS reached card mount" >> /mnt/sdcard/baseos-boot.log
-	fi
-	baseos_boot_mark frontend.card.breadcrumb.done
 fi
-/bin/ln -sfn /mnt/sdcard /mnt/SDCARD
-baseos_boot_mark frontend.card.setup.done
+# Older rootfs images may lack the alias baked into current builds.
+[ "$(readlink /mnt/SDCARD)" = /mnt/sdcard ] || /bin/ln -sfn /mnt/sdcard /mnt/SDCARD
 
 # System update: apply a *.bosupd payload the user copied onto the card. Costs
 # one failed glob on an ordinary boot; when a payload is present it writes the
@@ -196,16 +139,10 @@ baseos_boot_mark frontend.card.setup.done
 # leaves every card file to the USB host; the update runs on the next normal
 # boot after the user ejects and restarts without MENU.
 if [ "$USB_STORAGE_MODE" -eq 0 ]; then
-	baseos_boot_mark update.apply.start
 	[ -x /usr/sbin/baseos-update ] && /usr/sbin/baseos-update apply
-	baseos_boot_mark update.apply.done "status=$?"
 fi
 
 # Dev image extras (serial getty is in inittab; this starts SSH).
 [ -x /etc/init.d/dev ] && /etc/init.d/dev &
-baseos_boot_mark dev.request
-
-baseos_boot_mark rcS.done
-baseos_boot_legacy_mark /run/boot-rcS-done
 
 : # rcS must succeed; init proceeds to respawn nextui-session

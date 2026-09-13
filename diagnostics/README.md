@@ -1,12 +1,13 @@
 # Base OS diagnostics
 
-## Boot profiling
+## Boot timing
 
-Create `/etc/baseos-boot-profile` on a rootfs containing the profiling helper, then
-reboot and collect `/run/boot-profile.tsv` with `tools/boot_profile.py`. The optional
-profiled initramfs also records filesystem-check and root-mount stages. See
-[boot optimization and profiling](../docs/09-boot-profiling.md) for building the
-experimental p4 image, collecting controlled samples, and interpreting overlaps.
+Read `/run/boot-frontend-exec` after the frontend starts. This single tmpfs marker
+records kernel uptime at the first frontend handoff and survives frontend
+respawns. Keep cold starts and clean warm reboots separate; the marker excludes
+bootloader and frontend rendering time. See
+[boot optimization and measurement](../docs/09-boot-profiling.md) for repeated
+measurements and the retained GPU improvement.
 
 ## sleep-drain — measure suspend battery drain
 

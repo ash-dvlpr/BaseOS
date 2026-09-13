@@ -5,20 +5,10 @@ estimated.
 
 ## 1. Boot timing (measured)
 
-Kernel-relative markers are written to `/run/boot-*` by `rcS` / `nextui-session`
-(seconds since kernel start):
-
-| marker | warm boot | meaning |
-|---|---|---|
-| `boot-rcS-start` | 2.04 s | our init reached the first breadcrumb (proc/sys/dev/tmpfs mounted) |
-| `boot-rcS-done` | 2.59 s | modules requested, `/data` + card mounted (~0.55 s of rcS) |
-| `boot-frontend-exec` | 2.80 s | `launch.sh` handed control to NextUI |
-| `boot-dev-done` | TBD | `/etc/init.d/dev` finished starting dropbear + launching the adb gadget script |
-| `boot-adb-gadget-done` | TBD | the adb gadget bound its UDC (off the critical path — see §6) |
-
-> The `dev` / `adb-gadget` markers are **measured per release**: they sit off the
-> critical path (§6) and are re-measured, not carried forward, whenever that area
-> changes. `validate-on-device.sh` prints them on every run.
+The current runtime records only `/run/boot-frontend-exec`: seconds from kernel
+start to the first frontend handoff, stored on tmpfs. Earlier measurements below
+used stage markers that have since been removed. The historical RG40XXV warm
+handoff was 2.80 s; see [current GPU measurements](09-boot-profiling.md) for RG34XXSP.
 
 The normal splash policy has no runtime detection, hashing, renderer process or
 framebuffer write. It removes the former synchronous `/init` draw plus the routine
@@ -242,9 +232,6 @@ and restart without MENU to return to the frontend.
 before mounting frontend storage; it has no wait loop or resident process. The
 gadget script is backgrounded off the already-backgrounded `init.d/dev`, so it
 never delays `frontend-exec`. The one-second TF2 enumeration allowance runs only
-after a MENU-requested maintenance boot. Two measurement hooks make the cost
-observable: the script writes `/run/boot-adb-gadget-done` when the UDC bind lands and
-appends `adb gadget ready` to `/mnt/sdcard/baseos-boot.log`; `init.d/dev` writes
-`/run/boot-dev-done` when it finishes. Because these live off the critical path, the
-boot-timing table (§1) leaves them **TBD / measured per release** — re-measure and
-record them whenever this area changes rather than trusting a stale number.
+after a MENU-requested maintenance boot. Routine service startup does not write
+timing breadcrumbs or append logs to the SD card. The sole boot timing marker is
+`/run/boot-frontend-exec` (§1).

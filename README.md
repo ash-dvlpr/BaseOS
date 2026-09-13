@@ -20,6 +20,11 @@ We have a hard ceiling of 3.0 sec boot time. On top of that is NextUI which take
 
 By comparison, stock Anbernic OS + NextUI takes 17.5 sec (manually measured with a stopwatch). Knulli takes 22 sec.
 
+GPU debug stripping reduced RG34XXSP kernel-to-frontend handoff from **3.01 s to
+2.26 s**, comparing medians of three clean warm boots per variant. See
+[boot measurements](docs/09-boot-profiling.md) for the results and measurement
+scope; cold-start timing is measured separately.
+
 ## What BaseOS provides
 
 - The fastest possible boot time for Anbernic RG XX devices.
@@ -67,9 +72,10 @@ holding MENU to return to normal.
 
 ## How does it work?
 
-BaseOS is derived from the stock Anbernic OS for H700-based handhelds. The 
-kernel and DTB are preserved. Drivers retain their original executable code;
-the GPU module has its debug data removed to reduce loading time.
+BaseOS is derived from the stock Anbernic OS for H700-based handhelds. The
+vendor bootloader, kernel, initramfs and DTB are preserved. Drivers retain their
+original executable code; the GPU module has its debug data removed to reduce
+loading time.
 However, it replaces the stock Ubuntu userland with a custom BusyBox based
 rootfs. We retain all required features like WiFi, GLES, Bluetooth etc. but
 cut down everything else running in the background or increasing the boot

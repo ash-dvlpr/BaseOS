@@ -47,7 +47,7 @@ chroot $R /usr/bin/dbus-uuidgen > $R/run/machine-id
 mkdir -p $R/mnt/sdcard
 mountpoint -q $R/mnt/sdcard || mount --bind /mnt/sdcard $R/mnt/sdcard
 # run our session exactly as busybox init would (respawn loop not needed for demo)
-chroot $R /bin/sh -c "cut -d\" \" -f1 /proc/uptime > /run/boot-rcS-done; exec /sbin/nextui-session" \
+chroot $R /sbin/nextui-session \
 	> /tmp/takeover-session.log 2>&1 &
 echo "session started (pid $!)"'
 
