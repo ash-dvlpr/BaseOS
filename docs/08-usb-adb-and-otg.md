@@ -16,6 +16,13 @@ USB mass storage. Connect the cable, then hold MENU from power-on. A one-shot st
 query selects the mode before frontend storage is mounted. Whole TF2 wins when
 present; otherwise TF1 p7 is exported. The frontend is not involved.
 
+On a powered-off device, connecting the cable *is* the power-on, and BaseOS now ends
+such a boot by powering off again to charge ([05](05-runtime-power-network.md) §5).
+That does **not** pre-empt this entry: MENU-not-held is one of the preconditions of
+the auto-power-off, so holding MENU while connecting the cable still reaches storage
+mode. Plain adb on a powered-off device does change — press POWER after connecting,
+because the cable on its own now powers back off.
+
 This keeps the only USB-C port available for intentional OTG host devices on normal
 boots while making the two supported peripheral workflows explicit and predictable.
 `/data/no-adb` remains the persistent adb opt-out.
@@ -78,7 +85,9 @@ hardware-state-dependent. A polling loop or `/sbin/hotplug` would be worse: an i
 RG40XXV produces battery uevents about every 10.24 seconds. For a shared OTG port, the
 smaller and more honest policy is boot-scoped peripheral access:
 
-- cable present before power-on: adb, or MENU-held mass storage;
+- cable present before power-on: adb, or MENU-held mass storage — on a device that was
+  off, the cable itself is the power-on, so press POWER for an adb session and hold
+  MENU for storage mode ([05](05-runtime-power-network.md) §5);
 - cable absent before power-on: stock OTG auto behavior remains available;
 - cable disconnected from an adb session: restart with it connected.
 
@@ -113,6 +122,13 @@ filesystem corruption. Storage mode is therefore an exclusive maintenance boot:
 4. publish only an existing, completely unmounted block device to configfs;
 5. keep the frontend stopped while the host owns the device;
 6. eject on the host and restart without MENU.
+
+Step 1 survives the charger auto-power-off unchanged. `rcS` tests `boot-menu-held` as
+one of the preconditions of that branch — before it unmounts anything or writes the
+PMIC — so a cable-caused boot with MENU held selects storage mode, and only a
+cable-caused boot *without* MENU held ends itself. This is deliberate: it is the path
+a user reaches for precisely when the device is otherwise unusable, and it must not
+depend on the device having been on first.
 
 Exporting whole TF2 exposes its real partition table, so the host can access every
 filesystem it supports and deliberately repartition or format the removable card.

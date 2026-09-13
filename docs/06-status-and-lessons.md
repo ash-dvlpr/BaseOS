@@ -27,6 +27,7 @@
 | Rootfs running from slot B | ✅ running at LBA 1482752 — partition 5 boots from either offset |
 | `/data` survives a slot flip | ✅ the update log written before the flip was still there after it |
 | Update trial + confirm on hardware | ✅ armed on the first boot of the new slot and cleared when the session started |
+| PMIC soft-poweroff (`REG27H[0]`) stays off on a charger | ✅ RG SP only (2026-08-18), where the kernel's power off restarts in ~7 s. One part on one model; unvalidated on the other ten. That part names itself `axp2202` (measured 2026-08-20), so discovery, the `0x34` refusal, the one-entry name allowlist and the unarmed probe fail closed wherever the part is absent, moved, differently named or unnamed — though the name is the kernel's identification from the DTB, not a chip-ID read ([05](05-runtime-power-network.md) §5) |
 
 > **Standalone-repo changes not yet hardware-validated:** the split from NextUI moved
 > two responsibilities into Base OS — (a) the frontend payload is no longer baked in

@@ -8,6 +8,7 @@
 #   work/tools/fbsplash       (framebuffer boot splash)
 #   work/tools/gptgrow        (grow last GPT partition on first boot)
 #   work/tools/gptslot        (A/B root-slot geometry + flip for updates)
+#   work/tools/axp-off        (cut power at the PMIC; rcK's last step)
 #   work/tools/sftp-server    (OpenSSH sftp subsystem child for dropbear)
 #   work/tools/adbd           (Android adb daemon, USB-only, static)
 # Must use --platform linux/arm64 so the produced binaries are aarch64 for the
@@ -87,6 +88,17 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
   strip /out/gptslot
 '
 
+# axp-off: the shutdown primitive. The kernel's reboot(RB_POWER_OFF) does not
+# stay off on this board while VBUS is present — it comes back in ~7 s — so rcK
+# ends by writing the PMU's own soft-poweroff bit over i2c instead (see
+# src/axp-off.c). No libraries; it is one ioctl and one two-byte write.
+docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
+  -v "$TOOLS":/out -v "$HERE/src":/src:ro alpine:3.20 sh -euc '
+  apk add -q build-base linux-headers
+  gcc -static -O2 -Wall -Wextra -o /out/axp-off /src/axp-off.c
+  strip /out/axp-off
+'
+
 # sftp-server: dropbear 2024.85 ships the sftp subsystem execing
 # SFTPSERVER_PATH=/usr/libexec/sftp-server, so the transport (owned by dropbear)
 # hands each sftp session to this OpenSSH helper. It needs no crypto of its own,
@@ -145,8 +157,9 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
 
 file "$TOOLS/busybox" "$TOOLS/dropbearmulti" "$TOOLS/curl" \
   "$TOOLS/fbsplash" "$TOOLS/gptgrow" "$TOOLS/gptslot" "$TOOLS/sftp-server" \
-  "$TOOLS/adbd" 2>/dev/null || true
+  "$TOOLS/adbd" "$TOOLS/axp-off" 2>/dev/null || true
 [ -x "$TOOLS/gptslot" ] || { echo "gptslot build did not produce an executable" >&2; exit 1; }
+[ -x "$TOOLS/axp-off" ] || { echo "axp-off build did not produce an executable" >&2; exit 1; }
 [ -x "$TOOLS/curl" ] || { echo "curl build did not produce an executable" >&2; exit 1; }
 file "$TOOLS/curl" | grep -q "statically linked" \
   || { echo "curl build is not static" >&2; exit 1; }

@@ -20,7 +20,7 @@ TOOLS="$HERE/work/tools"
 
 [ -f "$WORK/source.json" ] || { echo "missing $WORK/source.json (run prepare-stock.sh $TARGET IMAGE)"; exit 1; }
 [ -f "$WORK/stock-harvest.tar" ] || { echo "missing $WORK/stock-harvest.tar (run prepare-stock.sh $TARGET IMAGE)"; exit 1; }
-for tool in busybox dropbearmulti curl fbsplash gptgrow gptslot sftp-server adbd; do
+for tool in busybox dropbearmulti curl fbsplash gptgrow gptslot sftp-server adbd axp-off; do
   [ -x "$TOOLS/$tool" ] || { echo "missing $TOOLS/$tool (run build-tools.sh)"; exit 1; }
 done
 BASEOS_VERSION="$(tr -d ' \n' < "$HERE/VERSION")"
@@ -82,6 +82,11 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
   ln -sf libGLESv2.so.2 "$R/usr/lib/libGLESv2.so"
 
   ## 4. Our overlay wins over everything
+  # `busybox --install` symlinked /usr/sbin/poweroff and /usr/sbin/reboot at the
+  # busybox binary, and /sbin is itself a symlink to usr/sbin. Copying our shims
+  # onto those symlinks would follow them and overwrite busybox, so drop them
+  # first — the same hazard the fbsplash applet has further down.
+  rm -f "$R/usr/sbin/poweroff" "$R/usr/sbin/reboot"
   cp -R /overlay/. "$R/"
   # Target identity is generated here; the overlay contains no device-specific
   # model data. BASEOS_DEVICE is the frontend family, while BASEOS_TARGET is
@@ -115,6 +120,8 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
             "$R/usr/sbin/nextui-session" "$R/usr/sbin/systemctl" \
             "$R/usr/sbin/expand-storage" "$R/usr/sbin/baseos-update" \
             "$R/usr/sbin/boot-menu-held" \
+            "$R/usr/sbin/baseos-poweroff" "$R/usr/sbin/baseos-reboot" \
+            "$R/usr/sbin/poweroff" "$R/usr/sbin/reboot" \
             "$R/usr/sbin/usb-gadget-adb" "$R/usr/sbin/usb-storage-mode" \
             "$R/mnt/vendor/ctrl/setBluetooth.sh" \
             "$R/usr/share/udhcpc/default.script"
@@ -126,6 +133,8 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
            /usr/sbin/baseos-ntp /usr/sbin/baseos-ntp-notify \
            /usr/sbin/expand-storage /usr/sbin/baseos-update /usr/sbin/systemctl \
            /usr/sbin/boot-menu-held \
+           /usr/sbin/baseos-poweroff /usr/sbin/baseos-reboot \
+           /usr/sbin/poweroff /usr/sbin/reboot \
            /usr/sbin/usb-gadget-adb /usr/sbin/usb-storage-mode \
            /mnt/vendor/ctrl/setBluetooth.sh; do
     [ -x "$R$s" ] || { echo "FATAL: $s is not executable in rootfs"; exit 1; }
@@ -180,6 +189,10 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
   [ -f /tools/gptgrow ] && cp /tools/gptgrow "$R/usr/sbin/gptgrow" && chmod 755 "$R/usr/sbin/gptgrow"
   # gptslot: A/B root-slot geometry and flip, used by baseos-update.
   [ -f /tools/gptslot ] && cp /tools/gptslot "$R/usr/sbin/gptslot" && chmod 755 "$R/usr/sbin/gptslot"
+  # axp-off: rcK'\''s last step. Not optional — without it every poweroff falls
+  # back to reboot(RB_POWER_OFF), which restarts whenever a charger is attached.
+  cp /tools/axp-off "$R/usr/sbin/axp-off"
+  chmod 755 "$R/usr/sbin/axp-off"
   # card README dropped onto the empty data partition after expansion.
   mkdir -p "$R/usr/share/baseos"
   [ -f /assets/card-readme.txt ] && cp /assets/card-readme.txt "$R/usr/share/baseos/card-readme.txt"
@@ -204,7 +217,7 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
   find "$R/usr/bin" "$R/usr/sbin" "$R/usr/libexec" -type f | while read -r f; do
     head -c4 "$f" | grep -q "^.ELF" || continue
     case "$f" in
-      */busybox|*/dropbearmulti|*/curl|*/fbsplash|*/gptgrow|*/gptslot|*/ldconfig|*/ldconfig.real|*/rtk_hciattach|*/sftp-server|*/adbd) continue ;;
+      */busybox|*/dropbearmulti|*/curl|*/fbsplash|*/gptgrow|*/gptslot|*/ldconfig|*/ldconfig.real|*/rtk_hciattach|*/sftp-server|*/adbd|*/axp-off) continue ;;
     esac
     if ! chroot "$R" /usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1 --list \
         "${f#"$R"}" 2>/dev/null | grep -q "=>"; then

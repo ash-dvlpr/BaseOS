@@ -8,7 +8,8 @@ exactly-scoped set of stock libraries and daemons. ~105 MB in a 512 MiB ext4.
 Four sources, assembled by `build-rootfs.sh` (see [02](02-image-build-and-flash.md)):
 
 1. **Static BusyBox** (Alpine `busybox-static`, ~1 MB) — provides `/sbin/init`, `sh`
-   (ash), `mount`, `insmod`, `udhcpc`, `hwclock`, `getty`, `poweroff`/`reboot`,
+   (ash), `mount`, `insmod`, `udhcpc`, `hwclock`, `getty`, `poweroff`/`reboot` (both
+   shadowed by BaseOS shims, [05](05-runtime-power-network.md) §5),
    **and — importantly — `mkfs.vfat`/`mkdosfs`, `partprobe`, `blockdev`, `killall`**
    (used by the first-boot expand, [03](03-first-boot-and-expand.md)).
 2. **The StockMod harvest** — an allowlist (`manifest/harvest.list`) extracted from
@@ -100,6 +101,16 @@ ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt100   # serial console (harmless wi
    boot-check`, which counts trial boots after a system update and restores the
    previous slot if this one never reaches a frontend session
    ([07](07-partition-layout-and-updates.md))
+4a. **a charger boot ends here.** If U-Boot reports `bootreason=charger`, `rcS` writes
+   the PMU's soft-poweroff bit and the device goes back off to charge instead of
+   running a frontend against its own charger. It sits *before* that `boot-check`, so
+   charging a device never spends one of its trial boots, and before the card mount,
+   so nothing is mounted that a power cut could tear. Six preconditions have to agree
+   first — a real `/data`, no `/data/no-charger-off`, MENU not held (holding it still
+   reaches USB-storage mode, [08](08-usb-adb-and-otg.md)), an unarmed `axp-off` probe
+   that says the PMIC is reachable on this board, a usable RTC, and no auto-off
+   stamp inside the last 120 s — and any of them failing continues the boot
+   normally ([05](05-runtime-power-network.md) §5)
 5. restore the entropy seed; `hwclock -s` (background); `insmod 8821cs.ko` (background)
 6. `machine-id`: reuse `/data/machine-id` or generate one; symlink `/etc/machine-id`
    and `/var/lib/dbus/machine-id → /run/machine-id`
@@ -140,7 +151,11 @@ The existing `MinUI.pak/launch.sh` runs **unchanged** on base OS: its stock-OS c
 (`systemctl …`, `killall brightCtrl.bin cexpert`, the logind drop-in, the TF1 dmenu
 self-heal) are already guarded with `|| true` / `command -v` / `mountpoint -q`, and
 resolve harmlessly against our shims. Poweroff/reboot work via the sentinels NextUI
-already writes (`/tmp/poweroff`, `/tmp/reboot`) — BusyBox init handles both.
+already writes (`/tmp/poweroff`, `/tmp/reboot`), and BusyBox init runs `rcK` for
+both. `/usr/sbin/poweroff` and `/usr/sbin/reboot` — which `/sbin` resolves to as
+well — are now BaseOS shims over `baseos-poweroff` / `baseos-reboot`
+([05](05-runtime-power-network.md) §5), so a caller invoking either by name takes
+the PMIC path. One that execs the busybox binary directly does not.
 
 NextUI's RetroAchievements HTTP layer also runs unchanged: it invokes the static
 `/usr/bin/curl` supplied by BaseOS. The binary is built from a pinned curl release and
