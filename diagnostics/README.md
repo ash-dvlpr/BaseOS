@@ -1,5 +1,13 @@
 # Base OS diagnostics
 
+## Boot profiling
+
+Create `/etc/baseos-boot-profile` on a rootfs containing the profiling helper, then
+reboot and collect `/run/boot-profile.tsv` with `tools/boot_profile.py`. The optional
+profiled initramfs also records filesystem-check and root-mount stages. See
+[boot optimization and profiling](../docs/09-boot-profiling.md) for building the
+experimental p4 image, collecting controlled samples, and interpreting overlaps.
+
 ## sleep-drain — measure suspend battery drain
 
 Distinguishes real deep sleep (µA-level, days of standby) from fake sleep

@@ -221,6 +221,12 @@ reason and raise the acceptance ceiling explicitly.
 The RG40XX V `boot-frontend-exec` acceptance ceiling is currently 3.00 seconds and is
 enforced by `validate-on-device.sh`.
 
+The rootfs build strips GPU debug data with module ABI checks. Experimental minimal
+initramfs images, detailed stage tracing, and repeated ADB measurement are described
+in [boot optimization and profiling](docs/09-boot-profiling.md). `build-boot.sh`
+produces an opt-in p4 image; the standard image and `.bosupd` paths continue to
+preserve the vendor boot partition.
+
 ## Technical documentation
 
 - [Boot chain and partitions](docs/00-boot-chain-and-partitions.md)

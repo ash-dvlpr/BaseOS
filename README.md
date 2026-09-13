@@ -15,7 +15,7 @@ Currently, that frontend is [NextUI](https://nextui.loveretro.games), but more m
 
 We have a hard ceiling of 3.0 sec boot time. On top of that is NextUI which takes another 4.5 sec for a total of around 7.5 sec startup time.
 
-* **2.96 s BaseOS only** - power LED to frontend handoff.
+* **2.96 s BaseOS only** - kernel uptime at frontend handoff; excludes bootloader time.
 * **7.14 s BaseOS + NextUI** - power LED to NextUI, ready-to-game on RG40XXV.
 
 By comparison, stock Anbernic OS + NextUI takes 17.5 sec (manually measured with a stopwatch). Knulli takes 22 sec.
@@ -68,7 +68,8 @@ holding MENU to return to normal.
 ## How does it work?
 
 BaseOS is derived from the stock Anbernic OS for H700-based handhelds. The 
-kernel, drivers, DTB etc are untouched, giving you perfect hardware support.
+kernel and DTB are preserved. Drivers retain their original executable code;
+the GPU module has its debug data removed to reduce loading time.
 However, it replaces the stock Ubuntu userland with a custom BusyBox based
 rootfs. We retain all required features like WiFi, GLES, Bluetooth etc. but
 cut down everything else running in the background or increasing the boot

@@ -4,6 +4,8 @@
 # shim). Delegates to the standard NextUI launch.sh from the card so the
 # NextUI runtime stays identical between stock-hijack and base OS installs.
 
+. /usr/sbin/baseos-boot-profile
+baseos_boot_mark session.start
 SD=/mnt/sdcard
 LOG=/tmp/nextui-session.log
 INSTALL_FAILED=0
@@ -13,7 +15,9 @@ CARD_MISSING=0
 # up far enough to hand off. Keying it here rather than on the frontend exec is
 # deliberate — a card with no frontend is a perfectly healthy OS, and keying it
 # later would make that state look like a failed update and roll back forever.
+baseos_boot_mark session.update-confirm.start
 [ -x /usr/sbin/baseos-update ] && /usr/sbin/baseos-update confirm 2>/dev/null
+baseos_boot_mark session.update-confirm.done "status=$?"
 
 # Log to tmpfs always, and mirror onto the card once it is mounted so boot
 # problems leave forensic evidence readable from any computer.
@@ -56,6 +60,7 @@ fi
 # The card should already be mounted by rcS; retry here covers slow cards
 # and hot re-insertion after an unmount.
 n=0
+baseos_boot_mark session.card.wait.start
 while ! mountpoint -q "$SD" 2>/dev/null; do
 	if [ "$n" -ge 15 ]; then
 		log "no card mounted after ${n}s"
@@ -72,8 +77,10 @@ while ! mountpoint -q "$SD" 2>/dev/null; do
 	sleep 1
 	n=$((n + 1))
 done
+baseos_boot_mark session.card.wait.done "polls=$n missing=$CARD_MISSING"
 
 # Update flow: same triggers as the old boot shim (02-boot-and-installer.md).
+baseos_boot_mark session.update-scan.start
 if mountpoint -q "$SD" 2>/dev/null; then
 	ZIP="$SD/MinUI.zip"
 	LAUNCH="$SD/.system/h700/paks/MinUI.pak/launch.sh"
@@ -113,18 +120,26 @@ if mountpoint -q "$SD" 2>/dev/null; then
 		fi
 	fi
 fi
+baseos_boot_mark session.update-scan.done "install_failed=$INSTALL_FAILED"
 
 LAUNCH="$SD/.system/h700/paks/MinUI.pak/launch.sh"
 if [ -x "$LAUNCH" ] || [ -f "$LAUNCH" ]; then
 	# rcS loads mali_kbase in the background; make sure /dev/mali0 exists
 	# before the frontend's GFX_init opens it (near-always already true).
 	m=0
+	baseos_boot_mark gpu.wait.start
 	while [ ! -e /dev/mali0 ] && [ "$m" -lt 30 ]; do
 		sleep 0.1 2>/dev/null || sleep 1
 		m=$((m + 1))
 	done
-	cut -d" " -f1 /proc/uptime > /run/boot-frontend-exec 2>/dev/null
+	baseos_boot_mark gpu.wait.done "polls=$m"
+	baseos_boot_mark frontend.log.start
 	log "exec $LAUNCH (mali wait ${m}x)"
+	baseos_boot_mark frontend.log.done
+	# Measure the actual handoff after logging. Keep the first boot handoff
+	# in the legacy file; later init respawns append events to the TSV only.
+	baseos_boot_mark frontend.exec "$LAUNCH"
+	[ -s /run/boot-frontend-exec ] || baseos_boot_legacy_mark /run/boot-frontend-exec
 	exec /bin/sh "$LAUNCH"
 fi
 
