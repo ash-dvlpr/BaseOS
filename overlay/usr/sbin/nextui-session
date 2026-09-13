@@ -1,8 +1,8 @@
 #!/bin/sh
 # The frontend session, respawned by busybox init. Replaces the whole stock
 # chain (launcher.service -> launcher.sh -> loadapp.sh -> dmenu_ln -> boot
-# shim). Delegates to the standard NextUI launch.sh from the card so the
-# NextUI runtime stays identical between stock-hijack and base OS installs.
+# shim). Runs NextUI's standard launch.sh or the Slot binary from the card.
+# Keep this entry point for compatibility with existing init configurations.
 
 SD=/mnt/sdcard
 LOG=/tmp/nextui-session.log
@@ -111,9 +111,21 @@ if mountpoint -q "$SD" 2>/dev/null; then
 fi
 
 LAUNCH="$SD/.system/h700/paks/MinUI.pak/launch.sh"
-if [ -x "$LAUNCH" ] || [ -f "$LAUNCH" ]; then
+FRONTEND=nextui
+# Preserve NextUI's install/update and boot priority on cards with both
+# frontends. Slot releases are already extracted; there is no installer or
+# launch.sh in their System directory.
+if [ ! -f "$LAUNCH" ]; then
+	LAUNCH="$SD/System/slot"
+	FRONTEND=slot
+fi
+if [ "$CARD_MISSING" -eq 0 ] && [ -f "$LAUNCH" ]; then
+	if [ "$FRONTEND" = slot ]; then
+		export SLOT_ROOT="$SD"
+		cd "$SD" || exit 1
+	fi
 	# rcS loads mali_kbase in the background; make sure /dev/mali0 exists
-	# before the frontend's GFX_init opens it (near-always already true).
+	# before the frontend initializes graphics (near-always already true).
 	m=0
 	while [ ! -e /dev/mali0 ] && [ "$m" -lt 30 ]; do
 		sleep 0.1 2>/dev/null || sleep 1
@@ -125,11 +137,17 @@ if [ -x "$LAUNCH" ] || [ -f "$LAUNCH" ]; then
 		{ read -r boot_uptime boot_idle < /proc/uptime \
 			&& printf '%s\n' "$boot_uptime" > /run/boot-frontend-exec; } 2>/dev/null || :
 	fi
+	if [ "$FRONTEND" = slot ]; then
+		# Slot is a glibc AArch64 ELF, not a shell script. Use the system
+		# loader so a copied binary needs no executable bit or chmod on the
+		# card. Diagnostics stay in RAM and are replaced on each launch.
+		exec /lib/ld-linux-aarch64.so.1 "$LAUNCH" > /tmp/slot.log 2>&1
+	fi
 	exec /bin/sh "$LAUNCH"
 fi
 
 # No frontend on the card. BaseOS ships none — the user copies one (e.g.
-# NextUI's MinUI.zip) onto the card, which now fills the whole SD (see the
+# NextUI's MinUI.zip or Slot's extracted System folder) onto the card (see the
 # README.txt expand-storage left on it). Show a clear prompt and wait for a
 # reboot; init respawns us, so pace the retry.
 if [ "$CARD_MISSING" -eq 1 ]; then

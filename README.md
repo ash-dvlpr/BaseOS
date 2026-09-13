@@ -7,7 +7,9 @@ support for hardware features on other custom firmwares, BaseOS is for you.
 
 It is designed as a drop-in replacement for the stock OS. However, BaseOS does not have a user interface of its own. It will boot up as fast as possible, then hand off to your frontend of choice.
 
-Currently, that frontend is [NextUI](https://nextui.loveretro.games), but more might be added.
+Supported frontends are [NextUI](https://nextui.loveretro.games) and
+[Slot](https://github.com/BrandonKowalski/slot), a GBA frontend designed for the
+Anbernic RG SP.
 
 [Install BaseOS](https://github.com/pvaibhav/BaseOS/wiki/BaseOS-Install-Guide)
 
@@ -42,6 +44,19 @@ scope; cold-start timing is measured separately.
 
 Follow **[installation guide](https://github.com/pvaibhav/BaseOS/wiki/BaseOS-Install-Guide)** for flashing, first boot, and NextUI setup on
 one-card or two-card configurations.
+
+To boot Slot, extract its H700 release on your computer and copy the contents of
+the extracted `slot-<version>` folder to the card root. Use either BaseOS's visible
+data partition on TF1 or a FAT32/exFAT card in TF2; a usable TF2 card takes priority.
+The card must contain `System/slot`, `System/mgba_libretro.so` and
+`System/gpsp_libretro.so`, alongside the release's other folders. Put GBA games in
+`Games/` and the optional BIOS in `BIOS/`. BaseOS boots Slot directly; it does not
+install a Slot zip or require a `launch.sh`.
+
+NextUI takes priority when both frontends are installed. Its pending `MinUI.zip`
+and `*.pakz` installers also run before frontend selection. For a Slot-only setup,
+use a card without NextUI's launcher or installer files. Update Slot by replacing
+its `System` folder with the one from a new release.
 
 ## Supported devices
 

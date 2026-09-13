@@ -192,6 +192,7 @@ Run checks relevant to the files changed. The main test entry points are:
 ./test-prepare-stock.sh
 ./test-expand-storage.sh
 ./tests/test-boot-splash-policy.sh
+./tests/test-frontend-session.sh
 ./tests/test-splash-rotation.sh
 ./tests/test-baseos-ntp.sh
 ./tests/test-timedatectl.sh

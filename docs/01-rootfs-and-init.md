@@ -108,9 +108,9 @@ ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt100   # serial console (harmless wi
 8. sample the built-in MENU button's current evdev state once; when held, enter a
    one-boot USB-storage maintenance mode *before* mounting frontend storage and
    export whole TF2 when present, otherwise TF1 p7
-8a. on a normal boot, mount the NextUI card: TF2 (`/dev/mmcblk1p1`) if present,
+8a. on a normal boot, mount the frontend card: TF2 (`/dev/mmcblk1p1`) if present,
     else this card's own `/dev/mmcblk0p7` → `/mnt/sdcard`, plus the `/mnt/SDCARD`
-    compat symlink; write a boot breadcrumb to the card
+    compat symlink
 8b. `baseos-update apply` — one failed glob on an ordinary boot; when the user has
    copied a `*.bosupd` payload onto the card it writes the inactive rootfs slot,
    verifies it, flips the GPT and reboots; deferred while USB storage is active
@@ -125,16 +125,34 @@ starts on demand from the BT path — not at boot.
 
 ## 6. `nextui-session` — the frontend loop
 
-Runs from `respawn`. It:
+Runs from `respawn`; the entry point keeps its historical name for compatibility.
+It confirms the system-update trial on session start, and stops before accessing
+the card in USB storage mode. On a normal boot it:
 
 1. ensures the card is mounted (retry loop; `INSERT SD CARD` splash if none);
 2. runs the first-boot **install** if `MinUI.zip`/`*.pakz` are present — same triggers
    as the old boot shim — painting a static install/update status pill
    (see [04](04-boot-splash.md) for why it is static, not animated, and why NextUI's
    own installer UI can't render here);
-3. waits (bounded) for `/dev/mali0` (the backgrounded module load), records the
-   `frontend-exec` boot marker and
-   `exec /bin/sh .system/h700/paks/MinUI.pak/launch.sh`.
+3. selects `.system/h700/paks/MinUI.pak/launch.sh` (NextUI) if present, otherwise
+   `System/slot` (Slot). Only regular files on a mounted card qualify. NextUI
+   retains priority when both are installed, including after its installer runs;
+4. waits (bounded) for `/dev/mali0` (the backgrounded module load), records the
+   first `/run/boot-frontend-exec` timestamp and hands off to the selected frontend.
+   NextUI runs through `/bin/sh`; Slot runs through `/lib/ld-linux-aarch64.so.1`.
+
+Slot releases are extracted on a computer and copied to the card root; BaseOS
+does not unpack Slot archives. The binary and both emulator cores live under
+`System/`; games, BIOS, saves and the other release folders sit alongside it.
+Slot receives `SLOT_ROOT=/mnt/sdcard` and starts with that working directory.
+Its AArch64 glibc binary uses the existing harvested runtime, EGL/GLES and ALSA
+libraries. Invoking the loader directly supports copied binaries without an
+executable bit, without changing card permissions. Slot's stdout and stderr go to
+`/tmp/slot.log`, replaced on each launch; session diagnostics remain in
+`/tmp/nextui-session.log`. Both are in RAM.
+
+Slot's optional wireless link feature calls AGS-102's `ags-net` helper, which
+BaseOS does not ship.
 
 The existing `MinUI.pak/launch.sh` runs **unchanged** on base OS: its stock-OS calls
 (`systemctl …`, `killall brightCtrl.bin cexpert`, the logind drop-in, the TF1 dmenu
