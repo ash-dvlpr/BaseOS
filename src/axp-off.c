@@ -1,129 +1,30 @@
-/*
- * axp-off — cut power at the AXP2202/AXP717 PMIC, bypassing PSCI and BL31.
- *
- * The kernel's own power off — reboot(RB_POWER_OFF) -> PSCI SYSTEM_OFF -> BL31
- * -> the PMU — does not stay off on this board: with VBUS present the device
- * comes back within about seven seconds, every time, reporting
- * bootreason=charger. Measured repeatedly on an RG SP. That made "plugged in
- * and idle" a boot loop, because a frontend's doze timeout ends in a poweroff.
- *
- * Writing the PMU's own soft-poweroff bit instead stays off, on a live charger,
- * from both button and charger boots. The AXP717 datasheet (6.15.2.26) gives
- * REG 27H as:
- *
- *   7:4 reserved (RO)
- *   3   PWROK pin pull low to restart the system  0=disable 1=enable  default 0
- *   2   PWRON 16s to shutdown the PMIC            0=disable 1=enable  default 1
- *   1   restart the system                        write 1 = restart   (RWAC)
- *   0   soft PWROFF                               write 1 = power off (RWAC)
- *
- * 27H is not invariant on this hardware: measured twice on the same RG SP, a
- * POWER-button boot read 0x08 — both configurable bits inverted from
- * default — and a later boot, after two reboots, read 0x00, back at default
- * on bit 3 and still inverted on bit 2. Vendor firmware reprograms the
- * register on every boot and evidently not always to the same value; the
- * reading tracked bootreason both times, which looks like a correlation,
- * but that is one data point per boot type and not established. Bit 3 was
- * suspected of causing the restart and exonerated by measurement; it has
- * now been seen both set and clear, and the tool handled both correctly, so
- * this preserves whatever it finds rather than assuming a value.
- *
- * Two callers, and both gate on this program's own unarmed probe: with no
- * --now it writes nothing and exits 0 only after discovery succeeded, the
- * address and the part name matched, /dev/i2c-N opened and REG27H read, which
- * makes it an exact "can this work on this board" test. rcK runs it last on a
- * poweroff, after unmounting /data and the card — but those unmounts run with
- * the frontend still alive, because BusyBox init runs its shutdown action
- * before the SIGTERM sweep, so they usually degrade to a read-only remount
- * rather than completing. Read "quiesced", not "unmounted". rcS runs it to end
- * a charger boot, where nothing but /data has been mounted yet. Nothing
- * downstream of a write that lands runs at all.
- *
- * Where the chip lives, and what it is, are discovered rather than assumed.
- * The register map is a property of the silicon and travels to every board
- * carrying this part; the i2c bus number is a property of the devicetree and
- * does not. Linux has already probed and bound the chip — which is exactly why
- * the write below needs I2C_SLAVE_FORCE — so this reads the kernel's answer,
- * bus, address and part name alike, out of sysfs.
- *
- * Safety rules, in order of how badly they end if broken:
- *
- *  - Register 0x27 is a compile-time constant. There is no general poke path
- *    and no register argument: 0x10-0x2f is dense with DCDC and LDO enables and
- *    voltages, and a stray byte there drops a rail with the case shut.
- *  - Bit 1 is masked off every write. Setting it restarts instead of powering
- *    off, which is the exact failure this tool exists to avoid.
- *  - The client must sit at 0x34 *and* name a part this has been measured on.
- *    Two independent checks, and they buy different things. The address is the
- *    cheaper disqualifier, but on its own it is a location check: every AXP in
- *    this family sits at 0x34, so it catches a board that moved the chip and
- *    not a board carrying a *different* AXP there — against which the rule
- *    above applies with full force, since 0x27 in another register map need
- *    not be "soft poweroff" at all. The name is the identity check, read from
- *    the client's own sysfs attribute, and it is what makes the wrong-part
- *    case fail closed. What it cannot do is verify the silicon: on a
- *    devicetree system that name comes from the node's compatible, so it is
- *    the kernel's claim about the part rather than the part's own answer. See
- *    KNOWN_PARTS.
- *  - --now is mandatory, so the binary is safe to run just to read state.
- *
- * I2C_SLAVE_FORCE is required: the axp20x-i2c driver holds the address, so the
- * polite ioctl returns EBUSY. Register 0x27 is outside the driver's regmap
- * cache (which covers 0x79-0x9f), so this neither reads nor leaves stale state.
+/* AXP2202 (AXP717 register map) soft poweroff. Keep the kernel driver bound;
+ * identify its client before touching the single supported register, 0x27.
+ * Without --now this is a read-only probe. See docs/05-runtime-power-network.md.
  */
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <linux/i2c.h>
+#include <linux/i2c-dev.h>
+#include <mntent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/mount.h>
 #include <unistd.h>
 
-#define I2C_SLAVE_FORCE 0x0706
 #define DRIVER_SUBPATH  "/bus/i2c/drivers/axp20x-i2c"
 #define EXPECT_ADDR     0x34
 #define REG             0x27   /* the only register this program will ever touch */
 
 #define SOFT_PWROFF   (1 << 0)
 #define RESTART       (1 << 1)   /* masked off every write — never set this */
-#define PWROK_RESTART (1 << 3)
 
-/*
- * The parts this program will write to, named as the kernel publishes them at
- * <client>/name. Eleven H700 models ship and one has been measured: an RG SP
- * reports "axp2202" at /sys/bus/i2c/drivers/axp20x-i2c/5-0034/name.
- *
- * Add an entry only on the strength of a measurement taken from that board.
- * Unmeasured silicon has to fail closed — that is the whole point of the list
- * — because REG 0x27 is "soft poweroff" in this part's register map and is
- * free to be a rail enable in another's. A refusal here costs nothing: the
- * caller falls back to the kernel's own power off, exactly as it did before
- * this program existed.
- */
+/* Kernel/DT identification, not a silicon ID. Only add measured parts. */
 static const char *const KNOWN_PARTS[] = { "axp2202" };
 
-/*
- * Driver-binding entries are named <bus>-<addr>, e.g. "5-0034" — the same
- * convention that names the regmap debugfs node at
- * /sys/kernel/debug/regmap/5-0034/. Everything else in the directory (bind,
- * unbind, uevent, module) fails the conversion and is skipped. The trailing
- * %c is what rejects a name with junk after the address: a complete match
- * consumes the whole string and leaves %c nothing to read, so exactly two
- * conversions means exactly one well-formed client name.
- *
- * The whole directory is scanned rather than stopping at the first entry.
- * readdir order is a property of the underlying filesystem, not of the bus, so
- * with two clients bound the first entry is whichever one sysfs happens to
- * yield — and picking it would make the caller's address check order-dependent.
- * An entry at EXPECT_ADDR wins outright; otherwise the first well-formed entry
- * is kept, purely so the caller can name it in the "sits at 0x%02x, not the
- * expected 0x34" refusal instead of reporting nothing found.
- *
- * The part name travels back with the address rather than being filtered on
- * here, so that a refusal can say which part it found. An unreadable or empty
- * name yields an empty string, which no allowlist entry matches.
- */
 static void read_part(const char *dir, const char *entry, char *part, size_t plen)
 {
 	char path[1024];
@@ -182,13 +83,111 @@ static int part_is_known(const char *part)
 	return 0;
 }
 
+/* One adapter-locked transfer: a kernel regmap access must not change the
+ * register pointer between selecting REG and reading its value. */
 static int rd(int fd, unsigned char *out)
 {
 	unsigned char reg = REG;
+	struct i2c_msg msgs[] = {
+		{ .addr = EXPECT_ADDR, .len = 1, .buf = &reg },
+		{ .addr = EXPECT_ADDR, .flags = I2C_M_RD, .len = 1, .buf = out },
+	};
+	struct i2c_rdwr_ioctl_data transfer = { .msgs = msgs, .nmsgs = 2 };
+	int n = ioctl(fd, I2C_RDWR, &transfer);
 
-	if (write(fd, &reg, 1) != 1)
+	if (n == 2)
+		return 0;
+	if (n >= 0)
+		errno = EIO;
+	return -1;
+}
+
+static int volatile_fs(const char *type)
+{
+	static const char *const types[] = {
+		"proc", "sysfs", "tmpfs", "devtmpfs", "devpts", "debugfs",
+		"configfs", "cgroup", "cgroup2", "ramfs", "rootfs", "securityfs",
+		"pstore", "tracefs", "fusectl", "mqueue", "hugetlbfs", "binfmt_misc",
+		"functionfs"
+	};
+	for (size_t i = 0; i < sizeof types / sizeof types[0]; i++)
+		if (!strcmp(type, types[i]))
+			return 1;
+	return 0;
+}
+
+/* Preserve VFS options when making a mount read-only. Filesystem-specific
+ * options remain unchanged with a NULL remount data argument. */
+static unsigned long readonly_flags(struct mntent *m)
+{
+	unsigned long flags = MS_REMOUNT | MS_RDONLY;
+	static const struct { const char *name; unsigned long flag; } options[] = {
+		{ "nosuid", MS_NOSUID }, { "nodev", MS_NODEV }, { "noexec", MS_NOEXEC },
+		{ "sync", MS_SYNCHRONOUS }, { "dirsync", MS_DIRSYNC },
+		{ "noatime", MS_NOATIME }, { "nodiratime", MS_NODIRATIME },
+		{ "relatime", MS_RELATIME }, { "mand", MS_MANDLOCK }
+	};
+	for (size_t i = 0; i < sizeof options / sizeof options[0]; i++)
+		if (hasmntopt(m, options[i].name))
+			flags |= options[i].flag;
+	return flags;
+}
+
+static int readonly_mounts(const char *path, int prepare)
+{
+	FILE *f = setmntent(path, "r");
+	struct mntent *m;
+	int root_seen = 0, failed = 0;
+
+	if (!f)
 		return -1;
-	return read(fd, out, 1) == 1 ? 0 : -1;
+	while ((m = getmntent(f))) {
+		if (!strcmp(m->mnt_dir, "/"))
+			root_seen = 1;
+		if (volatile_fs(m->mnt_type) || hasmntopt(m, "ro"))
+			continue;
+		if (!prepare || mount(NULL, m->mnt_dir, NULL, readonly_flags(m), NULL)) {
+			fprintf(stderr, "axp-off: %s is not safely read-only; refusing power cut\n",
+				m->mnt_dir);
+			failed = 1;
+		}
+	}
+	failed |= ferror(f) || !root_seen;
+	endmntent(f);
+	return failed ? -1 : 0;
+}
+
+static int no_swap(const char *path)
+{
+	FILE *f = fopen(path, "r");
+	char line[512];
+	int safe;
+
+	if (!f)
+		return 0;
+	safe = fgets(line, sizeof line, f) != NULL;
+	while (fgets(line, sizeof line, f))
+		if (strspn(line, " \t\r\n") != strlen(line))
+			safe = 0;
+	safe &= !ferror(f);
+	fclose(f);
+	return safe;
+}
+
+static int prepare_poweroff(void)
+{
+	/* USB mass storage can write an unmounted block device from kernel space.
+	 * Let the normal kernel shutdown disconnect and drain that gadget. */
+	if (access("/run/usb-storage-device", F_OK) == 0 || !no_swap("/proc/swaps")) {
+		fprintf(stderr, "axp-off: active USB storage or swap; using kernel shutdown\n");
+		return -1;
+	}
+	sync();
+	/* Includes the rootfs: the vendor initramfs mounts it writable. Do not
+	 * trust sync alone, or a failed umount/remount, before cutting the rails. */
+	if (readonly_mounts("/proc/mounts", 1))
+		return -1;
+	return readonly_mounts("/proc/mounts", 0);
 }
 
 int main(int argc, char **argv)
@@ -196,16 +195,15 @@ int main(int argc, char **argv)
 	const char *sysroot;
 	char bus_path[512], whence[128], part[64];
 	unsigned bus = 0, addr = 0;
-	int fd, i, arm = 0, drop_pwrok = 0;
-	unsigned char cur, val, back;
+	int fd, i, arm = 0;
+	unsigned long funcs;
+	unsigned char cur, val;
 
 	for (i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "--now"))
 			arm = 1;
-		else if (!strcmp(argv[i], "--no-pwrok"))
-			drop_pwrok = 1;
 		else {
-			fprintf(stderr, "usage: axp-off [--now] [--no-pwrok]\n");
+			fprintf(stderr, "usage: axp-off [--now]\n");
 			return 2;
 		}
 	}
@@ -240,6 +238,10 @@ int main(int argc, char **argv)
 		fprintf(stderr, "axp-off: open %s: %s\n", bus_path, strerror(errno));
 		return 1;
 	}
+	if (ioctl(fd, I2C_FUNCS, &funcs) < 0 || !(funcs & I2C_FUNC_I2C)) {
+		fprintf(stderr, "axp-off: adapter does not support combined I2C transfers\n");
+		return 1;
+	}
 	if (ioctl(fd, I2C_SLAVE_FORCE, addr) < 0) {
 		fprintf(stderr, "axp-off: I2C_SLAVE_FORCE 0x%02x: %s\n", addr, strerror(errno));
 		return 1;
@@ -250,8 +252,6 @@ int main(int argc, char **argv)
 	}
 
 	val = (unsigned char)((cur & ~RESTART) | SOFT_PWROFF);
-	if (drop_pwrok)
-		val &= (unsigned char)~PWROK_RESTART;
 
 	printf("axp-off: REG27H 0x%02x -> 0x%02x\n", cur, val);
 	if (!arm) {
@@ -259,22 +259,23 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	/* Last-resort flush. The caller has already quiesced its filesystems —
-	 * unmounted, or read-only where a live frontend held them — so this only
-	 * covers what a mistake in the calling script would leave behind. */
-	fflush(stdout);
-	sync();
-
-	if (write(fd, (unsigned char[]){ REG, val }, 2) != 2) {
-		fprintf(stderr, "axp-off: write REG27H: %s\n", strerror(errno));
+	if (prepare_poweroff())
+		return 1;
+	/* Filesystem cleanup may take time; preserve the current control bits. */
+	if (rd(fd, &cur)) {
+		fprintf(stderr, "axp-off: final REG27H read failed; refusing power cut\n");
 		return 1;
 	}
+	val = (unsigned char)((cur & ~RESTART) | SOFT_PWROFF);
+	fflush(stdout);
 
-	/* Reaching this point means the PMIC did not cut the rails, which is
-	 * itself the result: the caller falls through to reboot(RB_POWER_OFF). */
-	if (!rd(fd, &back))
-		fprintf(stderr, "axp-off: still running after write, REG27H reads 0x%02x\n", back);
-	else
-		fprintf(stderr, "axp-off: still running after write, REG27H unreadable\n");
+	if (write(fd, (unsigned char[]){ REG, val }, 2) != 2)
+		fprintf(stderr, "axp-off: write REG27H: %s\n", strerror(errno));
+
+	/* Allow the write to take effect before the caller can restore writable
+	 * mounts or enter kernel shutdown, even if the adapter reported an error.
+	 * There is no retry of a power command. */
+	sleep(5);
+	fprintf(stderr, "axp-off: still running after poweroff request\n");
 	return 1;
 }

@@ -1,60 +1,17 @@
 #!/bin/sh
-# Shutdown: persist entropy, flush, unmount. Busybox init runs this for
-# both poweroff and reboot.
+# BusyBox runs shutdown actions before its process-kill sweep. Stop writers
+# first; init starts rcK in its own session, which killall5 preserves.
+/usr/bin/busybox killall5 -TERM
+/bin/sleep 1
+/usr/bin/busybox killall5 -KILL
 /bin/dd if=/dev/urandom of=/data/random-seed bs=512 count=1 2>/dev/null
+/sbin/swapoff -a 2>/dev/null
 /bin/sync
 
-# Power off at the PMIC rather than returning to init for reboot(RB_POWER_OFF).
-# That path does not stay off while VBUS is present: the device is back in about
-# seven seconds reporting bootreason=charger, which turns an idle handheld on a
-# charger into a boot loop as soon as the frontend's doze timeout fires. Writing
-# the PMU's own soft-poweroff bit does stay off — measured on an RG SP, from
-# button and charger boots alike.
-#
-# Only on a poweroff. BusyBox init runs this single `::shutdown:` action for
-# reboot as well and gives no way to tell them apart, so baseos-poweroff leaves
-# a marker and baseos-reboot clears one. Absent the marker we take the reboot
-# path on purpose: the two failures are not symmetric. A poweroff that falls
-# through merely restarts on the charger — the behaviour this OS already
-# shipped — while a reboot that powers off strands baseos-update after a slot
-# flip, leaving the device sitting there off mid-update with no boot counted at
-# all.
-#
-# The unarmed probe is the third guard. `axp-off` with no --now writes nothing
-# and succeeds only after it has found the driver's client, matched both the
-# address and the part name it publishes, opened /dev/i2c-N and read REG27H —
-# an exact "can this work on this board" test. One AXP part has been measured,
-# on an RG SP, and the allowlist holds only that one; on any board where that
-# probe fails this script behaves exactly as it did before the PMIC write
-# existed.
-#
-# What then runs, in order, and what each step is worth:
-#
-#   * The unmounts, by name rather than `umount -a`: that would take devtmpfs
-#     with it and the i2c character device has to outlive this step.
-#
-#     -r is load-bearing here. BusyBox init runs the `::shutdown:` action
-#     *before* its kill(-1, SIGTERM) sweep, so the frontend is still running —
-#     a shell with its cwd on the card, reading its launch.sh from it — and
-#     bluetooth daemons may still hold /data/bluetooth. Both unmounts therefore
-#     return EBUSY on an ordinary poweroff from a frontend. Without -r that
-#     would leave a writable vfat/exfat mount live when the rails drop; with it
-#     they usually degrade to a read-only remount instead, which is a safe
-#     state to cut power in. Usually, not always: a busy cwd is what -r turns
-#     read-only, but a file still open for writing refuses the remount the same
-#     way it refused the unmount, and the mount stays rw. That gap is part of
-#     why quiescing the frontend first is a separate change. Assume degraded,
-#     not unmounted.
-#   * axp-off --now last, because nothing downstream of a cut that lands runs at
-#     all. It returns whenever the rails have not dropped *yet* — a write that
-#     failed, or one whose effect has not landed — and then the umount below
-#     runs and init is handed back exactly as this script always did.
-if [ -e /run/poweroff-requested ] && [ -x /usr/sbin/axp-off ] \
-	&& /usr/sbin/axp-off >/dev/null 2>&1; then
-	/bin/umount -r /mnt/sdcard 2>/dev/null
-	/bin/umount -r /data 2>/dev/null
-	/bin/sync
+# The marker distinguishes poweroff from reboot. axp-off checks the PMIC and
+# requires every persistent filesystem (including /) to be read-only before
+# cutting power. Any refusal returns to BusyBox's normal kernel shutdown.
+if [ -e /run/poweroff-requested ] && [ -x /usr/sbin/axp-off ]; then
 	/usr/sbin/axp-off --now
 fi
-
 /bin/umount -a -r 2>/dev/null

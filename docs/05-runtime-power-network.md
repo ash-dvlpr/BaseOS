@@ -139,109 +139,99 @@ it unchanged via the `setBluetooth.sh` shim ([01](01-rootfs-and-init.md) §7). V
 as far as daemons-run on-device (chroot); full pairing/audio is on the hardware
 to-do in [06](06-status-and-lessons.md).
 
-## 5. Power button / poweroff
+## 5. Power button, poweroff, and charger boots
 
-There is no `systemd-logind` on base OS. NextUI's `keymon` reads the power key
-(event0, `axp2202-pek`) directly and writes `/tmp/poweroff` / `/tmp/reboot`
-sentinels that `launch.sh` acts on by running `poweroff` or `reboot`; BusyBox
-init runs the single `::shutdown:` action, `/etc/init.d/rcK`, for both. A
-**long-press powers off in hardware** at the AXP2202 PMIC after 6 s
-(`pmu_powkey_off_time = 6000`) regardless of software — normal, expected
-force-off behaviour. It stays off with a charger attached, which
-AXP717 `REG22H[0] = 0` ("do not auto turn on after an OFFLEVEL POK shutdown")
-predicts and measurement confirms.
+There is no `systemd-logind`. The frontend handles POWER and calls `poweroff`
+or `reboot`. Their BaseOS shims record or clear `/run/poweroff-requested` before
+calling BusyBox; init runs `/etc/init.d/rcK` for either action. An absent marker
+means reboot, so an A/B update cannot accidentally turn into a PMIC power cut.
+The PMIC also has an independent hardware long-press shutdown (6 s on RG SP).
 
-**The kernel's power off does not stay off while a charger is attached.**
-`reboot(RB_POWER_OFF)` reaches PSCI `SYSTEM_OFF` and BL31, the shutdown
-completes normally, and the PMIC brings the device back about seven seconds
-later reporting `bootreason=charger`. Measured repeatedly on an RG SP.
-Unplugged it stays off, which is what made this look for a while like a hang
-rather than a restart. Left unhandled it turns any device on a charger into a
-boot loop, because the frontend's doze timeout ends in a `poweroff`.
-`knulli-cfw/distribution` issues #472 and #287 describe the same fault on other
-H700 hardware.
+### PMIC shutdown
 
-So `rcK` ends by writing the PMU's own soft-poweroff bit over i2c
-(`/usr/sbin/axp-off`, AXP717 `REG27H[0]`), which does stay off. Two
-consequences beyond the charger case: the PMIC cut never walks the kernel's
-device `.shutdown()` hooks, so a live `mali_kbase` cannot hang that path at
-all; and a power off no longer depends on what BL31 does with the PMU. What in
-BL31's `SYSTEM_OFF` handler undoes the shutdown was never identified — it is
-bypassed, not diagnosed.
-
-`axp-off` discovers the PMIC rather than assuming where it is, and checks what
-it found before writing to it. The register map is a property of the silicon
-and travels to every board carrying this part; the i2c bus number comes from
-the devicetree and does not. The kernel has already probed and bound the chip —
-which is why the write needs `I2C_SLAVE_FORCE` — so the tool reads the binding
-out of `/sys/bus/i2c/drivers/axp20x-i2c`, whose entries are named
-`<bus>-<addr>`; with two clients bound, the one at `0x34` wins rather than
-whichever `readdir` happens to yield first.
-
-Two checks then have to agree, because they disqualify different things.
-`0x34` is the cheaper one and it is a location check: every AXP in the family
-sits there, so on its own it catches a board that moved the chip and *not* a
-board carrying a different AXP at the same address — where `0x27` need not mean
-"soft poweroff" at all. So the client's own `name` attribute is checked too,
-against an allowlist of the parts somebody has actually measured. Today that is
-one entry, `axp2202`, read off an RG SP at
-`/sys/bus/i2c/drivers/axp20x-i2c/5-0034/name`. No binding, none at `0x34`, or a
-name that is missing, unreadable or unlisted all mean no write: it fails closed
-and the poweroff falls back to the kernel path.
-
-Both call sites gate on that, not only the write itself. Run without `--now`,
-`axp-off` writes nothing and exits 0 only after discovery succeeded, the address
-and the name matched, `/dev/i2c-N` opened and `REG27H` read — an exact "can this
-work on this board" probe. `rcK` and `rcS` each run it as a precondition, so a
-board where any of those steps fails takes the kernel path unchanged, and in
-`rcS` never unmounts `/data` first.
-
-**The residual risk, stated plainly:** the name is the *kernel's*
-identification, not the chip answering for itself — on a devicetree system it
-comes from the node's compatible, so it is only as good as the vendor DTB, and
-matching a chip-ID register out of the silicon would be strictly better. And
-eleven targets ship while one has been measured: another H700 board could carry
-the very same AXP2202 under a different name, in which case this simply refuses
-and does nothing, exactly as it does where the part really is different. That is
-the safe direction, and it is not a claim that any of the other ten models
-works. [06](06-status-and-lessons.md) §1 records what was measured per model
-rather than inferring it.
-
-BusyBox init gives `rcK` no way to tell a poweroff from a reboot, so
-`/usr/sbin/poweroff` and `/usr/sbin/reboot` are **shims** over
-`baseos-poweroff` and `baseos-reboot`, which record the intent in
-`/run/poweroff-requested`. Absent the marker, `rcK` takes the reboot path, and
-that default is deliberate: a poweroff that falls through merely restarts on the
-charger, which is what shipped before, while a reboot that powers off would
-strand `baseos-update` after a slot flip, leaving the device sitting there off
-mid-update with no boot counted at all. `/run` is tmpfs, so a marker cannot
-survive a boot and be mistaken for a fresh request.
-
-**A charger boot ends itself.** The PMIC powers the rails up whenever VBUS
-appears — vendor behaviour, not a fault — and U-Boot records the cause as
-`bootreason=charger`, mirrored at `axp2202-battery/boot_mode`. `rcS` sees it
-early, before `baseos-update boot-check`, the card mount or any frontend, and
-calls `axp-off` directly, so the handheld charges with the machine off instead
-of running a frontend against its own charger. U-Boot has already drawn its
-battery screen by then, so the cable still gives visible feedback. POWER
-produces `bootreason=button` and a completely normal boot with the cable
-attached, which is what keeps adb reachable.
-
-Six guards on that branch: a real `/data`, because the tmpfs fallback cannot
-remember anything between boots and an unbounded loop beats a busy frontend;
-`/data/no-charger-off` as an outright opt-out; MENU not held, because for a
-powered-off device connecting the cable *is* the power-on and the documented
-"cable, then hold MENU from power-on" storage-mode recovery
-([08](08-usb-adb-and-otg.md)) has to keep working on a device that is otherwise
-unusable; the unarmed `axp-off` probe above, so a board this was never measured
-on skips the branch before anything is unmounted; a readable RTC, since it is
-the only way to recognise a loop; and a 120 s window that stops a loop if the
-PMIC write ever stops sticking. The opt-out exists because this hardware
-**cannot** distinguish a host PC from a dumb charger — the driver publishes no
-`usb_type` and BC detection reads empty.
-
-Full measurements, and the two theories tested and killed on the way:
+On the RG SP, the contributor's tests found that kernel poweroff with USB
+attached returned to a charger boot in about seven seconds. Writing the
+AXP2202's soft-poweroff bit stayed off while charging. PR #14 contributed
+`axp-off`, board discovery, power intent, and the initial charger-boot policy;
+its measurements are in
 [`diagnostics/results/2026-08-18-charger-boot-and-poweroff.md`](../diagnostics/results/2026-08-18-charger-boot-and-poweroff.md).
+The exact cause in the vendor kernel/firmware shutdown path remains unproven.
+
+`axp-off` discovers the bound client under
+`/sys/bus/i2c/drivers/axp20x-i2c`. It requires address `0x34` and the measured
+kernel name `axp2202`; bus numbers are board-specific. This is the DT/kernel's
+identification, not a silicon-ID read. Other names are refused. Running it
+without arguments only reads register `0x27`: no power command, filesystem
+remount, or sync. A successful probe confirms access, not successful shutdown
+on every board using that name.
+
+Reads use `I2C_RDWR` with a register-select message followed by a read in one
+adapter-locked transfer. Separate `write()` and `read()` calls leave a window
+for the active kernel PMIC driver to change the register pointer.
+`I2C_SLAVE_FORCE` allows access to the bound address; it does not serialize
+those separate calls. See the [Linux I2C userspace interface](https://www.kernel.org/doc/Documentation/i2c/dev-interface).
+The write sets `REG27H[0]`, clears restart bit 1, and preserves the remaining
+bits, including PWROK. There is no general register-write interface.
+
+Before a direct cut, `rcK` sends TERM, waits one second, then sends KILL to
+userspace outside its own session. This is necessary because BusyBox normally
+runs its shutdown action **before** killing the frontend and daemons.
+BusyBox's `killall5` excludes PID 1, kernel threads, and rcK's session. It does
+not depend on a particular frontend process name. Reboot uses the same cleanup.
+
+`axp-off --now` then flushes and remounts every persistent filesystem read-only,
+including `/`: the vendor initramfs actually mounts the rootfs writable. It
+preserves VFS mount options and checks a fresh mount table afterward. A failed
+remount, writable filesystem, missing mount table/root entry, active swap, or
+USB mass-storage export refuses the direct cut. Virtual filesystems remain
+available for I2C and device access. The kernel handles shutdown when the PMIC
+or filesystem checks fail; USB storage uses that path to disconnect and drain
+its exported block device. After any attempted power write, the helper allows
+five seconds for it to take effect before returning to its caller.
+
+### Charger-only boot policy
+
+`rcS` checks the latched `axp2202-battery/boot_mode` immediately after mounting
+its virtual filesystems. Values 0 and 1 mean normal and charger boot. If the
+attribute is missing or unrecognized, an exact `bootreason=charger` cmdline
+token is the fallback. USB presence alone is never boot intent. Normal boot
+uses shell builtins for this decision, with no helper process or sleep.
+
+A confirmed charger boot calls `baseos-charger` **before** GPU loading,
+networking, persistent-state setup, card mounting, update checks, or frontend
+respawns. MENU bypasses automatic shutdown and is remembered in `/run` so
+releasing it before the later USB-storage check cannot lose maintenance mode.
+`/data/no-charger-off` remains a persistent opt-out; it allows normal startup
+from a cable because the hardware cannot reliably distinguish a PC from a
+charger.
+
+Otherwise, the helper mounts `/data` read-only and reads the RTC and the last
+automatic-shutdown timestamp. It attempts a PMIC shutdown only with a usable
+clock, working PMIC probe, and a successfully written timestamp. The timestamp
+is replaced atomically; no unbounded per-boot log is appended. A timestamp
+within 120 seconds, or in the future, suppresses another attempt to bound an
+unexpected reboot loop. A rapid deliberate replug takes the same fallback;
+**it does not start the frontend**.
+
+An unavailable PMIC, bad clock/storage, recent timestamp, or failed shutdown
+stays in a minimal charging state. The helper closes `/data` where possible,
+selects the CPU's `powersave` governor, and blanks the backlight. H700's vendor
+kernel uses the Allwinner disp2 brightness ioctls on `/dev/disp`; generic
+backlight sysfs nodes are also handled when present. The input helper discovers
+the PMIC's `axp*-pek` evdev device and blocks in `poll()` without periodic
+wakeups. A fresh POWER hold of at least half a second followed by release
+continues the same boot, restoring brightness and the previous CPU governor.
+Missing/disconnected input retries once a minute; an error is never treated
+as boot intent. A hardware long press remains available.
+
+This fallback is not suspend-to-RAM and is not claimed to equal PMIC-off power
+consumption. In particular, the SP vendor driver masks USB attach/detach wake
+sources during suspend, so USB-unplug wake must not be assumed. No new daemon
+survives into a normal frontend session. Charger waits do not count as failed
+update trials; `baseos-update boot-check` runs only after explicit normal boot
+intent. Actual power consumption, charger replug/button behavior, and the
+3.00-second RG40XX V boot budget still need controlled hardware measurements
+for the follow-up. The unarmed combined-I2C probe was verified on RG34XXSP.
 
 ## 6. USB gadget — adb and optional card storage
 
