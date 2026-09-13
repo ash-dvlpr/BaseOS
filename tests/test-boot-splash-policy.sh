@@ -58,6 +58,15 @@ if run_splash --important 45 ""; then
 fi
 [ ! -e "$TMP/splash.log" ]
 
+# Accepted POWER in the charger wait replaces the battery image with the
+# fully lit boot logo, never the legacy partial-progress wordmark.
+run_splash --charger-boot
+grep -qx -- "100" "$TMP/splash.log"
+if run_splash --charger-boot 0; then
+	echo "charger splash accepted an unexpected progress argument" >&2
+	exit 1
+fi
+
 # Exceptional work reaches the renderer as progress + message, which is what
 # makes it draw the compact pill and preserve every pixel outside it.
 run_splash --important 45 "EXPANDING STORAGE"

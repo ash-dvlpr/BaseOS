@@ -1,5 +1,8 @@
 # Charger shutdown follow-up to PR #14
 
+The original release-triggered POWER behavior described below was subsequently
+corrected in [the charger power-hold follow-up](2026-09-14-charger-power-hold.md).
+
 PR #14 was merged with its original author commits intact. This follow-up keeps
 its PMIC shutdown mechanism, device discovery, power-intent shims, MENU bypass,
 and persistent opt-out. It changes the filesystem gate, register reads, and

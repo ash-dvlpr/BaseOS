@@ -5,8 +5,8 @@
 //
 // The mode follows the message, not a flag: with a message the renderer
 // overlays a compact status surface and preserves every pixel outside it; with
-// none it draws the full-screen logo, which is only ever wanted offline when
-// generating the bootloader image. Runtime boot scripts always pass a message.
+// none it draws the full-screen logo used by the bootloader image and by the
+// charger wait when POWER is accepted. Other runtime calls pass a message.
 // -1 suppresses the pill's progress track (an action or error state).
 //
 // No options are accepted, and anything option-shaped is a hard error — see
@@ -475,8 +475,8 @@ static void render(uint8_t *fb, struct fb_var_screeninfo *vp, struct fb_fix_scre
 		int wx = (W - wordw) / 2;
 		int baseline = (int)(H * 0.44 + size * 0.35);
 		int ramp = clampi((int)(size * 0.55), 1, 400);
-		// The bootloader logo is rendered at 0%. Keep the complete B bright at
-		// that initial state, then use the remaining letters for real progress.
+		// Keep the complete B bright at the legacy 0% progress state. The static
+		// boot logo uses 100%, illuminating the entire wordmark.
 		// Adding half the ramp makes every pixel in B reach the solid-bright end
 		// of the soft reveal rather than leaving its right side half illuminated.
 		int firstw = ft_measure(face, "B", 0);

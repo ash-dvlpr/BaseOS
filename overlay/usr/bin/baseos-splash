@@ -1,10 +1,18 @@
 #!/bin/sh
-# Draw a compact status pill for exceptional boot work.
+# Draw a compact status pill for exceptional boot work, or the charger boot logo.
 #
 # Ordinary boots never invoke fbsplash, leaving the bootloader logo untouched
 # until the frontend draws its first frame.
 
 SPLASH_BIN="${BASEOS_FBSPLASH:-/usr/bin/fbsplash}"
+
+if [ "${1:-}" = "--charger-boot" ]; then
+	[ "$#" -eq 1 ] || exit 2
+	[ -x "$SPLASH_BIN" ] || exit 0
+	# Charging began with a battery image. Match the static boot logo once
+	# POWER is accepted: make-bootlogo.sh uses this fully lit wordmark too.
+	exec "$SPLASH_BIN" 100
+fi
 
 [ "${1:-}" = "--important" ] || exit 2
 shift
