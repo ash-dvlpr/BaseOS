@@ -14,8 +14,8 @@
   },
   "harvest": {
     "optional_omissions": [],
-    "sha256": "c93bdb0c6b44247ad4a4434694e7884a830006c258e27917cba33a88a5365b26",
-    "size": 86251520
+    "sha256": "d1c837671fafb599862b4906c90e96b317d3c9b7caf643398cdef987473b8d79",
+    "size": 108523520
   },
   "layout": {
     "backup_gpt_present": false,
@@ -100,7 +100,8 @@
         "unique_guid": "a0085546-4166-744a-a353-fca9272b8e4b"
       }
     ],
-    "sector_size": 512
+    "sector_size": 512,
+    "source_layout": "stockmod"
   },
   "model": "RG34XX",
   "model_string": "RG34xx",
@@ -138,8 +139,82 @@
   "schema": 1,
   "source": {
     "filename": "RG34XX-V1.0.6-BASE-20260526-mod-v3.9.9.img",
+    "packaging": "stockmod-base-trimmed",
+    "partitions": [
+      {
+        "attributes": 0,
+        "end_sector": 204799,
+        "name": "special",
+        "number": 1,
+        "sector_count": 131072,
+        "start_sector": 73728,
+        "type_guid": "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7",
+        "unique_guid": "a0085546-4166-744a-a353-fca9272b8e45"
+      },
+      {
+        "attributes": 0,
+        "end_sector": 270335,
+        "name": "boot-resource",
+        "number": 2,
+        "sector_count": 65536,
+        "start_sector": 204800,
+        "type_guid": "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7",
+        "unique_guid": "a0085546-4166-744a-a353-fca9272b8e46"
+      },
+      {
+        "attributes": 0,
+        "end_sector": 303103,
+        "name": "env",
+        "number": 3,
+        "sector_count": 32768,
+        "start_sector": 270336,
+        "type_guid": "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7",
+        "unique_guid": "a0085546-4166-744a-a353-fca9272b8e47"
+      },
+      {
+        "attributes": 0,
+        "end_sector": 434175,
+        "name": "boot",
+        "number": 4,
+        "sector_count": 131072,
+        "start_sector": 303104,
+        "type_guid": "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7",
+        "unique_guid": "a0085546-4166-744a-a353-fca9272b8e48"
+      },
+      {
+        "attributes": 0,
+        "end_sector": 15108095,
+        "name": "rootfs",
+        "number": 5,
+        "sector_count": 14673920,
+        "start_sector": 434176,
+        "type_guid": "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7",
+        "unique_guid": "a0085546-4166-744a-a353-fca9272b8e49"
+      },
+      {
+        "attributes": 0,
+        "end_sector": 23496703,
+        "name": "appfs",
+        "number": 6,
+        "sector_count": 8388608,
+        "start_sector": 15108096,
+        "type_guid": "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7",
+        "unique_guid": "a0085546-4166-744a-a353-fca9272b8e4a"
+      },
+      {
+        "attributes": 0,
+        "end_sector": 24545279,
+        "name": "UDISK",
+        "number": 7,
+        "sector_count": 1048576,
+        "start_sector": 23496704,
+        "type_guid": "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7",
+        "unique_guid": "a0085546-4166-744a-a353-fca9272b8e4b"
+      }
+    ],
     "sha256": "a3026c053fd2ee02549c7eb8614d64730bda50fddaff87ec4cfbba979e0c5906",
     "size": 12567183360
   },
+  "source_layout": "stockmod",
   "target": "rg34xx"
 }

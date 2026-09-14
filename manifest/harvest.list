@@ -3,8 +3,9 @@
 # Directories are captured recursively; symlinks are dereferenced (tar -h),
 # so list soname paths (what the dynamic linker/dlopen actually request),
 # not the fully-versioned real files.
-# Derived from the on-device ldd closure of every NextUI ELF + kept daemons
-# (2026-07-19, RG40XXV stock V1.1.1.0). See docs/01-rootfs-and-init.md.
+# AArch64 entries derive from the on-device ldd closure of every NextUI ELF +
+# kept daemons (2026-07-19, RG40XXV stock V1.1.1.0); ARMHF compatibility entries
+# extend that set per issue #13. See docs/01-rootfs-and-init.md.
 
 ## dynamic linker + glibc
 /usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1
@@ -26,6 +27,30 @@
 /usr/lib/libEGL.so.1
 /usr/lib/libGLESv2.so.2
 /usr/lib/libGLESv1_CM.so.1
+
+## ARMHF compatibility: runtime + audio/input/font dependencies (issue #13)
+# Required for 32-bit applications even on targets without Bluetooth.
+/usr/lib/ld-linux-armhf.so.3
+/usr/lib/arm-linux-gnueabihf/libc.so.6
+/usr/lib/arm-linux-gnueabihf/libm.so.6
+/usr/lib/arm-linux-gnueabihf/libdl.so.2
+/usr/lib/arm-linux-gnueabihf/libpthread.so.0
+/usr/lib/arm-linux-gnueabihf/librt.so.1
+/usr/lib/arm-linux-gnueabihf/libgcc_s.so.1
+/usr/lib/arm-linux-gnueabihf/libstdc++.so.6
+/usr/lib/arm-linux-gnueabihf/libz.so.1
+/usr/lib/arm-linux-gnueabihf/libasound.so.2
+/usr/lib/arm-linux-gnueabihf/libudev.so.1
+/usr/lib/arm-linux-gnueabihf/libfreetype.so.6
+/usr/lib/arm-linux-gnueabihf/libpng16.so.16
+/usr/lib/arm-linux-gnueabihf/libbrotlicommon.so.1
+/usr/lib/arm-linux-gnueabihf/libbrotlidec.so.1
+
+## ARMHF graphics: stock fbdev Mali + EGL/GLES + SDL2 (issue #13)
+/usr/lib32/libmali.so.0
+/usr/lib32/libEGL.so.1
+/usr/lib32/libGLESv2.so.2
+/usr/lib32/libSDL2-2.0.so.0
 
 ## audio: alsa-lib + configs + plugins (incl. bluealsa PCM/CTL), utils
 /usr/lib/aarch64-linux-gnu/libasound.so.2
@@ -97,8 +122,6 @@
 /usr/bin/bluealsa-aplay
 /usr/bin/bluetoothctl
 /usr/bin/rtk_hciattach
-/usr/lib/ld-linux-armhf.so.3
-/usr/lib/arm-linux-gnueabihf/libc.so.6
 /usr/bin/dbus-daemon
 /usr/bin/dbus-uuidgen
 /usr/bin/dbus-send

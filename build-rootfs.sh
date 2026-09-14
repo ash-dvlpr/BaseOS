@@ -34,6 +34,8 @@ BASEOS_BUILD="$(git -C "$HERE" describe --always --dirty 2>/dev/null || echo unk
 "$HERE/tools/tools-stamp.sh" | cmp -s - "$TOOLS/.stamp" || {
   echo "$TOOLS is stale for the current sources (run build-tools.sh)" >&2; exit 1; }
 python3 "$HERE/tools/source_manifest.py" verify "$WORK/source.json" "$TARGET"
+python3 "$HERE/tools/verify_harvest.py" "$WORK/stock-harvest.tar" \
+  "$HERE/manifest/harvest.list" "$HERE/devices.json" "$TARGET"
 
 docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
   -v "$WORK":/work -v "$TOOLS":/tools:ro \

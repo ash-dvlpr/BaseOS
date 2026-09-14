@@ -92,6 +92,22 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_HOST" \
   prepare "$T/RG40XXV-stockmod-base.img" "$T/trimmed-base" "$T/harvest.list"
   python3 -c "import json; d=json.load(open(\"$T/trimmed-base/source.json\")); assert d[\"layout\"][\"packaging\"] == \"stockmod-base-trimmed\"; assert not d[\"layout\"][\"backup_gpt_present\"]; assert len(d[\"layout\"][\"partitions\"]) == 7"
 
+  # StockMod v4 BASE keeps the same seven populated entries and a valid backup
+  # GPT. Import it without relaxing the full-disk CRC or partition-order gates.
+  FULL_BASE="$T/RG40XXV-stockmod-base-full.img"
+  python3 /src/tests/make_stock_fixture.py "$FULL_BASE" "$T/root" --stockmod-base-full
+  prepare "$FULL_BASE" "$T/full-base" "$T/harvest.list"
+  python3 /src/tools/source_manifest.py verify "$T/full-base/source.json" rg40xxv
+  python3 -c "import json; d=json.load(open(\"$T/full-base/source.json\")); assert d[\"source_layout\"] == \"stockmod\"; assert d[\"layout\"][\"packaging\"] == \"full-disk\"; assert d[\"layout\"][\"backup_gpt_present\"]; assert len(d[\"layout\"][\"partitions\"]) == 7"
+  cmp "$T/out1/stock-harvest.tar" "$T/full-base/stock-harvest.tar"
+  cp "$FULL_BASE" "$T/RG40XXV-full-base-bad-backup.img"
+  LAST_SECTOR=$(( $(stat -c %s "$FULL_BASE") / 512 - 1 ))
+  dd if=/dev/zero of="$T/RG40XXV-full-base-bad-backup.img" bs=512 seek="$LAST_SECTOR" count=1 conv=notrunc status=none
+  must_fail prepare "$T/RG40XXV-full-base-bad-backup.img" "$T/full-base-bad-backup" "$T/harvest.list"
+  python3 /src/tests/make_stock_fixture.py \
+    "$T/RG40XXV-full-base-wrong-name.img" "$T/root" --stockmod-base-full --first-name not-special
+  must_fail prepare "$T/RG40XXV-full-base-wrong-name.img" "$T/full-base-wrong-name" "$T/harvest.list"
+
   cp "$IMG" "$T/RG28XX-synthetic.img"
   printf "%s\n" \
     /etc/demo.conf \

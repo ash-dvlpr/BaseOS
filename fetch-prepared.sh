@@ -78,7 +78,9 @@ for target in $TARGETS; do
   mkdir -p "$HERE/work/$target"
   cp "$PREPARED/$target.json" "$HERE/work/$target/source.json"
   if python3 "$HERE/tools/source_manifest.py" verify \
-      "$HERE/work/$target/source.json" "$target" >/dev/null 2>&1; then
+      "$HERE/work/$target/source.json" "$target" >/dev/null 2>&1 \
+      && python3 "$HERE/tools/verify_harvest.py" "$HERE/work/$target/stock-harvest.tar" \
+        "$HERE/manifest/harvest.list" "$HERE/devices.json" "$target" >/dev/null 2>&1; then
     echo "up to date: $target"
   else
     RESTORE="$RESTORE $target"
@@ -141,6 +143,8 @@ for target in $RESTORE; do
     rm -f "$HERE/work/$target/$stale"
   done
   python3 "$HERE/tools/source_manifest.py" verify "$HERE/work/$target/source.json" "$target"
+  python3 "$HERE/tools/verify_harvest.py" "$HERE/work/$target/stock-harvest.tar" \
+    "$HERE/manifest/harvest.list" "$HERE/devices.json" "$target"
 done
 
 echo

@@ -56,6 +56,8 @@ for target in $TARGETS; do
   else
     "$HERE/verify-target.sh" "$target"
   fi
+  python3 "$HERE/tools/verify_harvest.py" "$work/stock-harvest.tar" \
+    "$HERE/manifest/harvest.list" "$HERE/devices.json" "$target"
 done
 
 mkdir -p "$PREPARED" "$OUT_DIR"

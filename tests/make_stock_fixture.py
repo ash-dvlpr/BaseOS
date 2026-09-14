@@ -40,6 +40,11 @@ def main() -> int:
         action="store_true",
         help="omit p8 and the backup GPT, ending the file exactly after p7",
     )
+    parser.add_argument(
+        "--stockmod-base-full",
+        action="store_true",
+        help="omit p8 but retain a valid backup GPT in a full-disk image",
+    )
     arguments = parser.parse_args()
     if arguments.root_size_mib < 16:
         raise ValueError("root fixture must be at least 16 MiB")
@@ -57,7 +62,7 @@ def main() -> int:
 
     entries = bytearray(ENTRY_COUNT * ENTRY_SIZE)
     for index, (name, start, end) in enumerate(zip(names, starts, ends)):
-        if arguments.stockmod_base and index == 7:
+        if (arguments.stockmod_base or arguments.stockmod_base_full) and index == 7:
             continue
         offset = index * ENTRY_SIZE
         entries[offset : offset + 16] = LINUX_FS.bytes_le

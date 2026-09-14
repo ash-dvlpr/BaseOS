@@ -25,6 +25,7 @@ EXPECTED_NAMES = [
     "UDISK",
     "primary",
 ]
+STOCKMOD_BASE_NAMES = [*EXPECTED_NAMES[:7], None]
 # The composed BaseOS image drops `appfs` and shifts UDISK/primary down a slot;
 # the freed region becomes the unallocated A/B rootfs slot (see mkgpt.py).
 BASEOS_NAMES = [
@@ -88,7 +89,9 @@ def parse_gpt(image: Path, expected_names: list | None = None) -> dict:
     reports which in the result's `source_layout`. Composed BaseOS images pass
     BASEOS_NAMES.
     """
-    accepted = [expected_names] if expected_names else [EXPECTED_NAMES, STOCK_NAMES]
+    # Newer StockMod BASE images include a valid backup GPT but still omit p8.
+    # Accept that exact table alongside the older full eight-partition layout.
+    accepted = [expected_names] if expected_names else [EXPECTED_NAMES, STOCKMOD_BASE_NAMES, STOCK_NAMES]
     image_size = image.stat().st_size
     if image_size % SECTOR_SIZE:
         raise ValueError("disk image size is not a whole number of 512-byte sectors")
@@ -211,7 +214,7 @@ def parse_gpt(image: Path, expected_names: list | None = None) -> dict:
                     "this is a truncated stock image; preparing from stock needs the "
                     "whole card, because the rootfs harvest is read from partition 5"
                 )
-            if backup_lba < image_sectors or names != [*EXPECTED_NAMES[:7], None]:
+            if backup_lba < image_sectors or names != STOCKMOD_BASE_NAMES:
                 raise ValueError("incomplete image is not a recognized StockMod BASE layout")
             if not partitions or partitions[-1]["number"] != 7:
                 raise ValueError("StockMod BASE image does not end with partition 7")
