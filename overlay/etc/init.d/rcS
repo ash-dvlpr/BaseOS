@@ -81,13 +81,25 @@ fi
 # busybox looks for it at /var/lib/hwclock/adjtime, and /var is tmpfs.
 /sbin/hwclock -u -s 2>/dev/null &
 
-# WiFi: BaseOS owns the wlan0 interface so a frontend never has to wait for it
-# (removing any dependency on the frontend's wifi script being race-hardened).
-# Loading the module triggers an asynchronous SDIO probe that creates wlan0 a
-# couple of seconds later; a background task waits for it and brings it up
-# (rfkill-unblock + link up). The frontend then only runs wpa_supplicant/DHCP on
-# an already-present, up interface. `ip`/`rfkill` are busybox applets on PATH.
+# WiFi initialization stays in the background: never delay frontend handoff.
+# The vendor kernel can enumerate the bootloader-powered SDIO card, then turn
+# off its unused WLAN regulator. Discard that stale card while power is still
+# off, before 8821cs powers it up and registers its driver. Otherwise the driver
+# probes the stale card concurrently with its own rescan (-123 on H700).
+# Frontends own association/DHCP and may still need to wait for wlan0.
 (
+	wifi_rf=/sys/class/misc/sunxi-wlan/rf-ctrl
+	if [ -w "$wifi_rf/scan_device" ] && [ -r "$wifi_rf/power_state" ] \
+		&& read -r wifi_power < "$wifi_rf/power_state" && [ "$wifi_power" = 0 ]; then
+		printf '1\n' > "$wifi_rf/scan_device"
+		wifi_wait=0
+		for wifi_card in /sys/bus/sdio/devices/*; do
+			while [ -d "$wifi_card" ] && [ "$wifi_wait" -lt 20 ]; do
+				sleep 0.05
+				wifi_wait=$((wifi_wait + 1))
+			done
+		done
+	fi
 	/sbin/insmod /lib/modules/8821cs.ko 2>/dev/null
 	wifi_wait=0
 	while [ ! -d /sys/class/net/wlan0 ] && [ "$wifi_wait" -lt 40 ]; do

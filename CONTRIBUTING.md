@@ -202,6 +202,8 @@ python3 tests/test-prepared-cache.py
 ./tests/test-baseos-mdns.sh
 ./tests/test-boot-splash-policy.sh
 ./tests/test-frontend-session.sh
+./tests/test-wifi-init.sh
+./tests/test-systemctl-wifi.sh
 ./tests/test-poweroff-policy.sh
 ./tests/test-axp-off.sh
 ./tests/test-baseos-config.sh

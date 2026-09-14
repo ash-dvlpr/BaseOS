@@ -1,7 +1,8 @@
 #!/bin/sh
 # Minimal systemd compatibility shim for the base OS (no systemd on board).
 # Covers exactly the calls NextUI's h700 scripts make:
-#   systemctl stop NetworkManager / wpa_supplicant[@...]   -> no-op ok
+#   systemctl stop NetworkManager                         -> no-op ok
+#   systemctl stop wpa_supplicant[@...]                    -> terminate and wait
 #   systemctl is-active [--quiet] bluetooth                -> pidof bluetoothd
 #   systemctl start|restart bluetooth                      -> dbus + bluetoothd
 #   systemctl stop bluetooth                               -> kill bluetoothd
@@ -28,6 +29,25 @@ ensure_dbus() {
 		sleep 0.1 2>/dev/null || sleep 1
 		n=$((n + 1))
 	done
+}
+
+stop_supplicant() {
+	# NextUI calls this before starting a replacement. Returning before the old
+	# daemon exits lets its control-socket cleanup race the new daemon's startup.
+	wpa_pids=$(pidof wpa_supplicant 2>/dev/null) || return 0
+	[ -n "$wpa_pids" ] || return 0
+	kill $wpa_pids 2>/dev/null || true
+	wpa_wait=0
+	while [ "$wpa_wait" -lt 40 ]; do
+		wpa_alive=0
+		for wpa_pid in $wpa_pids; do
+			kill -0 "$wpa_pid" 2>/dev/null && wpa_alive=1
+		done
+		[ "$wpa_alive" = 0 ] && return 0
+		sleep 0.05
+		wpa_wait=$((wpa_wait + 1))
+	done
+	return 1
 }
 
 case "$cmd" in
@@ -57,6 +77,8 @@ case "$cmd" in
 		;;
 	stop)
 		case "$unit" in
+			wpa_supplicant|wpa_supplicant.service|wpa_supplicant@*.service)
+				stop_supplicant; exit $? ;;
 			bluetooth|bluetooth.service) killall bluetoothd 2>/dev/null; exit 0 ;;
 			*) exit 0 ;;
 		esac

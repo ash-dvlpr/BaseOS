@@ -29,11 +29,24 @@ the counter has coarse resolution. Hook filenames must end in `.sh`.
 
 ## 3. Wi-Fi
 
-BaseOS owns interface startup. `rcS` loads `8821cs.ko` in the background,
-waits for its asynchronous SDIO probe to create `wlan0`, then unblocks radio
-and brings the interface up. The wait is bounded. Frontends manage network
-credentials, association and DHCP, and must wait if they start before the
-interface appears.
+BaseOS owns interface startup. In a background task, `rcS` first asks the
+vendor WLAN controller to discard any SDIO card enumerated before its supply
+was turned off by the kernel's unused-regulator cleanup. It waits up to one
+second for that stale card to disappear before loading `8821cs.ko`. Without
+this ordering, H700 devices can fail the driver probe with `-123` and never create
+`wlan0`; merely delaying module insertion does not prevent the failed probe.
+Already powered radios and kernels without these controls skip this step.
+
+The same background task waits for `wlan0`, then unblocks radio and brings
+the interface up. Neither wait delays frontend handoff. Frontends manage
+network credentials, association and DHCP, and must wait if they start before
+the interface appears.
+
+The `systemctl` compatibility shim implements a synchronous
+`stop wpa_supplicant` (including interface service names), with a bounded
+two-second wait. This lets NextUI's existing restart script wait for the old
+daemon's control-socket cleanup before launching its replacement. When no
+supplicant is running, the command returns immediately.
 
 Driver power saving uses the stock default, `rtw_power_mgnt=2`. This can add
 latency to intermittent traffic. DHCP uses BusyBox `udhcpc`; its event script
