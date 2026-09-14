@@ -3,7 +3,7 @@ Base OS — add a frontend to this card
 
 This card runs Base OS: a minimal Linux that boots your Allwinner H700
 handheld and hands off to a frontend. Base OS itself ships no frontend, so
-this data partition is empty and ready for you to add one.
+this data partition has setup files and is ready for you to add a frontend.
 
 To install NextUI:
 
@@ -41,8 +41,10 @@ You never need to reflash to move to a new Base OS version. Copy the release's
 its spare system slot, checks it, switches over and restarts — about a minute.
 
 Your Roms, Bios, Saves and settings are not touched, and the previous version
-stays on the card: if the new one cannot start, Base OS returns to it by
-itself. You can leave the .bosupd file here; it is only ever applied once.
+stays on the card. If initialization repeatedly fails before the frontend
+session starts, Base OS can roll back automatically. Failures before the
+update checker can run require recovery or reflashing. You can leave the
+.bosupd file here; its committed image is not applied again.
 
 This card's whole capacity is available now — Base OS expanded it to fill the
 card on first boot.
@@ -63,20 +65,19 @@ normal. Never restart or unplug the cable while the computer is writing.
 Base OS settings
 ----------------
 
-Edit baseos.conf at the root of this card (TF1), then restart normally:
+Edit baseos.conf at the root of TF1, then restart normally:
 
-    hostname=MyHandheld
+    hostname=my-handheld
     mdns=true
 
-TF1 always supplies these settings, even when the frontend lives on TF2.
-The file stays on the card and survives Base OS updates. The hostname defaults
-to the lowercase device model ID, such as rg34xxsp, and mDNS is enabled. Missing
-files, missing keys and invalid values use these defaults. Leave the supplied
-example lines commented out to keep the defaults.
-
+The default hostname is the device model ID (for example, rg34xxsp), and
+mDNS enables that name with .local on Wi-Fi. Set mdns=false to disable it.
 Hostnames accept 1-63 ASCII letters, digits and hyphens, with no hyphen at
-either end. Set mdns=false to disable the Wi-Fi .local name, such as
-rg34xxsp.local. Spaces around keys and values, # comments, and Windows line
-endings are supported. Unknown keys are ignored.
+either end. TF1 supplies settings even when the frontend is on TF2.
 
-USB-storage maintenance boots use the defaults until the next normal boot.
+Boot diagnostics
+----------------
+
+BaseOS appends boot diagnostics to baseos-boot.log at the root of the active
+frontend card: TF2 when usable, otherwise TF1. This includes BaseOS's time
+from kernel start to frontend handoff.

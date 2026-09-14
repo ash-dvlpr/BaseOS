@@ -1,371 +1,104 @@
 # 05 — Runtime: boot timing, power/sleep, network
 
-All numbers here were measured on the RG40XXV running base OS (2026-07-19), not
-estimated.
+## 1. Boot timing
 
-## 1. Boot timing (measured)
+`/run/boot-frontend-exec` records kernel uptime at the first frontend handoff.
+See [boot performance](09-boot-profiling.md) for measurement instructions and
+the acceptance ceiling.
 
-The current runtime records only `/run/boot-frontend-exec`: seconds from kernel
-start to the first frontend handoff, stored on tmpfs. Earlier measurements below
-used stage markers that have since been removed. The historical RG40XXV warm
-handoff was 2.80 s; see [current GPU measurements](09-boot-profiling.md) for RG34XXSP.
+`rcS` loads `mali_kbase.ko` in the background to overlap storage and service
+startup. `nextui-session` performs a bounded wait for `/dev/mali0` before
+handoff. Ordinary boots leave the bootloader logo untouched until the frontend
+renders its first frame.
 
-The normal splash policy has no runtime detection, hashing, renderer process or
-framebuffer write. It removes the former synchronous `/init` draw plus the routine
-`rcS`/hand-off draws, so the expected regular-boot impact is non-positive by
-construction—not merely assumed from a desktop benchmark. `boot-frontend-exec`
-remains the on-device acceptance marker. The 2.80 s result above is the historical
-reference; when the surrounding image state changes, use a controlled old/new A/B
-before attributing movement to splash policy. On RG40XXV, `validate-on-device.sh`
-fails above the current measured 3.00 s ceiling.
+## 2. Deep sleep
 
-### Static-logo A/B (2026-07-24)
+The frontend enters suspend-to-RAM by writing `mem` to `/sys/power/state`.
+`alsactl` saves and restores the mixer across sleep.
 
-The first post-change boot measured 2.95 s and appeared to regress against the
-historical 2.80 s result above. A controlled on-device A/B restored the exact
-pre-change files from backup between reboots:
+BaseOS applies the stock Super Standby value (`16`) when the SP-only
+`axp2202-battery/os_sleep` attribute exists; NextUI also applies it before
+suspend. This stops USB host controllers and excludes the hall sensor from
+the wake set: POWER wakes the device, while opening the lid alone does not.
+Non-SP kernels do not expose `os_sleep` and use the full USB-stop path.
 
-| build | `rcS-start` samples | `rcS-done` samples | `frontend-exec` samples | mean hand-off |
-|---|---|---|---|---|
-| pre-change animated splash | 2.08, 2.10 s | 3.00, 2.98 s | 3.01, 3.01 s | 3.01 s |
-| static logo + exceptional pills | 1.99, 2.04, 2.05 s | 2.94, 2.95, 2.96 s | 2.95, 2.96, 2.97 s | 2.96 s |
+For standby measurements, `diagnostics/sleep-drain/` provides
+`pre-sleep.d`/`post-resume.d` hooks that record the battery charge counter and
+system timestamps in `/mnt/sdcard/sleep-drain.log`. Use a long sleep interval because
+the counter has coarse resolution. Hook filenames must end in `.sh`.
 
-The new policy is about **50 ms faster** at frontend hand-off and reaches `rcS`
-roughly 60 ms earlier by removing the synchronous `/init` draw. The current device
-state is slower than the older 2.80 s measurement for reasons that predate this
-change—the old files reproduce the slowdown—so 3.00 s is the evidence-based
-regression ceiling for this image state.
+## 3. Wi-Fi
 
-Then `launch.sh` + `nextui.elf` init add ~1–2 s to the first frame. Before the kernel,
-boot0 + U-Boot add ~1.5–2.5 s (not software-visible; `bootdelay=0`).
+BaseOS owns interface startup. `rcS` loads `8821cs.ko` in the background,
+waits for its asynchronous SDIO probe to create `wlan0`, then unblocks radio
+and brings the interface up. The wait is bounded. Frontends manage network
+credentials, association and DHCP, and must wait if they start before the
+interface appears.
 
-**Stopwatch cold boot: 7.18 s** power-on → NextUI (vs ~15–20 s on stock). The stock
-kernel eats the fixed first ~2 s and is untouchable here (rebuilding it is the
-separate NextOS project). The `mali_kbase` background-load optimisation (below) shaved
-frontend-exec from 3.04 s → 2.80 s.
-
-### `mali_kbase` background load
-
-`mali_kbase.ko` costs ~0.73 s to insmod, but nothing needs the GPU until NextUI's
-`GFX_init` ~2 s later. `rcS` loads it in the **background** so it overlaps the card
-mount and `launch.sh` startup; `nextui-session` waits (bounded) for `/dev/mali0`
-before the hand-off. Measured: the wait was 0.1 s — almost the entire GPU load is now
-hidden. Idle system: **74 MB RAM used / 973 MB**, rootfs 105 MB, CPU 44–45 °C at
-`schedutil`.
-
-## 2. Deep sleep — validated real, on hardware
-
-The headline goal. Confirmed genuine **suspend-to-RAM**, not fake/freeze sleep, from
-the kernel log after a real sleep/wake cycle:
-
-```
-PM: suspend entry ... 14:22:28
-PM: Suspending system (mem)
-PM: suspend of devices complete after 923.702 msecs
-Disabling non-boot CPUs ...
-Enabling non-boot CPUs ...
-PM: suspend exit ...  14:58:01
-```
-
-`PM: Suspending system (mem)` = real STR (the thing mainline H616 / ROCKNIX can't do —
-they ship fake suspend). `Disabling non-boot CPUs` = the other 3 cores actually
-powered down. Over the **35.5-minute** sleep the AXP2202 coulomb counter
-(`charge_counter`) **did not move** (1,952,000 µAh → 1,952,000 µAh, 61 % → 61 %) — a
-flat counter that fake sleep at tens of mA would have visibly drained. This runs on an
-OS we fully control, with no stock trampoline.
-
-Base OS applies stock's Super Standby value (`16`) at boot when the SP-only
-`axp2202-battery/os_sleep` attribute exists; NextUI defensively reapplies it before
-each attempt. The SP kernel then fully stops its USB host controllers and leaves the
-hall sensor out of the wake set, so opening the lid alone does not wake deep sleep;
-POWER remains the wake source. Non-SP kernels do not expose `os_sleep` and already
-select the full USB-stop path. The frontend still enters suspend by writing `mem` to
-`/sys/power/state` directly (no systemd involvement), and `alsactl` saves/restores the
-mixer across sleep.
-
-**Measuring exact standby µA** needs a longer sleep — the coulomb counter is coarse
-(no tick over 35 min at this draw; `current_now` reads empty). `diagnostics/sleep-drain/`
-provides `pre-sleep.d`/`post-resume.d` hooks that stamp `charge_counter` + RTC time at
-the exact suspend/resume boundary and log the delta to `/mnt/sdcard/sleep-drain.log`;
-leave the device asleep for hours to get a projected-standby figure. (Hook files must
-end in `.sh` — NextUI's `run_hooks.sh` only executes `*.sh`.)
-
-## 3. WiFi — Base OS owns the interface
-
-The RTL8821CS module (`8821cs.ko`) triggers an **asynchronous** SDIO probe that creates
-`wlan0` ~2 s after the insmod returns. If a frontend's boot-time wifi bring-up runs
-before `wlan0` exists, its `ip link set wlan0 up` / `wpa_supplicant -i wlan0` silently
-fail and WiFi never comes up until the user toggles it.
-
-To keep this **independent of any frontend**, Base OS owns the `wlan0` interface itself:
-`rcS` runs a background task that loads the module, **waits for `wlan0` to appear
-(bounded), then `rfkill unblock` + `ip link set wlan0 up`** (`ip`/`rfkill` are BusyBox
-applets). By the time a frontend wants WiFi, the interface is present and up, so the
-frontend only has to run `wpa_supplicant`/DHCP on it — no race-hardening needed in the
-frontend's own scripts.
-
-> Note: `wlan0` appears at ~5 s on the current timing (module init is the slow part).
-> A frontend that starts `wpa_supplicant` *very* early could still beat it; the robust
-> guarantee is that Base OS brings the interface up as soon as hardware allows and does
-> not depend on the frontend to wait. NextUI additionally waits for `wlan0` in its own
-> `wifi_init.sh` (belt-and-suspenders), but Base OS no longer relies on that.
-
-- **Power-save.** `rtw_power_mgnt=2` (driver default) — **identical to stock**, kept as
-  correct for a handheld's battery. It causes intermittent ICMP latency (aggressive
-- **Power-save.** `rtw_power_mgnt=2` (driver default) — **identical to stock**, kept as
-  correct for a handheld's battery. It causes intermittent ICMP latency (aggressive
-  pings from a host monitor flap), but the association is rock-solid; not a fault.
-- DHCP: base OS uses BusyBox `udhcpc` (Ubuntu had `dhclient`); `wifi_init.sh` already
-  prefers `dhclient` and falls back to `udhcpc`, and the `udhcpc` event script writes
-  `/run/resolv.conf` (rootfs is otherwise rw but `/etc/resolv.conf` is a baked symlink
-  into `/run`).
+Driver power saving uses the stock default, `rtw_power_mgnt=2`. This can add
+latency to intermittent traffic. DHCP uses BusyBox `udhcpc`; its event script
+writes `/run/resolv.conf`, linked from `/etc/resolv.conf`.
 
 ### Hostname and mDNS
 
-Device settings live in `baseos.conf` at the root of TF1's visible FAT partition
-(p7 in BaseOS; stock firmware used p8). TF1 is authoritative even when the frontend
-runs from TF2. Fresh cards receive a commented example during first-boot expansion.
-Both the missing file and missing keys use defaults: the lowercase device model ID
-for `hostname` and `true` for `mdns`. On an RG34XX SP these defaults are:
+`baseos-config` reads `baseos.conf` from TF1's visible partition, even when
+TF2 holds the frontend. It recognizes `hostname` and `mdns`; defaults are the
+lowercase device model ID and `true`. Hostnames accept 1–63 ASCII letters,
+digits or hyphens, without a leading/trailing hyphen. Missing or invalid values
+use defaults; unknown keys are ignored. Settings are data, never shell code.
 
-```ini
-hostname=rg34xxsp
-mdns=true
-```
+The file is read once during normal boot. USB-storage mode uses defaults
+without opening the exported card. See [README settings](../README.md#settings)
+for editing instructions.
 
-`baseos-config` reads recognized `key=value` settings once during boot, before
-network services start. It does not execute shell expressions. Hostnames must be
-a single DNS label of 1–63 ASCII letters, digits or hyphens, with no leading or
-trailing hyphen. Missing or invalid settings fall back to the defaults above;
-unknown keys are ignored. Edit the file and boot normally to apply a change. It
-is never consumed, copied into `/data`, or followed by an additional rename reboot.
+After Wi-Fi receives an IPv4 address, the DHCP hook starts the static Avahi
+responder asynchronously through `baseos-mdns`. It publishes `<hostname>.local`
+on `wlan0`, with no service advertisements or D-Bus dependency. Renewals reuse
+the daemon; DHCP deconfiguration reconciles it with current interface state.
+Avahi handles later interface changes without an additional polling process.
 
-The validated settings are mirrored in `/run/baseos.conf`. `/etc/hostname` and
-`/etc/hosts` point to generated files in `/run`; the shell prompt uses `\h`.
-Normal boots reuse TF1's frontend mount or briefly mount it read-only for both
-configuration and update discovery. USB-storage maintenance uses defaults without
-reading an exported card. No configuration write or global `sync` is added to
-normal boot.
-
-With `mdns=true`, the Wi-Fi DHCP hook starts the static Avahi responder
-asynchronously when `wlan0` receives an IPv4 address. Other machines on the local
-network can then resolve `rg34xxsp.local` (DNS names are case-insensitive). Avahi is
-restricted to `wlan0`, publishes address records, and ships with no service
-definitions. D-Bus, wide-area DNS, reflection, workstation announcements and
-other optional records are disabled. `mdns=false` keeps the responder stopped.
-
-When devices share a hostname, Avahi negotiates an available mDNS name such as
-`rg34xxsp-2.local`. This changes only the advertised name; the kernel hostname
-and `baseos.conf` stay unchanged. Suffix assignment can change after restarts.
-Set a distinct `hostname` in each device's config for predictable addresses.
-
-DHCP renewals reuse the running responder; deconfiguration stops it. Some
-frontends kill DHCP without issuing deconfiguration when Wi-Fi is disabled. In
-that case Avahi stays asleep and withdraws records through kernel network events.
-There is no polling supervisor. Frontends using a different network manager must
-invoke the same `baseos-mdns` hook after configuring or removing an address.
+Name collisions receive an mDNS suffix, such as `rg34xxsp-2.local`, without
+changing the configured hostname. Set distinct hostnames for stable addresses.
+`mdns=false` disables the responder.
 
 ## 4. Bluetooth audio
 
-Uses the harvested stock stack directly: `rtk_hciattach` attaches the RTL8821CS UART,
-`bluetoothd` (BlueZ 5.66) runs under a base-OS `dbus-daemon` started by the
-`systemctl` shim, and `bluealsa` provides the A2DP source. NextUI's `bt_init.sh` drives
-it unchanged via the `setBluetooth.sh` shim ([01](01-rootfs-and-init.md) §7). Validated
-as far as daemons-run on-device (chroot); full pairing/audio is on the hardware
-to-do in [06](06-status-and-lessons.md).
+`rtk_hciattach` attaches the controller UART. The `systemctl` shim starts D-Bus
+and BlueZ on demand; BlueALSA supplies the audio service. Frontend scripts
+configure pairing and audio through the vendor-compatible shims. Radio files
+are omitted from the harvest for profiles without Bluetooth.
 
-## 5. Power button, poweroff, and charger boots
+See [validation coverage](06-status-and-lessons.md) for hardware checks.
 
-There is no `systemd-logind`. The frontend handles POWER and calls `poweroff`
-or `reboot`. Their BaseOS shims record or clear `/run/poweroff-requested` before
-calling BusyBox; init runs `/etc/init.d/rcK` for either action. An absent marker
-means reboot, so an A/B update cannot accidentally turn into a PMIC power cut.
-The PMIC also has an independent hardware long-press shutdown (6 s on RG SP).
+## 5. Power button and shutdown
 
-### PMIC shutdown
+BaseOS provides `poweroff` and `reboot` wrappers. `baseos-poweroff` creates
+`/run/poweroff-requested`; `baseos-reboot` clears it. Both then invoke BusyBox
+to request shutdown through init.
 
-On the RG SP, the contributor's tests found that kernel poweroff with USB
-attached returned to a charger boot in about seven seconds. Writing the
-AXP2202's soft-poweroff bit stayed off while charging. PR #14 contributed
-`axp-off`, board discovery, power intent, and the initial charger-boot policy;
-its measurements are in
-[`diagnostics/results/2026-08-18-charger-boot-and-poweroff.md`](../diagnostics/results/2026-08-18-charger-boot-and-poweroff.md).
-The exact cause in the vendor kernel/firmware shutdown path remains unproven.
+`rcK` stops other processes, saves entropy, disables swap and flushes writes.
+For power-off it calls `axp-off --now`, which requires persistent filesystems
+to be read-only before cutting processor power through the PMIC. Reboot skips
+the PMIC cut. If the PMIC helper refuses, shutdown falls back to BusyBox's
+kernel path after filesystem cleanup.
 
-`axp-off` discovers the bound client under
-`/sys/bus/i2c/drivers/axp20x-i2c`. It requires address `0x34` and the measured
-kernel name `axp2202`; bus numbers are board-specific. This is the DT/kernel's
-identification, not a silicon-ID read. Other names are refused. Running it
-without arguments only reads register `0x27`: no power command, filesystem
-remount, or sync. A successful probe confirms access, not successful shutdown
-on every board using that name.
+Frontends should use the BaseOS commands so shutdown intent and cleanup are
+preserved. Direct BusyBox applet calls or frontend-specific helpers can bypass
+that integration. A long power-button press forces hardware power-off.
 
-Reads use `I2C_RDWR` with a register-select message followed by a read in one
-adapter-locked transfer. Separate `write()` and `read()` calls leave a window
-for the active kernel PMIC driver to change the register pointer.
-`I2C_SLAVE_FORCE` allows access to the bound address; it does not serialize
-those separate calls. See the [Linux I2C userspace interface](https://www.kernel.org/doc/Documentation/i2c/dev-interface).
-The write sets `REG27H[0]`, clears restart bit 1, and preserves the remaining
-bits, including PWROK. There is no general register-write interface.
+Charger-origin boots use the early charging path before normal services start;
+see [charger-only boot](11-charger-only-boot.md).
 
-Before a direct cut, `rcK` sends TERM, waits one second, then sends KILL to
-userspace outside its own session. This is necessary because BusyBox normally
-runs its shutdown action **before** killing the frontend and daemons.
-BusyBox's `killall5` excludes PID 1, kernel threads, and rcK's session. It does
-not depend on a particular frontend process name. Reboot uses the same cleanup.
+## 6. USB access
 
-`axp-off --now` then flushes and remounts every persistent filesystem read-only,
-including `/`: the vendor initramfs actually mounts the rootfs writable. It
-preserves VFS mount options and checks a fresh mount table afterward. A failed
-remount, writable filesystem, missing mount table/root entry, active swap, or
-USB mass-storage export refuses the direct cut. Virtual filesystems remain
-available for I2C and device access. The kernel handles shutdown when the PMIC
-or filesystem checks fail; USB storage uses that path to disconnect and drain
-its exported block device. After any attempted power write, the helper allows
-five seconds for it to take effect before returning to its caller.
+BaseOS starts USB-only adb in the background through `/etc/init.d/dev`.
+Connect a data cable before power-on; after disconnecting, restart with the
+cable connected. `/data/no-adb` disables adb.
 
-### Charger-only boot policy
+Holding MENU during startup selects exclusive USB-storage maintenance mode.
+It exports whole TF2 when present, otherwise TF1's data partition, and keeps
+the frontend stopped until restart. Eject the drive on the host before
+restarting without MENU.
 
-`rcS` checks the latched `axp2202-battery/boot_mode` immediately after mounting
-its virtual filesystems. Values 0 and 1 mean normal and charger boot. If the
-attribute is missing or unrecognized, an exact `bootreason=charger` cmdline
-token is the fallback. USB presence alone is never boot intent. Normal boot
-uses shell builtins for this decision, with no helper process or sleep.
-
-A confirmed charger boot calls `baseos-charger` **before** GPU loading,
-networking, persistent-state setup, card mounting, update checks, or frontend
-respawns. MENU bypasses automatic shutdown and is remembered in `/run` so
-releasing it before the later USB-storage check cannot lose maintenance mode.
-`/data/no-charger-off` remains a persistent opt-out; it allows normal startup
-from a cable because the hardware cannot reliably distinguish a PC from a
-charger.
-
-Otherwise, the helper mounts `/data` read-only and reads the RTC and the last
-automatic-shutdown timestamp. It attempts a PMIC shutdown only with a usable
-clock, working PMIC probe, and a successfully written timestamp. The timestamp
-is replaced atomically; no unbounded per-boot log is appended. A timestamp
-within 120 seconds, or in the future, suppresses another attempt to bound an
-unexpected reboot loop. A rapid deliberate replug takes the same fallback;
-**it does not start the frontend**.
-
-An unavailable PMIC, bad clock/storage, recent timestamp, or failed shutdown
-stays in a minimal charging state. The helper closes `/data` where possible,
-selects the CPU's `powersave` governor, and blanks the backlight. H700's vendor
-kernel uses the Allwinner disp2 brightness ioctls on `/dev/disp`; generic
-backlight sysfs nodes are also handled when present. The input helper discovers
-the PMIC's `axp*-pek` evdev device and blocks in `poll()` without idle timer
-wakeups. A fresh POWER press arms a one-second deadline. Reaching it continues
-the same boot while the button is still held, restoring brightness and the
-previous CPU governor, lighting the power LED, and drawing the BaseOS logo once.
-Releasing early cancels the hold; repeats do not extend its deadline. Evdev uses
-monotonic timestamps so queued input retains its actual hold duration.
-Missing/disconnected input retries once a minute; an error is never treated
-as boot intent. A hardware long press remains available.
-
-This fallback is not suspend-to-RAM and is not claimed to equal PMIC-off power
-consumption. In particular, the SP vendor driver masks USB attach/detach wake
-sources during suspend, so USB-unplug wake must not be assumed. No new daemon
-survives into a normal frontend session. Charger waits do not count as failed
-update trials; `baseos-update boot-check` runs only after explicit normal boot
-intent. Actual power consumption, charger replug/button behavior, and the
-3.00-second RG40XX V boot budget still need controlled hardware measurements
-for the follow-up. The unarmed combined-I2C probe was verified on RG34XXSP.
-
-## 6. USB gadget — adb and optional card storage
-
-The single USB-C port is a charge port that also exposes a USB peripheral controller.
-Base OS drives it as a Google adb gadget so a host can `adb shell`/`adb push`/`adb pull`
-over the cable — **USB only, no TCP** by design (same root/no-auth dev posture as the
-root/root dropbear; keeping it off the network avoids exposing an unauthenticated shell
-over WiFi). `/usr/sbin/usb-gadget-adb` composes the gadget; it is launched **backgrounded
-from `/etc/init.d/dev`** (itself already backgrounded off `rcS`, [01](01-rootfs-and-init.md) §5).
-
-**Role: preserve stock dual-role OTG.** The USB-C port is shared between peripheral
-access and intentional USB-host devices. BaseOS leaves the vendor DTB and sunxi
-manager in their stock auto mode, binds its gadget to the always-present UDC
-(`5100000.udc-controller`), and does **not** force the role at runtime. Every runtime
-role interface is a trap on this vendor kernel (measured on rg40xxv,
-[06](06-status-and-lessons.md) §3):
-
-- Writing `/sys/.../usbc0/otg_role` (e.g. `echo usb_device > otg_role`) **wedges the
-  writer in an uninterruptible D-state** — reproduced both with and without a gadget
-  bound — so a boot script that wrote it would leak a stuck process and never bring adb
-  up.
-- The sibling files `usb_device`/`usb_host`/`usb_null` are 0400 **read-triggers** — a
-  bare `cat` of one switches the role and can wedge the port.
-
-The reliable peripheral-mode contract is therefore simple: connect the host cable
-before powering on. The manager selects the role during boot, while leaving the port
-available for USB-host peripherals on boots where no host cable is connected.
-Charging remains PMIC-controlled. (The manager's real device path is
-`/sys/devices/platform/soc/usbc0`, reached through the stable
-`/sys/bus/platform/devices/usbc0` symlink — but the script needs neither.)
-
-**configfs gadget layout.** The stock 4.9.170 kernel has `CONFIG_USB_CONFIGFS_F_FS=y`
-built in, so no module is needed. The script builds, under
-`/sys/kernel/config/usb_gadget/g1`:
-
-- IDs `idVendor 0x18d1` / `idProduct 0x4e42` (Google / adb);
-- `strings/0x409/serialnumber` from `androidboot.serialno` on the kernel cmdline
-  (falls back to a constant if absent), plus manufacturer/product strings;
-- one function `functions/ffs.adb`, a **FunctionFS** instance, linked into
-  `configs/c.1`;
-- the FunctionFS mount at `/dev/usb-ffs/adb`, where `adbd` opens `ep0` and writes its
-  descriptors.
-
-**Start + bind ordering.** The UDC bind is the last step and it only succeeds **after**
-`adbd` has written its descriptors to `ep0`. So the script starts `adbd` (as root)
-first, then **retries** writing the controller name into `g1/UDC`
-(`/sys/class/udc/5100000.udc-controller`) until the bind takes. Binding before `adbd`
-has populated ep0 fails with `EINVAL`; the retry loop closes that race without a fixed
-sleep.
-
-**Disconnect / reconnect.** The sunxi manager clears `g1/UDC` whenever VBUS drops.
-BaseOS intentionally does not keep a watcher, poller, hotplug helper, or manual
-rebinder for this partial recovery case: none can repair a later attach where the
-manager selects host role, and forcing the role would compromise OTG support. If adb
-is disconnected, power off and start again with the cable connected.
-
-**User stance.** adb is on by default, matching SSH/SFTP, but is reachable only by a
-physically connected USB data cable present during power-on; the daemon has no TCP
-5555 fallback. Create `/data/no-adb` and reboot to disable it. No frontend setting is
-required, keeping this OS-owned developer access independent of the installed
-frontend.
-
-**USB-storage maintenance mode.** The same kernel also has
-`CONFIG_USB_CONFIGFS_MASS_STORAGE=y`, and adb and mass storage work together as
-one composite gadget. They cannot safely share the frontend *filesystem* with a
-running frontend, however: a writable FAT/exFAT volume must never be mounted by
-BaseOS and a USB host at the same time.
-
-Connect the host cable first, then hold MENU from power-on to select an exclusive,
-one-boot maintenance mode. H700 DTBs label that built-in button's active-low line
-`GPIO Key Menu`. The vendor
-input driver advertises standard `BTN_MODE` but does not maintain the
-`EVIOCGKEY` current-state bitmap, so the small `boot-menu-held` script queries
-the physical level from the already-mounted GPIO debug view. It has no wait
-window, input loop, compiled helper or resident process. rcS checks it before
-mounting frontend storage. Whole TF2
-(`/dev/mmcblk1`) wins when present so the host receives its real partition table
-and every partition; otherwise TF1's data partition (`/dev/mmcblk0p7`) is
-exported.
-
-`usb-storage-mode` publishes only a device that was never mounted during this
-boot. Both the selector and gadget reject a whole disk if *any* child partition
-is mounted. Missing or busy devices fail closed into a normal boot.
-
-`nextui-session` sees the runtime marker, does not remount the card or launch a
-frontend, and waits for the gadget's bounded ready/failure result. A successful
-bind paints one static `USB STORAGE: EJECT BEFORE RESTART` pill; failure paints
-`USB STORAGE FAILED: POWER OFF`, avoiding unsafe card-removal advice while the
-kernel may still hold the backing device. The gadget normally exposes both adb
-and writable storage; `/data/no-adb` makes this storage-only. Eject on the host
-and restart without MENU to return to the frontend.
-
-**Boot-time stance.** A normal boot performs one non-blocking input-state probe
-before mounting frontend storage; it has no wait loop or resident process. The
-gadget script is backgrounded off the already-backgrounded `init.d/dev`, so it
-never delays `frontend-exec`. The one-second TF2 enumeration allowance runs only
-after a MENU-requested maintenance boot. Routine service startup does not write
-timing breadcrumbs or append logs to the SD card. The sole boot timing marker is
-`/run/boot-frontend-exec` (§1).
+See [USB adb, mass storage and H700 OTG](08-usb-adb-and-otg.md) for gadget
+configuration, role handling, storage safety and validation.

@@ -191,8 +191,16 @@ grep -q '^umount ' "$TMP/events" || fail "mount leaked after update failure"
 
 # Exercise the actual update scan and cleanup too. Only its block-device check
 # is adapted to a regular fixture, allowing a privilege-free fallback mount.
+# Keep the shared logger's writes inside the same fixture on the host.
+mkdir -p "$TMP/data"
+sed -e "s|/data/|$TMP/data/|g" \
+	-e "s|/tmp/baseos-boot.log|$TMP/baseos-boot.log|g" \
+	-e "s|/mnt/sdcard|$TMP/sdcard|g" \
+	-e "s|/run/usb-storage-device|$TMP/usb-storage-device|g" \
+	"$HERE/overlay/usr/share/baseos/boot-log.sh" > "$TMP/boot-log.sh"
 sed '/^# One-time migration/,$d' "$HERE/overlay/usr/sbin/baseos-update" \
 	| sed -e "s|/dev/mmcblk0p7|$TMP/tf1|g" \
+		-e "s|/usr/share/baseos/boot-log.sh|$TMP/boot-log.sh|g" \
 		-e "s|/mnt/sdcard|$TMP/sdcard|g" -e "s|/tmp/.baseos-own|$TMP/own|g" \
 		-e "s|/proc/mounts|$TMP/mounts|g" \
 		-e "s|/run/usb-storage-device|$TMP/usb-storage-device|g" \

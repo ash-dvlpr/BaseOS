@@ -5,7 +5,8 @@
 # Keep this entry point for compatibility with existing init configurations.
 
 SD=/mnt/sdcard
-LOG=/tmp/nextui-session.log
+. /usr/share/baseos/boot-log.sh
+select_boot_log
 INSTALL_FAILED=0
 CARD_MISSING=0
 
@@ -14,12 +15,6 @@ CARD_MISSING=0
 # deliberate — a card with no frontend is a perfectly healthy OS, and keying it
 # later would make that state look like a failed update and roll back forever.
 [ -x /usr/sbin/baseos-update ] && /usr/sbin/baseos-update confirm 2>/dev/null
-
-# Session diagnostics stay in tmpfs; routine boots do not append to the card.
-log() {
-	line="$(date '+%H:%M:%S') $*"
-	echo "$line" >> "$LOG"
-}
 
 important_splash() {
 	[ -x /usr/bin/baseos-splash ] \
@@ -71,6 +66,8 @@ done
 
 # Update flow: same triggers as the old boot shim (02-boot-and-installer.md).
 if mountpoint -q "$SD" 2>/dev/null; then
+	select_boot_log
+	flush_early_boot_log
 	ZIP="$SD/MinUI.zip"
 	LAUNCH="$SD/.system/h700/paks/MinUI.pak/launch.sh"
 	HAVE_PAKZ=0
@@ -132,15 +129,17 @@ if [ "$CARD_MISSING" -eq 0 ] && [ -f "$LAUNCH" ]; then
 		m=$((m + 1))
 	done
 	log "exec $LAUNCH (mali wait ${m}x)"
-	# One total kernel-uptime measurement, kept in RAM across session respawns.
+	# Keep the first handoff across respawns and record it in the readable log.
 	if [ ! -s /run/boot-frontend-exec ]; then
 		{ read -r boot_uptime boot_idle < /proc/uptime \
-			&& printf '%s\n' "$boot_uptime" > /run/boot-frontend-exec; } 2>/dev/null || :
+			&& printf '%s\n' "$boot_uptime" > /run/boot-frontend-exec \
+			&& printf '%s BaseOS boot time: %s s (kernel start to frontend handoff)\n' \
+				"$boot_uptime" "$boot_uptime" >> "$LOG"; } 2>/dev/null || :
 	fi
 	if [ "$FRONTEND" = slot ]; then
 		# Slot is a glibc AArch64 ELF, not a shell script. Use the system
 		# loader so a copied binary needs no executable bit or chmod on the
-		# card. Diagnostics stay in RAM and are replaced on each launch.
+		# card. Frontend output stays in RAM and is replaced on each launch.
 		exec /lib/ld-linux-aarch64.so.1 "$LAUNCH" > /tmp/slot.log 2>&1
 	fi
 	exec /bin/sh "$LAUNCH"

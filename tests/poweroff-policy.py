@@ -22,7 +22,7 @@ class Boot:
         self.proc = None
         self.write("test/busybox", BUSYBOX.read_bytes(), executable=True)
         for command in ("sh", "cat", "cut", "cp", "dd", "grep", "ln", "mkdir",
-                        "mv", "tr", "rm", "sleep"):
+                        "mv", "tr", "rm", "sleep", "date", "mountpoint"):
             path = self.root / "bin" / command
             path.parent.mkdir(exist_ok=True)
             path.symlink_to("/test/busybox")
@@ -33,6 +33,7 @@ class Boot:
         self.write("proc/cmdline", cmdline + "\n")
         self.write("proc/uptime", "1.23 0\n")
         self.write("proc/sys/kernel/random/uuid", "test-id\n")
+        self.write("proc/sys/kernel/random/boot_id", "test-boot-id\n")
         if mode is not None:
             self.write("sys/class/power_supply/axp2202-battery/boot_mode", mode + "\n")
         self.write("sys/class/rtc/rtc0/since_epoch", "1000\n")
@@ -44,7 +45,7 @@ class Boot:
         self.write("dev/urandom", "seed")
         self.write("etc/hostname", "baseos\n")
         for script in ("etc/init.d/rcS", "etc/init.d/rcK", "usr/sbin/baseos-charger",
-                       "usr/bin/baseos-splash"):
+                       "usr/bin/baseos-splash", "usr/share/baseos/boot-log.sh"):
             self.write(script, (ROOT / "overlay" / script).read_bytes(), executable=True)
         self.stub("bin/mount", '''
 case "$*" in

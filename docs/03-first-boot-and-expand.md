@@ -1,8 +1,9 @@
 # 03 — First boot: expand-to-fill, then add a frontend
 
 The image ships a tiny 64 MiB empty data partition (p7) and **no frontend**. On the
-first boot p7 is grown to fill the whole card and left empty; the user then copies a
-frontend onto it. Every subsequent boot skips the expansion.
+first normal boot p7 grows to fill the card and receives `README.txt` and a
+commented `baseos.conf` example; the user then copies a frontend onto it.
+Subsequent boots check the geometry and skip reformatting.
 
 ## 1. Why reformat instead of resize-in-place
 
@@ -35,9 +36,8 @@ reflects the new size immediately — no reread needed. (Run against a plain fil
 ioctl fails `ENOTTY` and is skipped; the GPT is still rewritten — that's the offline
 test path.)
 
-Verified offline on a simulated 20 GB card: both GPT copies come out with valid
-signatures and CRCs, p7 fills the disk, idempotent on re-run. Verified on hardware:
-p7 grew from 68 MB to **62.8 GB** on a 64 GB card.
+`test-expand-storage.sh` covers GPT growth and repeat-run behavior on synthetic
+images. See [hardware coverage](06-status-and-lessons.md) for device checks.
 
 ## 3. `expand-storage` — the first-boot orchestrator (`overlay/usr/sbin/expand-storage`)
 
@@ -47,55 +47,57 @@ Runs from `rcS`, **before** the card is mounted:
    - **exit 1** (already fills the disk, i.e. an already-set-up card) → log and exit,
      leaving p7 completely untouched and showing no expansion message. So a frontend
      the user has copied on is never reformatted;
-   - **exit 2** (GPT/device error) → log the failure, leave p7 untouched and fail;
+   - **exit 2** (GPT/device error) → log the failure and skip formatting; a write
+     error can occur after partial GPT changes;
    - **exit 0** (freshly grown) → continue;
 2. paint `baseos-splash --important 45 "EXPANDING STORAGE"` now that a real resize is
    confirmed;
 3. fallback `partprobe`/`blockdev --rereadpt` (harmless EBUSY if BLKPG already did it);
 4. `mkfs.vfat -F 32 -n BASEOS /dev/mmcblk0p7` (fresh empty FAT32, full size);
-5. mount p7 and drop `README.txt` (from `/usr/share/baseos/card-readme.txt`) explaining
-   how to add a frontend; `sync`; unmount.
+5. mount p7 and copy `README.txt` and the commented `baseos.conf` example from
+   `/usr/share/baseos/`; `sync`; unmount.
 
-It logs to `/tmp/expand.log` **and** mirrors to `/data/expand.log` (persistent, on p6)
-so a failed expand is diagnosable after a power-off even without network. Keying
+It logs to `/data/baseos-boot.log` (persistent, on p6) before the frontend card
+is mounted. rcS appends that buffer to `/mnt/sdcard/baseos-boot.log` once the
+card is writable, then removes the buffer. If mounting fails, the buffer remains
+for recovery after power-off. Keying
 idempotency on "does p7 already fill the disk" (rather than a `/data` flag or content
-check) is robust: expansion happens exactly once, and once done the partition is never
-touched again.
+check) prevents normal boots from reformatting existing frontend content.
+If formatting fails after GPT growth, the next geometry check will still report
+that p7 fills the disk; automatic formatting is not retried.
 
 ## 4. Adding a frontend (the hand-off)
 
-Base OS ships no frontend, so after the first-boot expansion the card is empty and
+BaseOS ships no frontend, so after expansion the card contains only setup files and
 `nextui-session` shows **`ADD FRONTEND TO SD CARD`** and waits (init respawns it). The
 user then:
 
 1. mounts the card on a computer — it now presents the full-capacity `BASEOS` volume
-   with the `README.txt`;
+   with `README.txt` and `baseos.conf`;
 2. copies a frontend onto it — for NextUI, `MinUI.zip` (+ any `nextui.*.pakz`);
 3. reboots the handheld.
 
-On that boot `nextui-session` sees `MinUI.zip` and runs the frontend's **own**
-installer (which extracts `.system/…`, processes the `*.pakz`, and creates
-Bios/Roms/Saves), then launches it. The install takes ~1 min (SD-speed dependent) and
-shows a static `INSTALLING FRONTEND` pill — see [04](04-boot-splash.md) for why it's static and
-why the frontend's own installer UI can't render on Base OS. Every boot after that goes
-straight to the frontend.
+On the next normal boot, `nextui-session` bootstraps `.tmp_update/h700.sh`
+from `MinUI.zip` when needed and runs that frontend installer. Pending `*.pakz`
+files also trigger it. BaseOS displays a static installation/update pill;
+see [boot splash](04-boot-splash.md). Slot's extracted release needs no installer.
 
-A different frontend just needs a compatible launch payload; the OS↔frontend contract
-is small (a launch entry point on the card, `/mnt/SDCARD`, the poweroff/reboot
-sentinels, a ready `wlan0`).
+Slot uses an extracted `System/slot` binary instead of the NextUI installer.
+See [frontend entry points](01-rootfs-and-init.md#4-frontend-session) for launch
+selection and the [README](../README.md#installation) for card setup.
 
 ## 5. Boot-to-boot behaviour
 
 | boot | expand-storage | frontend | net |
 |---|---|---|---|
-| 1st (fresh flash) | grows + reformats p7 empty (~seconds) | none yet → add-frontend prompt | expand, then wait |
-| after user copies a frontend | p7 already fills disk → no-op | frontend installer runs (~1 min), then launches | slow, one-time |
+| 1st normal boot | grows and formats p7, copies setup files | add-frontend prompt unless TF2 has a frontend | expand, then select frontend |
+| after user copies a frontend | geometry check, no format | NextUI installer or direct Slot launch | frontend-dependent |
 | every later boot | no-op | `MinUI.zip`/pakz consumed → launch only | a few seconds to the frontend |
 
 ## 6. Edge cases & caveats
 
-- If the card is *exactly* the image size (no free space), `gptgrow` is a no-op and p7
-  stays 64 MB — realistically never (cards are always larger than the ~0.9 GB image).
+- If the card is exactly the image size, `gptgrow` is a no-op and the initial
+  FAT filesystem stays roughly 64 MiB; the expansion path does not copy setup files.
 - Because p7 is reformatted on first boot, the user must add the frontend **after** the
   first boot, not before — anything dropped on the tiny empty p7 pre-boot is erased by
   the expansion. (Standard handheld flow: flash → boot to expand → add content.)

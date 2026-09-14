@@ -37,6 +37,7 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_HOST" \
   -v "$WORK":/work:ro -v "$HERE/tools":/src:ro \
   -v "$CARD":/dev/mmcblk0 \
   -v "$HERE/overlay/usr/sbin/baseos-update":/usr/sbin/baseos-update:ro \
+  -v "$HERE/overlay/usr/share/baseos/boot-log.sh":/usr/share/baseos/boot-log.sh:ro \
   -e TARGET="$TARGET" -e PAYLOAD_NAME="$(basename "$PAYLOAD")" \
   alpine:3.20 sh -euc '
   apk add -q build-base python3 e2fsprogs e2fsprogs-extra

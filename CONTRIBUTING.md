@@ -38,7 +38,9 @@ Both scripts take an optional target list, which is what you want while iteratin
 
 `build-all.sh` is the existing per-target chain — rootfs, QEMU userspace smoke
 test, image, update payload — plus packaging, and it rebuilds the shared tools
-only when `src/` has moved. Those steps remain individually runnable:
+when required binaries are missing or the source stamp changes. The stamp
+covers C/header files in `src/` and `tools/`, plus adb patches. Rerun
+`build-tools.sh` explicitly after changing build recipes or pinned dependencies. Those steps remain individually runnable:
 
 ```sh
 ./build-tools.sh
@@ -108,6 +110,9 @@ Which it is comes from the partition table, never from the filename:
 | StockMod | `special`, 64 MiB empty ext4 | start at 204800 |
 | stock | `Roms`, 2 GiB user-visible FAT32 | start ~1.94 GiB higher |
 
+StockMod BASE images may omit the final `primary` partition, either in a trimmed
+image or a full-disk image with a valid backup GPT, as in StockMod v4.
+
 A stock table is recast into the StockMod one before anything else runs: `Roms`
 is dropped and rebuilt as an empty 64 MiB `special`, and everything after it
 moves down by the difference — which lands p2–p5 on exactly the StockMod
@@ -117,7 +122,7 @@ This is safe because **StockMod performs the same re-partition and boots.** With
 an RG34XXSP stock and StockMod image side by side, `env` and `boot` are
 byte-identical across the move and U-Boot is unmodified, because it resolves
 `partitions=` from GPT names and `root=` by partition number rather than by
-address (docs/07 §2). StockMod's only other boot-chain change is one nibble of
+address ([boot contract](docs/07-partition-layout-and-updates.md#1-boot-contract)). StockMod's only other boot-chain change is one nibble of
 `dram_para[28]` plus its checksum — a DRAM trim, not something the move needs,
 so a stock-derived card keeps its own timings.
 
@@ -190,11 +195,18 @@ Run checks relevant to the files changed. The main test entry points are:
 
 ```sh
 ./test-prepare-stock.sh
+python3 tests/test-verify-harvest.py
+python3 tests/test-prepared-cache.py
 ./test-expand-storage.sh
 ./tests/test-baseos-config.sh
 ./tests/test-baseos-mdns.sh
 ./tests/test-boot-splash-policy.sh
 ./tests/test-frontend-session.sh
+./tests/test-poweroff-policy.sh
+./tests/test-axp-off.sh
+./tests/test-baseos-config.sh
+./tests/test-baseos-mdns.sh
+python3 tests/test-strip-gpu-module.py
 ./tests/test-splash-rotation.sh
 ./tests/test-baseos-ntp.sh
 ./tests/test-timedatectl.sh
@@ -214,25 +226,15 @@ Run checks relevant to the files changed. The main test entry points are:
 
 ## Boot-performance changes
 
-The README tracks two different figures:
+The README distinguishes BaseOS handoff timing from frontend startup time.
+Update timing figures only after repeated measurements show a meaningful change;
+label kernel-relative timings separately from power-on measurements. Developer
+docs should describe current behavior, interfaces and validation requirements;
+keep experiment logs, old/new results and debugging history out of them.
 
-- Total duration from pressing power to NextUI, measured manually.
-- Kernel-relative `boot-frontend-exec`, the repeatable BaseOS optimization target.
-
-Update the README counter only after controlled, repeated measurements show a
-substantial change beyond normal jitter. Record the previous total and briefly name
-the change responsible. If an intentional trade-off makes boot slower, document the
-reason and raise the acceptance ceiling explicitly.
-
-The RG40XX V `boot-frontend-exec` acceptance ceiling is currently 3.00 seconds and is
-enforced by `validate-on-device.sh`.
-
-The rootfs build strips GPU debug data with module ABI checks; rebuilt `.bosupd`
-updates deliver this improvement. The vendor boot partition is preserved.
-Boot measurement uses only `/run/boot-frontend-exec`, a kernel-uptime value written
-to tmpfs immediately before the first frontend handoff. See
-[boot optimization and measurement](docs/09-boot-profiling.md) for the GPU results
-and controlled cold-start or warm-reboot comparisons.
+The RG40XX V kernel-to-frontend handoff ceiling is 3.00 seconds, enforced by
+`validate-on-device.sh`. See [boot performance](docs/09-boot-profiling.md) for
+measurement scope, comparison procedure and GPU module optimization.
 
 ## Technical documentation
 
@@ -242,6 +244,9 @@ and controlled cold-start or warm-reboot comparisons.
 - [First boot and storage expansion](docs/03-first-boot-and-expand.md)
 - [Boot logo and exceptional status UI](docs/04-boot-splash.md)
 - [Runtime, boot timing, power, and networking](docs/05-runtime-power-network.md)
-- [Hardware status and lessons learned](docs/06-status-and-lessons.md)
+- [Hardware validation and constraints](docs/06-status-and-lessons.md)
 - [Partition layout and A/B system updates](docs/07-partition-layout-and-updates.md)
-- [USB adb and H700 OTG investigation](docs/08-usb-adb-and-otg.md)
+- [USB adb and H700 OTG](docs/08-usb-adb-and-otg.md)
+- [Boot performance](docs/09-boot-profiling.md)
+- [Boot SD-card I/O](docs/10-boot-io-audit.md)
+- [Charger-only boot](docs/11-charger-only-boot.md)

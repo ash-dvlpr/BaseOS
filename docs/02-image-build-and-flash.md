@@ -13,22 +13,21 @@ avoids nested emulation on Intel.
 
 ## 1. Inputs and targets
 
-The sole external input for a target is an **extracted StockMod `.img`**. BaseOS does
-not download or unpack multipart archives. `devices.json` declares the ten supported
-targets, their StockMod filename prefix, exact BaseOS identity, frontend-family
-compatibility string, native bootlogo dimensions and radio capabilities:
+Normal builds use the published prepared cache through `fetch-prepared.sh`.
+Preparing new inputs requires an extracted stock or StockMod `.img`; BaseOS
+does not download or unpack multipart vendor archives.
 
-`rg28xx`, `rg34xx`, `rg34xxsp`, `rg35xxplus`, `rg35xxh`, `rg35xxpro`, `rg35xxsp`,
-`rg40xxh`, `rg40xxv`, and `rgcubexx`. `rg35xxplus` covers both RG35XX Plus and
-RG35XX 2024 because StockMod distributes one image for them.
+`devices.json` defines eleven target profiles, including `rgsp`. Use
+`python3 tools/device_profile.py list` for the current IDs, or see the
+[device table](../CONTRIBUTING.md#building). Profiles specify model identity,
+filename matching, logo dimensions, rotation and radio capabilities.
 
-It validates the primary GPT header, CRC and unusual `8 × 128` entry-table shape.
-Full-card images must also contain a matching valid backup GPT and all eight named
-partitions. StockMod `BASE` archives use a deliberate compact form: they end exactly
-after p7, leave entry 8 empty and retain the primary header's original full-disk
-geometry. That form is accepted only when p1–p7 have the exact H700 names and the file
-ends precisely at p7; arbitrary truncation still fails closed. The build restores the
-known H700 `primary` identity when it writes a complete, internally consistent GPT.
+Preparation validates GPT geometry and CRCs. Full stock/StockMod images require
+a matching backup GPT. StockMod BASE images may omit `primary`, either ending
+exactly after p7 without a backup GPT or retaining a valid full-disk backup.
+Other truncation is rejected. Stock layouts are normalized to StockMod offsets;
+image composition restores `primary` when absent.
+
 Preparation copies everything before p5 into `boot-prefix.img` and extracts the
 allowlisted userspace from p5. Extraction happens
 through `debugfs`; a static BusyBox tar runs chrooted inside the extracted root so
@@ -39,7 +38,7 @@ The per-target preparation contract under `work/<target>/` is:
 
 - `boot-prefix.img` — raw boot region plus partitions 1–4;
 - `stock-harvest.tar` — deterministic, dereferenced stock userspace allowlist;
-- `source.json` — target/model/capabilities, StockMod filename/size/SHA-256, complete
+- `source.json` — target/model/capabilities, vendor filename/size/SHA-256, complete
   GPT geometry, output hashes, preserved partition hashes and logo dimensions.
 
 Paths in `manifest/harvest.list` are required unless they belong to the WiFi/Bluetooth
@@ -52,7 +51,8 @@ file fails preparation, so BaseOS never silently emits a partially functional ro
 First extract the StockMod download with 7-Zip. For a multipart download, open or
 extract the `.7z.001` file; 7-Zip reads the following volumes automatically. BaseOS
 does not unpack these archives itself. Confirm that extraction produced one `.img`
-whose filename matches the target profile in `devices.json`.
+whose filename matches the target profile or its configured filename alias in
+`devices.json`.
 
 From the repository root, substitute the desired target and extracted image path:
 
@@ -103,7 +103,7 @@ actual framebuffer geometry.
 ## 3. One-command and batch builds
 
 Put one `.img` for every desired model in a directory. With no target list the batch
-command requires all ten; target arguments select a subset:
+command requires every configured target; target arguments select a subset:
 
 ```sh
 ./build-stockmod.sh /path/to/firmware
@@ -119,11 +119,11 @@ short equivalent of the complete recipe in section 2.
 
 ## 4. Image geometry and verification
 
-The source p5 start remains fixed because the vendor environment boots
-`/dev/mmcblk0p5`, and it doubles as rootfs slot A. BaseOS then packs a 512 MiB
+The normalized p5 start becomes rootfs slot A. The environment selects
+partition number 5; GPT slot switching can move its extent to slot B. BaseOS then packs a 512 MiB
 rootfs slot, an identically sized unallocated slot B, a 128 MiB userdata filesystem
-and a 64 MiB initial FAT32 partition, plus backup-GPT headroom — 1.4 GB in total,
-which zips to about 58 MB. `expand-storage` grows the FAT partition to the card on
+and a roughly 64 MiB initial FAT32 filesystem, plus backup-GPT headroom.
+The normalized image is about 1.5 GB; compressed size depends on rootfs contents. `expand-storage` grows the FAT partition to the card on
 first boot.
 
 Every image build checks:
@@ -148,9 +148,8 @@ matches and required-file omissions:
 ./test-prepare-stock.sh
 ```
 
-QEMU validates generic init plumbing, not the vendor kernel or hardware. RG40XXV is
-the currently hardware-proven BaseOS target; generated images for the other models
-must not be described as hardware-validated until physically tested.
+QEMU validates generic userspace plumbing, not the vendor kernel or hardware.
+See [hardware validation](06-status-and-lessons.md) for device-specific coverage.
 
 ## 5. Flash and optional device validation
 

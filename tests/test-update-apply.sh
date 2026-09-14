@@ -13,6 +13,7 @@ HERE="$(cd "$(dirname "$0")/.." && pwd)"
 
 docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_HOST" \
   -v "$HERE/overlay/usr/sbin/baseos-update":/usr/sbin/baseos-update:ro \
+  -v "$HERE/overlay/usr/share/baseos/boot-log.sh":/usr/share/baseos/boot-log.sh:ro \
   alpine:3.20 sh -euc '
   # 8 MiB slots: small enough to stay quick, large enough that the chunked
   # write and read-back actually loop (step = max(1, MiB/16) = 1 MiB here).
@@ -35,6 +36,7 @@ EOF
   stub /usr/bin/baseos-splash "printf \"%s\\n\" \"\$*\" >> /tmp/splash.log"
   stub /usr/local/bin/reboot "echo reboot >> /tmp/reboot.log"
   stub /usr/local/bin/sleep "exit 0"
+  stub /usr/local/bin/mountpoint "echo probe >> /tmp/card-probes; [ ! -e /tmp/no-card ]"
   mkdir -p /usr/sbin
   cat > /usr/sbin/gptslot <<"EOF"
 #!/bin/sh
@@ -75,7 +77,11 @@ EOF
     cd /
   }
 
-  reset() { rm -f /tmp/flip.log /tmp/splash.log /tmp/reboot.log; rm -rf /data/update; }
+  reset() {
+    rm -f /tmp/flip.log /tmp/splash.log /tmp/reboot.log /tmp/card-probes /tmp/no-card \
+      /mnt/sdcard/baseos-boot.log /data/baseos-boot.log /tmp/baseos-boot.log
+    rm -rf /data/update
+  }
   no_flip() {
     [ -f /tmp/flip.log ] && { echo "FAIL: $1 — the GPT was flipped" >&2; exit 1; }
     return 0
@@ -135,6 +141,10 @@ EOF
   test "$(tail -1 /tmp/progress.txt)" -eq 98 || { echo "FAIL: bar should reach 98" >&2; exit 1; }
   echo "  progress: $(tr "\n" " " < /tmp/progress.txt)"
   grep -qx "trial=1.0.1" /data/update/state || { echo "FAIL: no trial state" >&2; exit 1; }
+  grep -q "update: inactive slot verified" /mnt/sdcard/baseos-boot.log \
+    || { echo "FAIL: update events missing from shared card log" >&2; exit 1; }
+  grep -q "records out" /mnt/sdcard/baseos-boot.log \
+    || { echo "FAIL: update command diagnostics missing from shared card log" >&2; exit 1; }
   echo "ok"
 
   grep -q "^$want 1.0.1 test$" /data/update/history \
@@ -144,7 +154,9 @@ EOF
   echo "== the trial ends when a frontend session starts =="
   baseos-update confirm
   test ! -f /data/update/state || { echo "FAIL: trial state survived confirm" >&2; exit 1; }
-  grep -q "confirmed" /data/update/log || { echo "FAIL: nothing logged" >&2; exit 1; }
+  grep -q "update: .*confirmed" /mnt/sdcard/baseos-boot.log || { echo "FAIL: nothing logged" >&2; exit 1; }
+  test ! -e /data/update/log && test ! -e /tmp/baseos-update.log \
+    || { echo "FAIL: legacy update logs were recreated" >&2; exit 1; }
   echo "ok"
 
   echo "== an already-applied payload is skipped =="
@@ -238,6 +250,65 @@ EOF
   test -f /tmp/flip.log || { echo "FAIL: no rollback flip" >&2; exit 1; }
   test ! -f /data/update/state || { echo "FAIL: trial state survived rollback" >&2; exit 1; }
   grep -q "RESTORING SYSTEM" /tmp/splash.log || { echo "FAIL: no restore pill" >&2; exit 1; }
+  test ! -e /tmp/card-probes && test ! -e /mnt/sdcard/baseos-boot.log \
+    || { echo "FAIL: pre-card boot check accessed the frontend card" >&2; exit 1; }
+  grep -q "update: update trial boot 2" /data/baseos-boot.log \
+    || { echo "FAIL: trial diagnostics missing from persistent early log" >&2; exit 1; }
+  grep -q "restoring" /data/baseos-boot.log \
+    || { echo "FAIL: rollback diagnostics missing from persistent early log" >&2; exit 1; }
+  echo "ok: rollback state and pre-card diagnostics survive without probing the card"
+
+  echo "== confirmation without a frontend card retains diagnostics on data =="
+  reset
+  : > /tmp/no-card
+  mkdir -p /data/update
+  printf "trial=1.0.1\nattempts=1\n" > /data/update/state
+  baseos-update confirm
+  test ! -f /data/update/state || { echo "FAIL: trial state survived confirm" >&2; exit 1; }
+  grep -q "update: .*confirmed" /data/baseos-boot.log \
+    || { echo "FAIL: confirmation diagnostics missing from persistent early log" >&2; exit 1; }
+  test ! -e /mnt/sdcard/baseos-boot.log \
+    || { echo "FAIL: log created on an unmounted frontend path" >&2; exit 1; }
+  echo "ok"
+
+  echo "== an unavailable card log falls back without blocking confirmation =="
+  reset
+  mkdir /mnt/sdcard/baseos-boot.log
+  mkdir -p /data/update
+  printf "trial=1.0.1\nattempts=1\n" > /data/update/state
+  baseos-update confirm
+  test ! -f /data/update/state || { echo "FAIL: logging blocked confirmation" >&2; exit 1; }
+  grep -q "update: .*confirmed" /data/baseos-boot.log \
+    || { echo "FAIL: unavailable card log did not fall back to data" >&2; exit 1; }
+  rmdir /mnt/sdcard/baseos-boot.log
+  echo "ok"
+
+  echo "== an unavailable early log falls back without blocking a trial boot =="
+  reset
+  mkdir /data/baseos-boot.log
+  mkdir -p /data/update
+  printf "trial=1.0.1\nattempts=1\n" > /data/update/state
+  baseos-update boot-check
+  grep -qx "attempts=2" /data/update/state || { echo "FAIL: logging blocked trial count" >&2; exit 1; }
+  grep -q "update: update trial boot 2" /tmp/baseos-boot.log \
+    || { echo "FAIL: unavailable early log did not fall back to RAM" >&2; exit 1; }
+  test ! -e /tmp/card-probes || { echo "FAIL: fallback probed the frontend card" >&2; exit 1; }
+  rmdir /data/baseos-boot.log
+  echo "ok"
+
+  echo "== USB storage confirmation logs in RAM without probing the card =="
+  reset
+  printf "/dev/mmcblk1\n" > /run/usb-storage-device
+  mkdir -p /data/update
+  printf "trial=1.0.1\nattempts=1\n" > /data/update/state
+  baseos-update confirm
+  test ! -f /data/update/state || { echo "FAIL: trial state survived confirm" >&2; exit 1; }
+  grep -q "update: .*confirmed" /tmp/baseos-boot.log \
+    || { echo "FAIL: USB storage confirmation missing from RAM log" >&2; exit 1; }
+  test ! -e /tmp/card-probes && test ! -e /mnt/sdcard/baseos-boot.log \
+    && test ! -e /data/baseos-boot.log \
+    || { echo "FAIL: USB storage confirmation touched a persistent log" >&2; exit 1; }
+  rm -f /run/usb-storage-device
   echo "ok"
 
   echo "RESULT: PASS — payload validation, verify-then-commit, and rollback"

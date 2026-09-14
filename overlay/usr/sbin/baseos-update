@@ -40,7 +40,17 @@ STATE="$STATE_DIR/state"
 # oscillate forever — and neither is one that already succeeded.
 HISTORY="$STATE_DIR/history"
 LEGACY_COMMITTED_SHA="$STATE_DIR/committed-sha"
-TMPLOG=/tmp/baseos-update.log
+. /usr/share/baseos/boot-log.sh
+# A trial can roll back and reboot before rcS mounts the frontend card. Keep
+# those diagnostics on /data until a later normal boot can move them to it.
+if [ "${1:-apply}" = boot-check ]; then
+	select_early_boot_log
+else
+	select_boot_log
+	if [ "$LOG" = /tmp/baseos-boot.log ] && [ ! -s /run/usb-storage-device ]; then
+		select_early_boot_log
+	fi
+fi
 # Boots allowed after an update before the previous slot is restored. The trial
 # ends as soon as a frontend session starts, so this only ever counts boots that
 # never got that far.
@@ -60,15 +70,7 @@ VERIFY_FROM=60
 VERIFY_TO=95
 COMMIT_STAGE=98
 
-log() {
-	line="$(cut -d' ' -f1 /proc/uptime 2>/dev/null) update: $*"
-	echo "$line" >> "$TMPLOG" 2>/dev/null
-	if [ -d /data ]; then
-		mkdir -p "$STATE_DIR" 2>/dev/null
-		echo "$line" >> "$STATE_DIR/log" 2>/dev/null
-	fi
-	return 0
-}
+update_log() { log "update: $*"; }
 
 splash() {
 	[ -x /usr/bin/baseos-splash ] && /usr/bin/baseos-splash --important "$@" 2>/dev/null
@@ -203,7 +205,7 @@ select_payload() {
 			evaluate "$candidate"; verdict=$?
 			if [ "$verdict" -eq 0 ]; then CHOSEN="$candidate"; break; fi
 			if [ "$verdict" -eq 2 ]; then
-				log "$candidate rejected: $EV_REASON"
+				update_log "$candidate rejected: $EV_REASON"
 				REJECTED=1
 			fi
 		done
@@ -224,7 +226,7 @@ apply() {
 	[ "$any" -eq 1 ] || { cleanup; return 0; }
 
 	if ! load_geometry; then
-		log "payload present but this card has no A/B slot layout — ignoring"
+		update_log "payload present but this card has no A/B slot layout — ignoring"
 		cleanup
 		return 0
 	fi
@@ -246,7 +248,7 @@ apply() {
 	want_sha="$EV_SHA"
 
 	mkdir -p "$STATE_DIR"
-	log "applying $version ($build) from $payload to slot at LBA $SLOT_INACTIVE_START"
+	update_log "applying $version ($build) from $payload to slot at LBA $SLOT_INACTIVE_START"
 	splash "$WRITE_FROM" "UPDATING SYSTEM"
 
 	seek_mb=$((SLOT_INACTIVE_START / 2048))
@@ -258,19 +260,19 @@ apply() {
 	# stalling it at the end, so the progress shown is data actually committed.
 	step=$((count_mb / 16))
 	[ "$step" -ge 1 ] || step=1
-	if ! tar -xOf "$payload" rootfs.img.gz 2>>"$TMPLOG" | gunzip 2>>"$TMPLOG" | {
+	if ! tar -xOf "$payload" rootfs.img.gz 2>>"$LOG" | gunzip 2>>"$LOG" | {
 		written=0
 		while [ "$written" -lt "$count_mb" ]; do
 			this="$step"
 			[ $((written + this)) -le "$count_mb" ] || this=$((count_mb - written))
 			dd of="$DISK" bs=1M seek=$((seek_mb + written)) count="$this" \
-				iflag=fullblock conv=notrunc,fsync 2>>"$TMPLOG" || exit 1
+				iflag=fullblock conv=notrunc,fsync 2>>"$LOG" || exit 1
 			written=$((written + this))
 			splash $((WRITE_FROM + (WRITE_TO - WRITE_FROM) * written / count_mb)) \
 				"UPDATING SYSTEM"
 		done
 	}; then
-		log "write to the inactive slot failed — GPT untouched"
+		update_log "write to the inactive slot failed — GPT untouched"
 		splash -1 "UPDATE FAILED"
 		cleanup
 		return 1
@@ -296,16 +298,16 @@ apply() {
 		done
 	} | sha256sum | cut -d' ' -f1)"
 	if [ "$got_sha" != "$want_sha" ]; then
-		log "verify failed (got $got_sha want $want_sha) — GPT untouched"
+		update_log "verify failed (got $got_sha want $want_sha) — GPT untouched"
 		splash -1 "UPDATE FAILED"
 		cleanup
 		return 1
 	fi
-	log "inactive slot verified"
+	update_log "inactive slot verified"
 
 	# The commit. Everything above is reversible by doing nothing.
-	if ! /usr/sbin/gptslot "$DISK" flip >> "$TMPLOG" 2>&1; then
-		log "slot flip failed — still running the old slot"
+	if ! /usr/sbin/gptslot "$DISK" flip >> "$LOG" 2>&1; then
+		update_log "slot flip failed — still running the old slot"
 		splash -1 "UPDATE FAILED"
 		cleanup
 		return 1
@@ -327,7 +329,7 @@ apply() {
 	# flip, the history append and this sync take a few seconds between them,
 	# and painting before them left the bar looking stalled at its final value.
 	splash "$COMMIT_STAGE" "UPDATING SYSTEM"
-	log "flipped to slot $version; rebooting"
+	update_log "flipped to slot $version; rebooting"
 	cleanup
 	reboot
 	# init takes over from here; hold rcS briefly so it does not race ahead
@@ -342,23 +344,23 @@ boot_check() {
 	[ -n "$attempts" ] || attempts=0
 	attempts=$((attempts + 1))
 	if [ "$attempts" -ge "$MAX_TRIAL_BOOTS" ]; then
-		log "slot failed to reach a frontend session in $attempts boots — restoring;"
-		log "the payload that produced it stays on the card but is not retried"
+		update_log "slot failed to reach a frontend session in $attempts boots — restoring;"
+		update_log "the payload that produced it stays on the card but is not retried"
 		splash -1 "RESTORING SYSTEM"
-		if /usr/sbin/gptslot "$DISK" flip >> "$TMPLOG" 2>&1; then
+		if /usr/sbin/gptslot "$DISK" flip >> "$LOG" 2>&1; then
 			rm -f "$STATE"
 			sync
 			reboot
 			sleep 10
 			return 0
 		fi
-		log "restore flip failed; continuing on the current slot"
+		update_log "restore flip failed; continuing on the current slot"
 		rm -f "$STATE"
 		return 1
 	fi
 	sed "s/^attempts=.*/attempts=$attempts/" "$STATE" > "$STATE.new" \
 		&& mv "$STATE.new" "$STATE"
-	log "update trial boot $attempts of $MAX_TRIAL_BOOTS"
+	update_log "update trial boot $attempts of $MAX_TRIAL_BOOTS"
 	return 0
 }
 
@@ -366,7 +368,7 @@ confirm() {
 	[ -f "$STATE" ] || return 0
 	version="$(field "$STATE" trial)"
 	rm -f "$STATE"
-	log "update to $version confirmed"
+	update_log "update to $version confirmed"
 	return 0
 }
 

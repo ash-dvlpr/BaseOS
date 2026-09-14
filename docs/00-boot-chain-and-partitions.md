@@ -1,25 +1,27 @@
 # 00 — Boot chain & partitions (the immutable half)
 
-Everything in this file comes from the target's prepared StockMod firmware image.
-It is the part we cannot rebuild and the part that gives "perfect hardware support";
-BaseOS keeps it byte-for-byte except for the bootlogo inside p2 and regenerated GPT
-metadata needed for the smaller output image.
-All facts verified live on the RG40XXV (stock firmware V1.1.1.0, kernel
-`4.9.170 #16 SMP PREEMPT` built 2026-05-21) on 2026-07-19.
+The vendor bootloader, kernel and initramfs come from each target's prepared
+firmware. Preparation normalizes stock layouts to StockMod geometry; image
+composition replaces the p2 bootlogo and regenerates GPT metadata. The vendor
+executable boot code remains unchanged.
+
+The geometry below is the normalized H700 layout. Target-specific inputs and
+preserved-region hashes are recorded in `source.json`.
 
 ## 1. GPT / partition layout
 
-The stock card is **GPT** (not MBR). The RG40XXV StockMod `BASE` archive retains the
-same primary GPT and partitions 1–7, but deliberately ends after p7 with entry 8 empty
-and no backup GPT. `prepare-stock.sh` recognizes that exact compact form; image
-composition writes valid primary and backup GPTs, restoring the known `primary`
-identity into the BaseOS table:
+The card uses GPT. Preparation accepts full stock and StockMod images, plus
+StockMod BASE images with the final `primary` entry omitted. BASE images may
+end at p7 without a backup GPT or include a valid full-disk backup. Arbitrary
+truncation is rejected. Image composition writes both GPT copies and restores
+the `primary` entry when absent.
 
 BaseOS ships **seven** partitions, not the stock eight: `appfs` is dropped and the
 region it occupied becomes the unallocated second rootfs slot (see
 [07](07-partition-layout-and-updates.md)). Every partition except the user-visible
-FAT volume carries GPT attribute bits 62 and 63, so a desktop assigns exactly one
-drive letter for the whole card.
+FAT volume carries GPT attribute bits 62 and 63, to request a single
+Windows drive letter. macOS can still expose the vendor FAT volume; see
+[desktop visibility](07-partition-layout-and-updates.md#desktop-visibility).
 
 | # | name | start LBA | size (stock) | contents | our image |
 |---|---|---|---|---|---|
@@ -37,7 +39,7 @@ drive letter for the whole card.
 `UDISK` and `primary` keep the stock entries' names, type GUIDs and unique GUIDs —
 they are *shifted* down one slot, not renamed.
 
-**Load-bearing constraints** (violating any of these bricks the boot):
+**Boot constraints:**
 
 - U-Boot builds the kernel cmdline's `partitions=` map **from the GPT partition
   names** — verified on hardware: p3 stores `partitions=${partitions}` unexpanded and
@@ -52,7 +54,7 @@ they are *shifted* down one slot, not renamed.
   by name), but BaseOS preserves them anyway: they cost nothing and keep the table as
   close to stock as possible. GPT **attribute** bits are BaseOS-set and boot fine.
 - `prepare-stock.sh` derives `boot-prefix.img` directly from the selected target's
-  StockMod `.img`, ending exactly at p5's start. The known RG40XXV layout makes this
+  normalized firmware layout, ending exactly at p5's start. The known RG40XXV layout makes this
   **222,298,112 bytes**; other targets are read from their GPT rather than assuming
   that value. The source name/hash, geometry, prefix hash and preserved-region hashes
   are recorded in `work/<target>/source.json`. The image starts from this prefix,
@@ -86,8 +88,7 @@ temporarily remove it, but the image build never touches p3.
 
 ## 2. The hidden vendor initramfs (p4 is an Android boot image)
 
-**This is the single most important and least obvious fact.** Partition 4 (`boot`)
-is **not** a bare kernel — it is an **Android boot image** (`ANDROID!` magic) that
+Partition 4 (`boot`) is an **Android boot image** (`ANDROID!` magic) that
 bundles the kernel **and a vendor initramfs**. Extracting it (2 KiB page size; kernel
 then gzip'd ramdisk) reveals a small BusyBox-1.22 (2015) initramfs whose `/init`:
 
@@ -96,7 +97,7 @@ then gzip'd ramdisk) reveals a small BusyBox-1.22 (2015) initramfs whose `/init`
 3. **mounts root with `-o rw,noatime,nodiratime,norelatime,noauto_da_alloc,barrier=0,data=ordered`**;
 4. `mount --move /dev` and `exec switch_root /mnt /init`.
 
-Two consequences drove real bugs (see [06](06-status-and-lessons.md)):
+The root filesystem must satisfy two requirements:
 
 - **The root ext4 MUST have a journal.** The initramfs mounts with `data=ordered`,
   and the kernel *rejects* that on a journal-less filesystem
@@ -120,31 +121,28 @@ created with:
 -O ^metadata_csum,^metadata_csum_seed,^64bit,^orphan_file
 ```
 
-i.e. the classic feature set (`ext_attr resize_inode dir_index filetype extent
-flex_bg sparse_super large_file huge_file dir_nlink extra_isize`) **plus a journal**.
-`metadata_csum` needs kernel crc32c the vendor kernel lacks; `64bit`/`orphan_file`
-are similarly too new. Getting this wrong is invisible until you flash — the kernel
-just fails to mount root and hangs on the splash.
+The build keeps a journal and disables these optional features for vendor BSP
+compatibility. Keep this feature mask aligned with `build-image.sh`; changing
+it requires testing the resulting filesystem with the target's vendor kernel.
 
 Kernel config points confirmed from `/proc/config.gz` on the device:
 
 - `CONFIG_DEVTMPFS=y` but `CONFIG_DEVTMPFS_MOUNT` is **not** set → we mount devtmpfs
   ourselves in `rcS`, and bake static `/dev/console` + `/dev/null` nodes as a cover.
 - `CONFIG_FRAMEBUFFER_CONSOLE` is **not** set → no kernel text console on the LCD, so
-  boot debugging can't rely on printk-on-panel; we use on-screen `fbsplash`
-  breadcrumbs and `/data` logs instead (see [06](06-status-and-lessons.md)).
+  use serial output or temporary instrumentation for boot diagnosis.
 - exfat, squashfs, overlay, f2fs, loop are **built in** — this 2026 kernel has native
-  exfat (correcting earlier port notes).
+  exfat.
 
 ## 4. Kernel modules
 
-Only **three** modules are loaded by the running system; everything else (disp2,
-audiocodec, evdev inputs, AXP2202 PMIC/battery, suspend, all filesystems) is built
-into the kernel:
+BaseOS uses these modules where the device profile supports the hardware.
+Display, audio, input, PMIC, suspend and filesystem support come from the
+vendor kernel's built-in drivers:
 
 | module | role | notes |
 |---|---|---|
-| `mali_kbase.ko` | Mali-G31 GPU (`/dev/mali0`) | ~17 MB; loaded in the background during `rcS` |
+| `mali_kbase.ko` | Mali-G31 GPU (`/dev/mali0`) | debug data stripped during the build; loaded in the background during `rcS` |
 | `8821cs.ko` | RTL8821CS WiFi (SDIO) | WiFi firmware embedded in the module; loaded async |
 | `rtl_btlpm.ko` | RTL8821C Bluetooth low-power handshake | loaded on BT enable |
 
@@ -159,6 +157,5 @@ and shifts `UDISK`/`primary` down one entry, reserves the second rootfs slot as
 unallocated space, sets the hidden attribute bits, and writes valid primary + backup
 GPTs (correct CRCs) plus a protective MBR covering the target size. Conventions (matched exactly by `gptgrow`, [03](03-first-boot-and-expand.md)):
 8 entries × 128 B at LBA 2–3, first usable LBA 4, backup entries at `total-3..-2`,
-backup header at `total-1`, last usable = `total-4`. This regenerated GPT is accepted
-by boot0, U-Boot **and** the kernel — validated on hardware, including on a 64 GB card
-whose stale foreign backup GPT sat far past our image's end.
+backup header at `total-1`, last usable = `total-4`. See
+[hardware coverage](06-status-and-lessons.md) for validation status.

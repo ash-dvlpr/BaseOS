@@ -13,16 +13,11 @@
 
 DISK=/dev/mmcblk0
 CARD=/dev/mmcblk0p7
-LOG=/tmp/expand.log
+. /usr/share/baseos/boot-log.sh
+select_early_boot_log
 README=/usr/share/baseos/card-readme.txt
 
-# Mirror to persistent /data (p6, mounted by rcS before us) so a failed expand
-# is diagnosable after a power-off — /tmp is volatile.
-log() {
-	line="$(cut -d' ' -f1 /proc/uptime) expand: $*"
-	echo "$line" >> "$LOG"
-	[ -d /data ] && echo "$line" >> /data/expand.log 2>/dev/null || true
-}
+# rcS transfers this early spool to the frontend card after mounting it.
 splash() { [ -x /usr/bin/baseos-splash ] && /usr/bin/baseos-splash --important "$@" 2>/dev/null; }
 
 [ -b "$CARD" ] || { log "no $CARD"; exit 0; }
@@ -36,7 +31,7 @@ splash() { [ -x /usr/bin/baseos-splash ] && /usr/bin/baseos-splash --important "
 grew=$?
 case "$grew" in
 	0) splash 45 "EXPANDING STORAGE" ;;
-	1) exit 0 ;;
+	1) log "expand: p7 already fills the disk; leaving it untouched"; exit 0 ;;
 	*) log "gptgrow failed (exit $grew); leaving p7 untouched"; exit 1 ;;
 esac
 partprobe "$DISK" >> "$LOG" 2>&1 || blockdev --rereadpt "$DISK" >> "$LOG" 2>&1 || true

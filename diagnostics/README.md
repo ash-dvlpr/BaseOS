@@ -6,16 +6,18 @@ Read `/run/boot-frontend-exec` after the frontend starts. This single tmpfs mark
 records kernel uptime at the first frontend handoff and survives frontend
 respawns. Keep cold starts and clean warm reboots separate; the marker excludes
 bootloader and frontend rendering time. See
-[boot optimization and measurement](../docs/09-boot-profiling.md) for repeated
-measurements and the retained GPU improvement.
+[boot performance](../docs/09-boot-profiling.md) for the measurement procedure.
+The handoff time is also recorded in `baseos-boot.log` at the root of the active
+frontend card (TF2, otherwise TF1). See [boot I/O](../docs/10-boot-io-audit.md)
+for early buffering and fallback destinations.
 
 ## sleep-drain — measure suspend battery drain
 
-Distinguishes real deep sleep (µA-level, days of standby) from fake sleep
-(tens of mA, hours) and quantifies it, using the AXP2202 hardware coulomb
-counter sampled at the exact suspend/resume boundary via NextUI's hook system.
+Estimates average suspend drain from the AXP2202 charge counter, sampled by
+NextUI hooks immediately before sleep and after resume. Confirm suspend state
+separately through kernel logs; low drain alone does not prove suspend-to-RAM.
 
-Install onto a running device's card:
+From the copied `diagnostics/` directory on the device, install the hooks:
 
 ```sh
 D=/mnt/sdcard/.userdata/h700/.hooks
@@ -30,15 +32,12 @@ minimum for a coarse read; longer or overnight for precision), wake it (tap
 power). Each wake appends a line to `/mnt/sdcard/sleep-drain.log`:
 
 ```
-2026-07-19 15:40:02 slept=1834s dQ=2000uAh cap=61%->61% avg=3926uA proj_suspend_life=815h
+2026-07-19 15:40:02 slept=1834s dQ=2000uAh cap=61%->61% avg=3926uA proj_standby=815h
 ```
 
-`avg` is the mean current during suspend; `proj_suspend_life` = full battery /
-avg current. Single-digit-mA average ⇒ real deep sleep; tens of mA ⇒ fake.
-
-## results — measurement write-ups
-
-`results/` holds the write-up behind a change that needed hardware to settle.
-`2026-08-18-charger-boot-and-poweroff.md` records why `poweroff` did not stay
-off on a charger, the register evidence for writing the PMU directly, and the
-two theories that were tested and killed on the way.
+`avg` is the mean current over the interval; `proj_standby` is battery capacity
+divided by that current. The hooks use `date +%s`, so avoid changing system time
+during a measurement. Use an unplugged device and a long interval to reduce
+charge-counter quantization error. A zero delta means the counter did not
+resolve a change; the hook's `deep-sleep-confirmed` label is not independently
+sufficient evidence of the sleep state.
