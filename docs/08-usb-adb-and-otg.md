@@ -1,24 +1,24 @@
 # 08 — USB adb, mass storage, and H700 OTG
 
-This is the decision record for cable-based USB access on H700 devices. It preserves
-the hardware findings and the product trade-offs behind the deliberately small
-implementation in `/usr/sbin/usb-gadget-adb`.
+`/usr/sbin/usb-gadget-adb` provides cable-based USB access on H700 devices.
 
-## Decision
+## Supported behavior
 
-Enable USB-only adb by default alongside BaseOS's SSH/SFTP service. For reliable adb,
+BaseOS enables USB-only adb by default alongside BaseOS's SSH/SFTP service. For reliable adb,
 the data cable must be connected before the handheld is powered on. If the cable is
 disconnected, restart with it connected. BaseOS does not run a reconnect watcher,
 poll the port, force a USB role, or modify the vendor DTB.
 
-Also provide a BaseOS-owned maintenance boot that exposes user storage as writable
+A BaseOS-owned maintenance boot exposes user storage as writable
 USB mass storage. Connect the cable, then hold MENU from power-on. A one-shot state
 query selects the mode before frontend storage is mounted. Whole TF2 wins when
 present; otherwise TF1 p7 is exported. The frontend is not involved.
 
 This keeps the only USB-C port available for intentional OTG host devices on normal
 boots while making the two supported peripheral workflows explicit and predictable.
-`/data/no-adb` remains the persistent adb opt-out.
+`/data/no-adb` remains the persistent adb opt-out. A cable-only startup may
+enter charger handling; use POWER for normal startup or hold MENU for storage.
+See [charger-only boot](11-charger-only-boot.md).
 
 ## Verified H700 hardware contract
 
@@ -33,7 +33,7 @@ are:
 - dual-role USB-C wiring with PMU VBUS detection and no useful ID GPIO.
 
 The prepared H700 targets configure the sunxi manager as dual-role OTG. BaseOS
-preserves that policy. Investigation also established that the DTB inside Android
+preserves that policy. The DTB inside Android
 boot partition p4 is not the tree Linux receives; the live tree comes from the
 checksummed `sunxi-package` beside U-Boot. Neither copy is changed.
 
@@ -65,42 +65,20 @@ The daemon still owns its private smart socket on `127.0.0.1:5037`, so
 `adbd` has supplied its descriptors, so the script performs one bounded initial UDC
 bind loop. That loop handles boot ordering; it is not reconnect machinery.
 
-## Why reconnect is deliberately unsupported
+## Disconnect and reconnect
 
-On disconnect or VBUS loss, the vendor manager clears `usb_gadget/g1/UDC`. The
-gadget tree, FunctionFS mount, and daemon can survive, and rewriting the UDC name
-sometimes re-enumerates after reconnection. A rebinder was implemented and validated,
-but it could only repair that narrower case. It could not repair a later attach where
-the manager chose host role.
+On VBUS loss the vendor manager clears `usb_gadget/g1/UDC`. Rebinding cannot
+reliably restore access because a later attach may select host role. Restart
+with the cable connected to restore peripheral access. BaseOS preserves stock
+OTG support and does not run a resident reconnect watcher.
 
-Keeping the rebinder would cost a permanent process and promise recovery that remains
-hardware-state-dependent. A polling loop or `/sbin/hotplug` would be worse: an idle
-RG40XXV produces battery uevents about every 10.24 seconds. For a shared OTG port, the
-smaller and more honest policy is boot-scoped peripheral access:
-
-- cable present before power-on: adb, or MENU-held mass storage;
-- cable absent before power-on: stock OTG auto behavior remains available;
-- cable disconnected from an adb session: restart with it connected.
-
-The only resident USB cost is therefore the already-planned static `adbd` (about
-3.4 MiB on disk); there is no USB watcher process.
-
-## Product fit
-
-USB access stays inside BaseOS's hardware and system-service role and remains
-frontend-neutral. Setup is backgrounded off the frontend-critical path, has no UI or
-network listener, and every wait and failure path is bounded. Missing USB facilities
-remain a silent no-op on another target.
-
-Preserving the vendor DTB is also deliberate. Device-only policy would improve
-peripheral-mode determinism, but it would remove USB-host support from the handheld's
-only port. Requiring a cable-connected boot is the smaller compromise.
+Configfs attribute sizes are synthetic; inspect the contents of `g1/UDC` to
+check whether the gadget is bound.
 
 ## Mass-storage maintenance mode
 
-Hardware probing with a disposable FAT backing file proved that the RG40XXV and
-macOS enumerate one composite gadget as both adb and a writable “File-Stor Gadget”
-LUN. Root adb remains usable concurrently.
+The gadget supports adb and writable mass storage together. Root adb remains
+usable during storage mode unless disabled with `/data/no-adb`.
 
 The real frontend volume cannot be shared live: BaseOS normally mounts and executes
 the frontend from it, and simultaneous writable access by Linux and a USB host risks
@@ -130,13 +108,7 @@ ADB+storage and storage-only layouts, storage selection, mounted-child rejection
 the production AArch64 build. `validate-on-device.sh` checks `adbd`, FunctionFS, the
 bound UDC, and absence of a TCP 5555 listener.
 
-RG40XXV hardware validation completed:
-
-1. cable-present-at-power-on enumeration and root `adb shell` — passed;
-2. 4 MiB push/pull with matching SHA-256 — passed;
-3. MENU-held TF1 p7 export, host access on macOS, eject, and normal reboot — passed;
-4. unplug/replug recovery is intentionally not part of the supported contract.
-
-Whole-card TF2 selection and safety policy are automated-tested. Real-card acceptance
-still needs a backed-up, preferably multi-partition TF2 to verify host enumeration,
-write/eject/reboot, and deliberate partition-table operations.
+RG40XX V hardware validation covers cable-connected startup, root shell and
+checksum-matched file transfer, and TF1 export to macOS with eject/restart.
+Whole-card TF2 behavior still needs real-card validation for enumeration,
+write/eject/restart and partition-table operations.

@@ -1,217 +1,128 @@
-# 01 — Root filesystem & init
+# 01 — Root filesystem and init
 
-The rootfs on p5 is what we build. It is a minimal BusyBox userland plus a small,
-exactly-scoped set of stock libraries and daemons. ~105 MB in a 512 MiB ext4.
+The active rootfs is a 512 MiB ext4 slot containing BusyBox, harvested vendor
+libraries and BaseOS tools. `/bin`, `/sbin` and `/lib` link into `/usr`.
 
-## 1. Where the contents come from
+## 1. Build inputs
 
-Four sources, assembled by `build-rootfs.sh` (see [02](02-image-build-and-flash.md)):
+`build-rootfs.sh` combines:
 
-1. **Static BusyBox** (Alpine `busybox-static`, ~1 MB) — provides `/sbin/init`, `sh`
-   (ash), `mount`, `insmod`, `udhcpc`, `hwclock`, `getty`, `poweroff`/`reboot`,
-   **and — importantly — `mkfs.vfat`/`mkdosfs`, `partprobe`, `blockdev`, `killall`**
-   (used by the first-boot expand, [03](03-first-boot-and-expand.md)).
-2. **The StockMod harvest** — an allowlist (`manifest/harvest.list`) extracted from
-   the selected target's p5 by `prepare-stock.sh`. The allowlist was established from
-   the hardware-tested runtime closure and contains the libraries and daemons we keep:
-   - glibc 2.35 + `ld-linux-aarch64` + `libnss_{files,dns}`
-   - Mali blob `libmali.so.0.20.0` + `libEGL`/`libGLESv2`/`libGLESv1_CM` shims
-   - ALSA: `libasound` + `/usr/share/alsa` + `/etc/asound.conf` + the alsa-lib plugin
-     dir (incl. the bluealsa PCM/CTL plugins) + `alsactl` (the suspend script saves
-     mixer state through it)
-   - WiFi: `wpa_supplicant`, `wpa_cli` (+ libnl3), `fsck.fat`
-   - Bluetooth audio: `bluetoothd` (BlueZ 5.66, at `/usr/libexec/bluetooth/`),
-     `bluealsa`, `bluealsa-aplay`, `bluetoothctl`, `rtk_hciattach`, its ARMHF
-     interpreter/libc, `hciconfig`,
-     `libbluetooth`, `libsbc`, `dbus-daemon` + `/usr/share/dbus-1` + `/etc/dbus-1` +
-     `/etc/bluetooth`, and `/lib/firmware/rtlbt/`
-   - the transitive `ldd` closure of all of the above — ~45 libraries total
-     (glib/gio for BlueZ, `libsystemd` *as a library* for dbus, expat, ffi, pcre2,
-     blkid/mount, crypto/ssl for wpa, freetype/png16, stdc++, …)
-   - the 3 kernel modules; `/usr/share/zoneinfo`; terminfo for `linux`/`vt100`/`xterm`
-   - `ldconfig` (+ `ld.so.conf*`) — the build runs it to generate `ld.so.cache` so the
-     multiarch dir resolves
-3. **Static tools built once in a container** — Dropbear for dev SSH/scp, `curl`
-   with a CA bundle for frontend HTTP clients, plus **`fbsplash`**, **`gptgrow`** and
-   **`gptslot`** (see [04](04-boot-splash.md), [03](03-first-boot-and-expand.md),
-   [07](07-partition-layout-and-updates.md)).
-4. **Our overlay** (`overlay/`) — copied last, wins over everything. It includes
-   the small service/time compatibility shims needed by NextUI.
+- Static BusyBox and tools built by `build-tools.sh`: Dropbear, SFTP server,
+  curl with CA certificates, adb, Avahi, `fbsplash`, `gptgrow`, `gptslot`,
+  `axp-off` and `charger-wait`.
+- Vendor userspace selected by `manifest/harvest.list`: glibc, Mali/EGL/GLES,
+  ALSA, wireless services, Bluetooth/BlueALSA/D-Bus, timezone data and modules.
+- ARMHF compatibility libraries and loader, including stock fbdev Mali and
+  SDL2 under `/usr/lib32`. These are required independently of radio support.
+- `overlay/`, copied last, plus generated device identity and runtime symlinks.
 
-**Harvest gotchas learned on-device** (all fixed):
-- Preparation extracts p5 with `debugfs`, then runs static BusyBox tar chrooted inside
-  that root with `-h`, so soname paths become real files and absolute symlinks cannot
-  escape into the container. List sonames in `harvest.list`, not fully-versioned names.
-- The interp compat symlink `/lib/ld-linux-aarch64.so.1` must exist or **every**
-  dynamic binary is dead. `bluetoothctl` additionally needs `libreadline`/`libtinfo`.
-  The stock `rtk_hciattach` is the one ARM32 binary and needs the harvested ARMHF
-  loader/libc pair. These were found by on-device validation; the build now checks
-  the complete AArch64 closure and the ARMHF pair before emitting `rootfs.tar`.
+Preparation dereferences harvest paths inside the extracted vendor root and
+normalizes the archive. List sonames in the allowlist. Changing required paths
+requires preparing the affected targets again and refreshing the cache;
+`tools/verify_harvest.py` rejects incomplete archives during build, pack and restore.
 
-## 2. Merged-`/usr` layout
+The rootfs build checks the AArch64 dependency closure and the ARMHF loader/libc
+required by `rtk_hciattach`. Other ARMHF applications still need their own
+compatibility validation. Shipping `libudev` does not provide a udev daemon.
+GPU module debug data is stripped with ABI checks; ARMHF libraries are retained
+as harvested. See [boot performance](09-boot-profiling.md).
 
-The Ubuntu harvest assumes merged-`/usr`, so the rootfs uses it: `/bin → usr/bin`,
-`/sbin → usr/sbin`, `/lib → usr/lib` are symlinks; real content lives under `/usr`.
-Overlay files that live "in `/sbin`" (e.g. `nextui-session`) are therefore placed in
-`overlay/usr/sbin/`.
+## 2. Runtime layout
 
-## 3. `/init` — the PID 1 entry point
+| Path | Purpose |
+| --- | --- |
+| `/data` | Persistent p6 state: SSH keys, Bluetooth, entropy, time preferences and update state |
+| `/mnt/sdcard` | Active frontend card: usable TF2 p1, otherwise TF1 p7 |
+| `/mnt/SDCARD` | Compatibility symlink to `/mnt/sdcard` |
+| `/mnt/system` | Temporary read-only TF1 mount for configuration and update discovery when needed |
+| `/run`, `/tmp`, `/var`, `/dev/shm` | tmpfs runtime state |
+| `/mnt/vendor` | Compatibility files shipped in the rootfs; no vendor partition mounted here |
 
-The kernel cmdline is `init=/init`. The vendor initramfs `switch_root`s into our
-rootfs and execs `/init`. Our `/init` is a **regular script** (not a symlink — see
-[00](00-boot-chain-and-partitions.md) §2) that leaves the bootloader's static logo
-untouched and `exec`s `/usr/bin/busybox init`, which reads `/etc/inittab`.
+The vendor initramfs mounts root read-write. Normal initialization does not
+remount it read-only. If mounting p6 fails, `rcS` uses tmpfs for `/data`, so
+state from that boot is not persistent. Shutdown flushes persistent mounts;
+see [power handling](05-runtime-power-network.md).
 
-It used to write raw stage markers into the sacrificial `appfs` stub sector so a
-frozen boot was diagnosable from a card reader. That partition no longer exists —
-the region became the unallocated A/B rootfs slot — and the markers had already done
-their job during bring-up. Boot diagnostics now append to
-`/mnt/sdcard/baseos-boot.log`; pre-card messages are buffered in
-`/data/baseos-boot.log` until the frontend card mounts.
+## 3. Init and startup order
 
-## 4. `inittab`
+The vendor initramfs switches root to the regular executable `/init` script,
+which executes BusyBox init. `/etc/inittab` runs `rcS`, then respawns
+`nextui-session` and a serial getty. It invokes `rcK` on shutdown.
 
-```
-::sysinit:/etc/init.d/rcS
-::respawn:/sbin/nextui-session
-ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt100   # serial console (harmless without a cable)
-::ctrlaltdel:/sbin/reboot
-::restart:/sbin/init
-::shutdown:/etc/init.d/rcK
-```
+`rcS` performs this sequence:
 
-`nextui-session` is `respawn`ed: it replaces the entire stock chain
-(`launcher.service → launcher.sh → loadapp.sh → dmenu_ln → boot shim`).
+1. Mount kernel interfaces and tmpfs filesystems. Apply SP Super Standby where
+   supported. Mount `debugfs` for the HDMI display-control and MENU GPIO interfaces.
+2. Handle charger-origin startup before ordinary initialization; see
+   [charger-only boot](11-charger-only-boot.md).
+3. Load Mali in the background, mount `/data`, and check the system-update trial.
+4. Restore time preferences and entropy, read the RTC as UTC with `hwclock -u -s`,
+   and start Wi-Fi module/interface initialization in the background.
+5. Restore or generate the machine ID, then run first-boot storage expansion.
+6. Sample MENU through `boot-menu-held`'s GPIO check, or use the marker retained
+   by charger handling. Select USB-storage mode before mounting frontend storage.
+7. For normal startup, mount usable TF2 p1 or fall back to TF1 p7. Apply
+   `baseos.conf` from TF1, then scan for system updates. Storage mode uses
+   configuration defaults and skips card access and update application.
+8. Start SSH/SFTP and USB adb through `/etc/init.d/dev` in the background.
 
-## 5. `rcS` — early init (target well under 1 s)
+Services requiring a network do not block frontend startup. There is no udev
+or mdev; devtmpfs provides device nodes. Bluetooth starts D-Bus on demand.
 
-1. mount `proc`, `sysfs`, `devtmpfs`, `devpts`, `debugfs`, tmpfs on `/dev/shm` `/tmp`
-   `/run` `/var`; hostname
-1a. `debugfs` is not a debugging nicety here: `/sys/kernel/debug/dispdbg` is the sunxi
-   disp2 driver's **only** output-switch control surface, so it is what moves `disp0`
-   between the LCD and the HDMI TX. The stock OS got the mount for free from systemd;
-   without it the frontend's HDMI switch silently no-ops (see §7)
-2. leave the framebuffer untouched
-3. **`insmod mali_kbase.ko` in the background** — nothing needs the GPU until
-   NextUI's `GFX_init` ~2 s later, and the insmod costs ~0.7 s; backgrounding it
-   overlaps the card mount (see the timing win in [05](05-runtime-power-network.md))
-4. mount p6 (`UDISK`) → `/data` (persistent state, unaffected by a slot flip); create
-   `/data/{bluetooth,bluealsa,dropbear}`; symlink `/var/lib/bluetooth → /data/bluetooth`;
-   restore the persisted timezone through `/run/localtime`; run `baseos-update
-   boot-check`, which counts trial boots after a system update and restores the
-   previous slot if this one never reaches a frontend session
-   ([07](07-partition-layout-and-updates.md))
-5. restore the entropy seed; `hwclock -s` (background); `insmod 8821cs.ko` (background)
-6. `machine-id`: reuse `/data/machine-id` or generate one; symlink `/etc/machine-id`
-   and `/var/lib/dbus/machine-id → /run/machine-id`
-7. **first-boot expand-to-fill** (`expand-storage`, [03](03-first-boot-and-expand.md))
-   — runs *before* the card mount; a no-op once the card is provisioned
-8. sample the built-in MENU button's current evdev state once; when held, enter a
-   one-boot USB-storage maintenance mode *before* mounting frontend storage and
-   export whole TF2 when present, otherwise TF1 p7
-8a. on a normal boot, mount the frontend card: TF2 (`/dev/mmcblk1p1`) if present,
-    else this card's own `/dev/mmcblk0p7` → `/mnt/sdcard`, plus the `/mnt/SDCARD`
-    compat symlink
-8b. `baseos-update apply` — one failed glob on an ordinary boot; when the user has
-   copied a `*.bosupd` payload onto the card it writes the inactive rootfs slot,
-   verifies it, flips the GPT and reboots; deferred while USB storage is active
-   ([07](07-partition-layout-and-updates.md))
-9. start dev extras (`/etc/init.d/dev` → dropbear SSH/sftp-server and the
-   backgrounded adb-over-USB gadget via `usb-gadget-adb`, see
-   [05](05-runtime-power-network.md) §6) in the background
+## 4. Frontend session
 
-No udev, no mdev: devtmpfs auto-creates nodes, SDL runs with
-`SDL_JOYSTICK_DISABLE_UDEV=1`, BlueZ makes its own uinput nodes, and `dbus-daemon`
-starts on demand from the BT path — not at boot.
+`nextui-session` confirms an update trial when the session starts, even if no
+frontend is installed. In USB-storage mode it waits for the gadget result,
+displays the storage status and keeps the frontend stopped.
 
-## 6. `nextui-session` — the frontend loop
+Normal sessions retry card mounting, run pending `MinUI.zip`/`*.pakz` installers,
+then select these entry points in order:
 
-Runs from `respawn`; the entry point keeps its historical name for compatibility.
-It confirms the system-update trial on session start, and stops before accessing
-the card in USB storage mode. On a normal boot it:
+1. `.system/h700/paks/MinUI.pak/launch.sh`, invoked through `/bin/sh`.
+2. `System/slot`, invoked through `/lib/ld-linux-aarch64.so.1`.
 
-1. ensures the card is mounted (retry loop; `INSERT SD CARD` splash if none);
-2. runs the first-boot **install** if `MinUI.zip`/`*.pakz` are present — same triggers
-   as the old boot shim — painting a static install/update status pill
-   (see [04](04-boot-splash.md) for why it is static, not animated, and why NextUI's
-   own installer UI can't render here);
-3. selects `.system/h700/paks/MinUI.pak/launch.sh` (NextUI) if present, otherwise
-   `System/slot` (Slot). Only regular files on a mounted card qualify. NextUI
-   retains priority when both are installed, including after its installer runs;
-4. waits (bounded) for `/dev/mali0` (the backgrounded module load), records the
-   first `/run/boot-frontend-exec` timestamp and hands off to the selected frontend.
-   NextUI runs through `/bin/sh`; Slot runs through `/lib/ld-linux-aarch64.so.1`.
+These are the explicit launch paths in the session script. Other compatible
+frontends must provide a supported entry point; there is no separate
+spruceOS-name check. Only regular files on the mounted card qualify.
 
-Slot releases are extracted on a computer and copied to the card root; BaseOS
-does not unpack Slot archives. The binary and both emulator cores live under
-`System/`; games, BIOS, saves and the other release folders sit alongside it.
-Slot receives `SLOT_ROOT=/mnt/sdcard` and starts with that working directory.
-Its AArch64 glibc binary uses the existing harvested runtime, EGL/GLES and ALSA
-libraries. Invoking the loader directly supports copied binaries without an
-executable bit, without changing card permissions. Slot's stdout and stderr go to
-`/tmp/slot.log`, replaced on each launch in RAM. BaseOS session and installer
-diagnostics append to `/mnt/sdcard/baseos-boot.log`, falling back to
-`/tmp/baseos-boot.log` when the card is unavailable or exported over USB.
+Slot uses `SLOT_ROOT=/mnt/sdcard` and that working directory. Its release is
+extracted on a computer; BaseOS does not unpack Slot archives. Invoking the
+loader supports copied binaries without an executable bit. Its optional
+AGS-102 `ags-net` helper is not shipped by BaseOS.
 
-Slot's optional wireless link feature calls AGS-102's `ags-net` helper, which
-BaseOS does not ship.
+Before the first handoff, the session performs a bounded wait for `/dev/mali0`
+and records `/run/boot-frontend-exec`. The marker survives session respawns.
+Missing cards, missing frontends and installer errors display a status pill;
+see [boot splash](04-boot-splash.md).
 
-The existing `MinUI.pak/launch.sh` runs **unchanged** on base OS: its stock-OS calls
-(`systemctl …`, `killall brightCtrl.bin cexpert`, the logind drop-in, the TF1 dmenu
-self-heal) are already guarded with `|| true` / `command -v` / `mountpoint -q`, and
-resolve harmlessly against our shims. Poweroff/reboot work via the sentinels NextUI
-already writes (`/tmp/poweroff`, `/tmp/reboot`) — BusyBox init handles both.
+## 5. Configuration and compatibility
 
-NextUI's RetroAchievements HTTP layer also runs unchanged: it invokes the static
-`/usr/bin/curl` supplied by BaseOS. The binary is built from a pinned curl release and
-does not depend on the StockMod or frontend library trees.
+`baseos-config` reads TF1's `baseos.conf` before network services start and
+writes `/run/hostname`, `/run/hosts` and `/run/baseos.conf`. `/etc/hostname`
+and `/etc/hosts` link to those generated files. See
+[network identity](05-runtime-power-network.md#hostname-and-mdns).
 
-## 7. Service shims — running NextUI's stock-OS scripts unchanged
+- `systemctl` handles Bluetooth start, restart, stop and `is-active`.
+  Unsupported `is-active` queries return 3; other unsupported operations succeed
+  quietly. Starting Bluetooth ensures D-Bus is running first.
+- `timedatectl` supports `show` for Timezone/NTP/NTPSynchronized,
+  `set-timezone`, `set-ntp` and the boot-time `apply` operation. Preferences live
+  in `/data/timezone` and `/data/ntp-enabled`; the runtime timezone link is
+  `/run/localtime`. NTP defaults off and runs asynchronously when enabled.
+- `/mnt/vendor/ctrl/setBluetooth.sh` supplies the vendor-compatible Bluetooth
+  initialization interface.
+- `poweroff` and `reboot` route through BaseOS shutdown wrappers; see
+  [power handling](05-runtime-power-network.md).
 
-Base OS has no systemd and no vendor scripts, but NextUI's h700 scripts call into
-them. Three shims bridge the gap:
+`/etc/baseos-release` includes exact target, frontend family, model string,
+panel rotation, version and build. The `dmenu.bin` model-string stub supports
+frontends that detect hardware through the vendor path. Device profiles are
+maintained in `devices.json`.
 
-- **`/usr/sbin/systemctl`** — a ~40-line POSIX shim covering exactly the calls NextUI
-  makes: `stop NetworkManager/wpa_supplicant*` → succeed no-op; `is-active bluetooth`
-  → `pidof bluetoothd`; `start/restart bluetooth` → ensure a system `dbus-daemon` then
-  launch `/usr/libexec/bluetooth/bluetoothd`; `stop bluetooth` → kill it. Everything
-  else exits 0 quietly (callers guard with `|| true`).
-- **`/usr/bin/timedatectl`** — implements NextUI's timezone and network-time calls
-  without systemd. The selected zone is stored in `/data/timezone`; `/etc/localtime`
-  points through writable `/run/localtime`, which `rcS` restores on every boot.
-  The NTP preference is stored in `/data/ntp-enabled` and controls a supervised
-  BusyBox `ntpd`. Enabling it returns immediately: `/usr/sbin/baseos-ntp` waits for
-  a default route and DNS entirely in the background, so neither an unavailable
-  network nor clock synchronization can delay frontend startup. Successful syncs
-  update the hardware clock and `/run/baseos-ntp-synchronized`. Invalid timezone
-  names and invalid NTP boolean values are rejected. This remains an OS service,
-  matching NextUI's other platform integrations: TG5040 controls the stock
-  `/etc/init.d/ntpd`, TG5050 controls the stock `/etc/init.d/S49ntp`, and H700
-  delegates through `timedatectl`; NextUI itself does not bundle an NTP daemon.
-- **`/mnt/vendor/ctrl/setBluetooth.sh`** — a POSIX rewrite of the vendor script at the
-  same path (nothing is ever mounted over `/mnt/vendor`), so `bt_init.sh` works unchanged:
-  `init` → `insmod rtl_btlpm.ko` + `rtk_hciattach …`; `enable` → `hciconfig hci0 up`.
-- **`debugfs` on `/sys/kernel/debug`** (mounted in `rcS`, §5) — not a shim but the same
-  kind of stock-environment dependency. The frontend switches the display output by
-  writing `name`/`command`/`param`/`start` under `/sys/kernel/debug/dispdbg`; that is
-  the disp2 driver's only interface for it, and systemd used to provide the mount.
-  Its absence was a silent failure: the cable is still detected through
-  `/sys/class/extcon/hdmi/state` and the framebuffer is still resized to 720p, so the
-  UI ends up hardware-scaled onto the untouched internal panel (issue #10).
+## 6. Logs
 
-Device identity is generated from `devices.json` at build time. `/etc/baseos-release`
-separates the exact `BASEOS_TARGET`, frontend-family `BASEOS_DEVICE`, human model and
-stock-style `BASEOS_MODEL_STRING`. It also carries `BASEOS_PANEL_ROTATION_CCW`, which
-`fbsplash` reads because it ships as one binary for every target
-([04](04-boot-splash.md) §2.1). A stub `/mnt/vendor/bin/dmenu.bin` containing that
-model string keeps NextUI's `strings … | grep ^RG` detection working without the stock
-frontend present; it is a compatibility adapter, not a BaseOS dependency on NextUI.
-
-## 8. Read-only vs read-write root
-
-The design target is a read-only root (writable state on tmpfs + `/data` + the FAT
-card) for power-loss resilience. In practice the **vendor initramfs mounts p5
-read-write** and we do not yet remount it `ro` — so today the root is rw. The journal
-(required anyway, [00](00-boot-chain-and-partitions.md) §2) protects integrity;
-remounting `ro` at the end of `rcS` is tracked as polish in
-[06](06-status-and-lessons.md).
+BaseOS boot, session, installer, update and adb diagnostics append to
+`baseos-boot.log` at the root of the active frontend card. Early messages use
+`/data/baseos-boot.log` until the card mounts; missing/unwritable cards and
+USB-storage mode use the fallbacks described in [boot I/O](10-boot-io-audit.md).
+Slot output remains in `/tmp/slot.log`, and NTP output in `/var/log/baseos-ntp.log`.

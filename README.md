@@ -1,62 +1,81 @@
 # What is BaseOS?
 
-BaseOS is a minimal but feature-complete operating system for Anbernic RG XX handhelds.
+BaseOS is a minimal but feature-complete operating system for Anbernic RG XX
+handhelds.
 
 If you're tired of slow boot times, high battery consumption, or less than ideal
 support for hardware features on other custom firmwares, BaseOS is for you.
 
-It is designed as a drop-in replacement for the stock OS. However, BaseOS does not have a user interface of its own. It will boot up as fast as possible, then hand off to your frontend of choice.
+It is designed as a drop-in replacement for the stock OS. However, BaseOS does
+not have a user interface of its own. It will boot up as fast as possible, then
+hand off to your frontend of choice.
 
-Supported frontends are [NextUI](https://nextui.loveretro.games) and
-[Slot](https://github.com/BrandonKowalski/slot), a GBA frontend designed for the
-Anbernic RG SP.
+BaseOS can auto-detect and start [NextUI](https://nextui.loveretro.games),
+[Slot](https://slot.kowalski.io) and [spruceOS](https://spruceui.github.io).
 
 [Install BaseOS](https://github.com/pvaibhav/BaseOS/wiki/BaseOS-Install-Guide)
 
 ## Boot duration
 
-We have a hard ceiling of 3.0 sec boot time. On top of that is NextUI which takes another 4.5 sec for a total of around 7.5 sec startup time.
+BaseOS currently boots in **2.25 seconds** as of v1.2.0, down from **2.99
+seconds** in v1.1.0. We have a hard limit of 3.0 sec, and every change is
+regression tested against this.
 
-* **2.96 s BaseOS only** - kernel uptime at frontend handoff; excludes bootloader time.
-* **7.14 s BaseOS + NextUI** - power LED to NextUI, ready-to-game on RG40XXV.
+Your frontend adds its own startup time. For example, NextUI adds about **4.5
+seconds**, bringing the total to approximately **6.75 seconds**.
 
-By comparison, stock Anbernic OS + NextUI takes 17.5 sec (manually measured with a stopwatch). Knulli takes 22 sec.
-
-GPU debug stripping reduced RG34XXSP kernel-to-frontend handoff from **3.01 s to
-2.26 s**, comparing medians of three clean warm boots per variant. See
-[boot measurements](docs/09-boot-profiling.md) for the results and measurement
-scope; cold-start timing is measured separately.
+BaseOS timing is measured from kernel start to frontend handoff, excluding
+bootloader time.
 
 ## What BaseOS provides
 
 - The fastest possible boot time for Anbernic RG XX devices.
 - Lowest possible resource and battery usage.
 - Takes 5 sec to install.
-- Full support for the handheld's display, sound, controls, networking, HDMI, LEDs,
-  deep sleep and other features. No comporise on that front.
+- Full support for the handheld's display, sound, controls, networking, HDMI,
+  LEDs, deep sleep and other features. No compromise on that front.
 - First-boot expansion of the data partition to fill the SD card.
-- Easy updates: copy one file onto the card and reboot. No reflashing, and
-  your ROMs, saves and settings are untouched.
+- Easy updates: copy one file onto the card and reboot. No reflashing, and your
+  ROMs, saves and settings are untouched.
 - SSH/SFTP over Wi-Fi and adb over USB active by default.
 - USB storage mode (hold MENU when powering on).
 
 ## Installation
 
-Follow **[installation guide](https://github.com/pvaibhav/BaseOS/wiki/BaseOS-Install-Guide)** for flashing, first boot, and NextUI setup on
-one-card or two-card configurations.
+Follow
+**[installation guide](https://github.com/pvaibhav/BaseOS/wiki/BaseOS-Install-Guide)**
+for flashing, first boot, and NextUI setup on one-card or two-card
+configurations.
 
 To boot Slot, extract its H700 release on your computer and copy the contents of
-the extracted `slot-<version>` folder to the card root. Use either BaseOS's visible
-data partition on TF1 or a FAT32/exFAT card in TF2; a usable TF2 card takes priority.
-The card must contain `System/slot`, `System/mgba_libretro.so` and
-`System/gpsp_libretro.so`, alongside the release's other folders. Put GBA games in
-`Games/` and the optional BIOS in `BIOS/`. BaseOS boots Slot directly; it does not
-install a Slot zip or require a `launch.sh`.
+the extracted `slot-<version>` folder to the card root. Use either BaseOS's
+visible data partition on TF1 or a FAT32/exFAT card in TF2; a usable TF2 card
+takes priority. The card must contain `System/slot`, `System/mgba_libretro.so`
+and `System/gpsp_libretro.so`, alongside the release's other folders. Put GBA
+games in `Games/` and the optional BIOS in `BIOS/`. BaseOS boots Slot directly;
+it does not install a Slot zip or require a `launch.sh`.
 
 NextUI takes priority when both frontends are installed. Its pending `MinUI.zip`
-and `*.pakz` installers also run before frontend selection. For a Slot-only setup,
-use a card without NextUI's launcher or installer files. Update Slot by replacing
-its `System` folder with the one from a new release.
+and `*.pakz` installers also run before frontend selection. For a Slot-only
+setup, use a card without NextUI's launcher or installer files. Update Slot by
+replacing its `System` folder with the one from a new release.
+
+## Settings
+
+Edit `baseos.conf` at the root of TF1's visible partition, then restart normally
+to apply changes. TF1 supplies these settings even when your frontend is on TF2.
+
+```ini
+hostname=my-handheld
+mdns=true
+```
+
+- `hostname`: the device's network name. Defaults to its model ID, such as
+  `rg34xxsp`. Use 1–63 letters, digits or hyphens, with no hyphen at either end.
+- `mdns`: enables `<hostname>.local` access over Wi-Fi (for example,
+  `my-handheld.local`). Defaults to `true`; set `false` to disable it.
+
+Omitted settings use their defaults. Lines starting with `#` are comments.
 
 ## Supported devices
 
@@ -72,29 +91,28 @@ its `System` folder with the one from a new release.
 - Anbernic RG CubeXX
 - Anbernic RG SP
 
-Development setup, build instructions, testing, and technical documentation are in
-**[CONTRIBUTING.md](CONTRIBUTING.md)**.
+Development setup, build instructions, testing, and technical documentation are
+in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
 ## USB access
 
 For reliable adb, connect a data-capable USB-C cable before powering on. If it
 is disconnected, restart with the cable connected.
 
-For USB mass storage, press and hold the MENU key while plugging in the USB cable. If your computer provides power, your handheld will start in mass storage mode. If it doesn't start, press and hold power for 3-4 sec. Let go when it start, but *keep pressing the MENU button* till you finally see "USB MASS STORAGE" on the screen. Then you can let go.
+For USB mass storage, press and hold the MENU key while plugging in the USB
+cable. If your computer provides power, your handheld will start in mass storage
+mode. If it doesn't start, press and hold power for 3-4 sec. Let go when it
+start, but *keep pressing the MENU button* till you finally see "USB STORAGE:
+EJECT BEFORE RESTART" on the screen. Then you can let go.
 
-NOTE: Eject the drive on the computer before restarting the handheld. Restart without
-holding MENU to return to normal.
+NOTE: Eject the drive on the computer before restarting the handheld. Restart
+without holding MENU to return to normal.
 
 ## How does it work?
 
-BaseOS is derived from the stock Anbernic OS for H700-based handhelds. The
-vendor bootloader, kernel, initramfs and DTB are preserved. Drivers retain their
-original executable code; the GPU module has its debug data removed to reduce
-loading time.
-However, it replaces the stock Ubuntu userland with a custom BusyBox based
-rootfs. We retain all required features like WiFi, GLES, Bluetooth etc. but
-cut down everything else running in the background or increasing the boot
-duration. Some parts of the stock OS are simulated to make them faster
-yet compatible.
+BaseOS uses the stock Anbernic bootloader, kernel and hardware drivers for
+H700-based handhelds, with a minimal BusyBox-based system in place of the stock
+Ubuntu userland. It provides the hardware support and services your frontend
+needs with minimal background activity.
 
 The current version is generally based on the latest stock/stockmod OS release.

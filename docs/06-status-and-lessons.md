@@ -1,174 +1,60 @@
-# 06 — Status, bug log & lessons
+# 06 — Hardware validation and constraints
 
-## 1. Hardware-validation matrix (RG40XXV, 2026-07-19)
+## 1. Validation coverage
 
-| capability | status |
-|---|---|
-| Regenerated-GPT boot (boot0/U-Boot/kernel accept it) | ✅ on a 64 GB card |
-| Minimal rootfs mounts + BusyBox init → NextUI | ✅ cold boot 7.18 s |
-| First-boot expand-to-fill (FAT partition 68 MB → 62.8 GB) | ✅ |
-| NextUI install + launch on Base OS | ✅ (`installer exited 0`, ~48 s) — validated with the earlier staged-payload flow; the current user-copies-frontend flow reuses the same install path but is not yet re-validated on hardware |
-| Seamless static bootlogo → frontend hand-off | ✅ |
-| Deep sleep (real suspend-to-RAM, ~0 drain / 35 min) | ✅ |
-| WiFi unaided bring-up + stable association | ✅ (validated when the frontend's `wifi_init.sh` did the wait; the Base-OS-owned `wlan0` bring-up is not yet hardware-validated) |
-| Dropbear SSH + sftp over WiFi | ✅ (SSH + sftp-server validated on hardware via Forklift and scp) |
-| adb over USB (charge port, device role) | ✅ root shell and checksum-matched push/pull validated on RG40XXV with the cable connected before power-on; reconnect requires a cable-connected restart |
-| USB mass storage | ✅ MENU-held maintenance boot exported TF1 p7 to macOS on RG40XXV; whole-TF2 policy is automated-tested but still needs real-card validation |
-| GLES video / input / audio in NextUI | ✅ (NextUI runs; port already validated these) |
-| Bluetooth audio pairing end-to-end | ⏳ daemons run; not yet paired on base OS |
-| HDMI output | ✅ hotplug both directions on RG40XXV once `rcS` mounts `debugfs` (§2.7) |
-| Exact deep-sleep standby µA (long sleep) | ⏳ counter too coarse for 35 min |
-| Other StockMod H700 targets | 🧪 target-aware images generated/verified; BaseOS hardware validation pending |
-| RG28XX rotated-panel splash | ✅ on the RG28XX (2026-07-26): pre-turned bootlogo and status pill both land upright in landscape ([04](04-boot-splash.md) §2.1) — the first BaseOS hardware validation on a second model |
-| 1.0 seven-partition A/B layout | ✅ boots on RG40XXV; NextUI reports BaseOS 1.0.0 |
-| Hidden GPT attributes accepted by the boot chain | ✅ (booted with attributes set) |
-| One drive letter / no format prompts on Windows | ⏳ not yet checked on a Windows machine |
-| `.bosupd` update applied on hardware | ✅ 1.0.0 → 1.0.1 on RG40XXV: write + verify 50.7 s, flip, reboot, trial boot 1 of 3, confirmed |
-| Rootfs running from slot B | ✅ running at LBA 1482752 — partition 5 boots from either offset |
-| `/data` survives a slot flip | ✅ the update log written before the flip was still there after it |
-| Update trial + confirm on hardware | ✅ armed on the first boot of the new slot and cleared when the session started |
+Hardware validation is device-specific; a successful image build or QEMU smoke
+test does not establish hardware support on every target.
 
-> **Standalone-repo changes not yet hardware-validated:** the split from NextUI moved
-> two responsibilities into Base OS — (a) the frontend payload is no longer baked in
-> (the user copies it after first-boot expansion), and (b) Base OS now brings `wlan0` up
-> itself instead of relying on the frontend's wifi script. Both build green and pass the
-> QEMU userspace smoke test, but need a hardware flash to confirm the first-boot
-> user-copy flow and the WiFi timing (see [05](05-runtime-power-network.md) §3).
+| Capability | Validated coverage | Remaining checks |
+| --- | --- | --- |
+| Boot, storage expansion and NextUI launch | RG40XX V | Per-target first-boot and upgrade checks |
+| Display, input, audio and GLES | NextUI on RG40XX V | Per-target validation |
+| Static boot logo and status pills | RG40XX V; rotated panel on RG28XX | Other panel profiles |
+| Suspend-to-RAM | RG40XX V | Long-duration standby current |
+| Wi-Fi | RG40XX V association; RG34XX SP network access | Per-target startup and reconnect checks |
+| SSH/SFTP | RG40XX V | Per-target validation |
+| USB adb | RG40XX V cable-connected boot; shell and file transfer | Per-target validation |
+| USB mass storage | RG40XX V TF1 data partition | Whole TF2 with real cards |
+| HDMI | RG40XX V hotplug in both directions | Per-target validation |
+| Bluetooth audio | Daemon startup | Pairing and playback |
+| A/B updates | RG40XX V slot flip, slot B boot, `/data` persistence and trial confirmation | Hardware rollback after failed boots |
+| GPT visibility attributes | RG40XX V boot | Windows drive-letter and format-prompt behavior |
+| Charger-only boot and PMIC shutdown | RG SP; POWER-hold startup on RG34XX SP | Per-target charging and power behavior |
+| Hostname and mDNS | RG34XX SP network validation | Per-target and host-network compatibility |
 
-## 2. Bug log — the five flash rounds to first boot
+## 2. Boot and build constraints
 
-The path to a booting image was a sequence of *silent* failures (frozen splash, no
-console — `CONFIG_FRAMEBUFFER_CONSOLE` is off). Each was diagnosed by instrumenting a
-layer, and each is now guarded:
+- Root ext4 requires a journal and the vendor-kernel-compatible feature mask.
+  `/init` must be a regular executable script. See
+  [boot chain](00-boot-chain-and-partitions.md).
+- Boot-critical scripts must be executable. Tool source hashes must match the
+  build stamp before packaging. See [image build](02-image-build-and-flash.md).
+- HDMI switching requires the `debugfs` display interface mounted by `rcS`.
+  See [rootfs and init](01-rootfs-and-init.md).
+- Framebuffer draws must finish before frontend handoff. Panel rotation comes
+  from the device profile. See [boot splash](04-boot-splash.md).
+- Preserve vendor USB role selection and inspect configfs attribute contents
+  rather than synthetic file sizes. See [USB access](08-usb-adb-and-otg.md).
+- Growing a partition while a sibling is mounted requires `BLKPG`; `gptgrow`
+  handles this. See [storage expansion](03-first-boot-and-expand.md).
 
-1. **Modern ext4 features.** `mke2fs` 1.47 defaults (`metadata_csum`, `_seed`, `64bit`)
-   aren't mountable by the 4.9 kernel. → classic 4.9-safe feature mask
-   ([00](00-boot-chain-and-partitions.md) §3).
-2. **Journal required.** p4 is an **Android boot image** embedding a vendor initramfs
-   whose `/init` mounts root `data=ordered`; the kernel rejects that on a journal-less
-   ext4. → keep the journal. (Root cause found by extracting p4 and reading the
-   initramfs `/init` — the real boot contract.)
-3. **`/init` must be a regular file.** The 2015 `switch_root` fails on our
-   `/init → sbin/init` symlink chain. → `/init` is a real script, not a symlink.
-4. **`expand-storage` not executable.** Shipped 0644; `rcS` guards the call with
-   `[ -x ]`, so it silently never ran → first boot `NO SYSTEM FOUND`. → added to the
-   rootfs chmod list **and a build guard that fails the build if any boot-critical
-   script is non-executable.**
-5. **Install-progress creep drew over NextUI.** A background `fbsplash` loop raced
-   NextUI's first frame and left the splash stuck over its static menu. → removed;
-   static `INSTALLING` frame only ([04](04-boot-splash.md) §5).
-6. **A cached tool binary shipped against new scripts.** `work/tools/` was reused
-   whenever the binaries merely *existed*, so editing `src/fbsplash.c` never rebuilt
-   the one that shipped. A pre-pill `fbsplash` reached a device whose boot scripts
-   already spoke the new contract: `--pill` fell into `atoi()` as progress 0, the
-   message argument shifted by one, and a card-less boot showed the full-screen logo
-   with one letter lit and `-1` for a caption — the real `INSERT SD CARD` silently
-   discarded. → `work/tools/.stamp` records the source hashes
-   (`tools/tools-stamp.sh`); `build-stockmod.sh` rebuilds on mismatch and
-   `build-rootfs.sh` refuses to ship. The deeper fix is that the renderer now rejects
-   option-shaped arguments instead of letting `atoi()` reinterpret them, so the same
-   skew fails loudly and leaves the boot logo untouched. **Two lessons: existence is
-   not freshness, and a CLI that parses with `atoi()` must reject what it doesn't
-   understand.**
-7. **HDMI went to the internal panel** (issue #10). Plugging a cable in was detected
-   and the UI resized to 1280x720, but the picture stayed on the 640x480 LCD, squished;
-   unplugging left it not filling the panel. The sunxi disp2 driver's only
-   output-switch surface is `/sys/kernel/debug/dispdbg`, and **`rcS` never mounted
-   `debugfs`** — on the stock OS systemd did. So the frontend's `SetHDMI()` wrote four
-   files that did not exist, got no error it could act on, and carried on resizing the
-   framebuffer and the DE layer against an output that had not moved. → `rcS` mounts
-   `debugfs`; `validate-on-device.sh` now checks `dispdbg/command` is writable.
-   **Lesson: an inherited-from-stock kernel interface is a dependency like any harvested
-   library — the ones reached by path rather than by `ld.so` are exactly the ones the
-   closure analysis misses.** (Consuming it silently is the other half of the bug: the
-   frontend's fix was to notice, and to stop cropping the scanout layer to a
-   framebuffer page nothing renders into.)
+## 3. Development validation
 
-Debug technique that cracked the silent boots: **boot stock with the base-OS card in
-the TF2 slot** — that runs our GPT / ext4 / binaries against the *real* kernel without
-flashing, so `mount`, `chroot`, and the vendor initramfs's exact mount options can be
-tested live. Plus (at the time) raw markers `dd`'d into the sacrificial `appfs` stub
-sector — that partition is gone as of 1.0, its region being the second rootfs slot —
-ext4
-superblock mount-counts, and `fbsplash` breadcrumbs as boot-stage forensics.
+QEMU tests cover generic userspace. Use hardware validation for vendor-kernel
+interfaces, drivers, display orientation, suspend and power handling. After
+harvest changes, check the runtime library closure on the target.
 
-## 3. Build / debug gotchas worth remembering
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for the build and test commands, and
+the relevant subsystem document for its acceptance criteria.
 
-- ext4 for the 4.9 kernel: 4.9-safe feature mask **with** a journal.
-- FAT `primary`: leave 1 MiB headroom so `mkfs.vfat` can't overrun into the backup GPT.
-- The GPT is the only thing that selects which bytes become the root filesystem, and
-  it is entirely ours to write. `root=/dev/mmcblk0p5` names a *number*, not an
-  address — that one fact is what buys A/B updates on a bootloader with no A/B
-  support (see [07](07-partition-layout-and-updates.md)).
-- Stock ships all eight partitions as Microsoft Basic Data with attributes `0`, which
-  is precisely why a stock-derived card makes Windows offer to format five of them.
-  Attribute bits 62/63 on everything but the user FAT volume fix it at zero cost.
-- BusyBox has `mkfs.vfat`/`mkdosfs`/`partprobe`/`blockdev`/`killall` applets — no need
-  to harvest dosfstools for the runtime.
-- BusyBox `cp` has no `--sparse`; use plain `cp` + `truncate` for sparse test images.
-- Growing a partition while a sibling is mounted needs the **`BLKPG` ioctl**, not
-  `partprobe` (which EBUSYs). `gptgrow` does BLKPG.
-- Dropbear serves sftp: it execs the static OpenSSH `/usr/libexec/sftp-server` for the
-  `sftp` subsystem (2024.85 default `SFTPSERVER_PATH`), so `sftp`/`scp` work directly.
-- Do **not** try to force the sunxi USB role. Writing `usbc0/otg_role` (e.g.
-  `echo usb_device > otg_role`) **wedges the writer in an uninterruptible D-state** on the
-  4.9.170 vendor kernel — reproduced both with and without a gadget bound, and only a
-  reboot clears the stuck process. Its siblings `usb_device`/`usb_host`/`usb_null` are
-  **0400 read-triggers** — merely `cat`-ing one switches the role (a `cat usb_host` wedged
-  the port). The adb gadget instead binds to the always-present UDC and lets the manager
-  auto-select peripheral mode on cable attach — no role write needed, and charging on the
-  shared port is undisturbed. (Real path is `/sys/devices/platform/soc/usbc0` via the
-  `/sys/bus/platform/devices/usbc0` symlink; the earlier `/sys/devices/platform/usbc0`
-  guess did not exist, which is how the bad `otg_role` write got masked at first.)
-- Configfs attribute `stat` sizes are synthetic. In particular, `test -s g1/UDC`
-  returns true even when reading the file yields an empty value after disconnect.
-  Test the contents. This was the hidden reason the first reconnect implementation
-  treated an unbound gadget as bound.
-- Reconnect recovery is deliberately outside the supported contract. The sunxi
-  manager clears `g1/UDC` on disconnect, but a rebinder cannot repair cases where a
-  later attach selects host role. A permanent listener would add partial recovery
-  while the one shared port must still support intentional OTG devices. Connect the
-  host cable before power-on; after a disconnect, restart with it connected.
-- The repo shell is **fish**, which doesn't word-split variables — inline `ssh -o`
-  options, never store them in a var.
-- The QEMU smoke test exercises generic userspace, not the vendor kernel or hardware.
-  During optional hardware validation, chroot-testing the harvest remains valuable
-  after manifest changes (it previously caught the `ld-linux` interpreter symlink
-  and `bluetoothctl`'s libreadline/libtinfo gaps).
-- NextUI hook dirs (`run_hooks.sh`) only execute `*.sh` files.
-- **A panel's dimensions do not tell you which way it is mounted.** The RG28XX reports
-  480×640 and is held in landscape; every geometry-aware thing BaseOS drew was upright
-  in framebuffer coordinates and therefore sideways on the glass. The vendor's own
-  `bootlogo.bmp` is the cheapest oracle for the direction — extract it from p2 and see
-  which way its artwork is stored ([04](04-boot-splash.md) §2.1).
+## 4. Open work
 
-## 4. Remaining polish / roadmap
+- Read-only rootfs after initialization for power-loss resilience.
+- Complete the remaining hardware checks above across supported H700 models.
+- Define `/data` schema migration before storing state that cannot be regenerated.
 
-- **Hardware-validate 1.0.** Three questions, one flash each: do the GPT attribute
-  bits boot; may partition 5 start anywhere (flash an image built with the rootfs at
-  the slot-B offset); does the seven-partition table boot. Then apply a real
-  `.bosupd`. Until then 1.0 images are offline-verified only.
-- **rootfs read-only.** The vendor initramfs mounts p5 rw; remount `ro` at the end of
-  `rcS` for power-loss resilience (writable state is already tmpfs + `/data` + FAT).
-- **BT-audio** end-to-end validation on base OS (HDMI is done — see §2.7).
-- **Long deep-sleep measurement** for a projected-standby-days figure.
-- **Other H700 variants.** The StockMod importer and device profiles now generate all
-  ten supported images with per-target boot partitions, model identity and logos.
-  Physical BaseOS validation beyond RG40XXV remains outstanding and must be recorded
-  per model rather than inferred from successful image construction.
-- **Silence boot breadcrumbs / release vs dev image split** (serial getty, dropbear
-  SSH/sftp and adb-over-USB are dev conveniences).
-- **PortMaster** later: the kernel already has squashfs + loop + overlay built in;
-  glibc 2.35 is in place and `/etc/os-release` is now generated from `VERSION`. The
-  512 MiB rootfs slot was sized with this in mind — 100 MB used, 5× headroom.
-- **`/data` schema migration.** There is no versioning of `/data` yet. Acceptable
-  while its contents are regenerable; needs a policy before anything in there becomes
-  precious.
+## 5. Frontend boundary
 
-## 5. Relationship to frontends
-
-BaseOS owns the hardware contract and OS tooling: GPT surgery, harvest closure, init,
-boot splash and expand-to-fill. NextUI is the first-class initial frontend and the
-source of the compatibility model contract, but it is installed onto the completed
-card rather than embedded in this image. Other frontends can use the same small
-session hand-off without becoming BaseOS build dependencies.
+BaseOS owns hardware support, system services, storage, updates and the session
+handoff. Frontends are installed separately on the card and are not BaseOS
+build dependencies.
