@@ -164,6 +164,11 @@ restricted to `wlan0`, publishes address records, and ships with no service
 definitions. D-Bus, wide-area DNS, reflection, workstation announcements and
 other optional records are disabled. `mdns=false` keeps the responder stopped.
 
+When devices share a hostname, Avahi negotiates an available mDNS name such as
+`rg34xxsp-2.local`. This changes only the advertised name; the kernel hostname
+and `baseos.conf` stay unchanged. Suffix assignment can change after restarts.
+Set a distinct `hostname` in each device's config for predictable addresses.
+
 DHCP renewals reuse the running responder; deconfiguration stops it. Some
 frontends kill DHCP without issuing deconfiguration when Wi-Fi is disabled. In
 that case Avahi stays asleep and withdraws records through kernel network events.
