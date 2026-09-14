@@ -65,8 +65,9 @@ untouched and `exec`s `/usr/bin/busybox init`, which reads `/etc/inittab`.
 It used to write raw stage markers into the sacrificial `appfs` stub sector so a
 frozen boot was diagnosable from a card reader. That partition no longer exists —
 the region became the unallocated A/B rootfs slot — and the markers had already done
-their job during bring-up. Boot forensics now live in `/run/boot-*`,
-`/data/expand.log` and `/data/update/log`.
+their job during bring-up. Boot diagnostics now append to
+`/mnt/sdcard/baseos-boot.log`; pre-card messages are buffered in
+`/data/baseos-boot.log` until the frontend card mounts.
 
 ## 4. `inittab`
 
@@ -148,8 +149,9 @@ Slot receives `SLOT_ROOT=/mnt/sdcard` and starts with that working directory.
 Its AArch64 glibc binary uses the existing harvested runtime, EGL/GLES and ALSA
 libraries. Invoking the loader directly supports copied binaries without an
 executable bit, without changing card permissions. Slot's stdout and stderr go to
-`/tmp/slot.log`, replaced on each launch; session diagnostics remain in
-`/tmp/nextui-session.log`. Both are in RAM.
+`/tmp/slot.log`, replaced on each launch in RAM. BaseOS session and installer
+diagnostics append to `/mnt/sdcard/baseos-boot.log`, falling back to
+`/tmp/baseos-boot.log` when the card is unavailable or exported over USB.
 
 Slot's optional wireless link feature calls AGS-102's `ags-net` helper, which
 BaseOS does not ship.

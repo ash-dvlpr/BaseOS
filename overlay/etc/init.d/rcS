@@ -133,6 +133,15 @@ fi
 # Older rootfs images may lack the alias baked into current builds.
 [ "$(readlink /mnt/SDCARD)" = /mnt/sdcard ] || /bin/ln -sfn /mnt/sdcard /mnt/SDCARD
 
+. /usr/share/baseos/boot-log.sh
+select_boot_log
+read -r boot_id < /proc/sys/kernel/random/boot_id
+log "=== BaseOS boot $(date '+%Y-%m-%d %H:%M:%S') ($boot_id) ==="
+flush_early_boot_log
+if [ "$LOG" = /mnt/sdcard/baseos-boot.log ]; then
+	log "rcS reached card mount"
+fi
+
 # System update: apply a *.bosupd payload the user copied onto the card. Costs
 # one failed glob on an ordinary boot; when a payload is present it writes the
 # inactive rootfs slot, verifies it, flips the GPT and reboots. Storage mode

@@ -56,8 +56,10 @@ Runs from `rcS`, **before** the card is mounted:
 5. mount p7 and drop `README.txt` (from `/usr/share/baseos/card-readme.txt`) explaining
    how to add a frontend; `sync`; unmount.
 
-It logs to `/tmp/expand.log` **and** mirrors to `/data/expand.log` (persistent, on p6)
-so a failed expand is diagnosable after a power-off even without network. Keying
+It logs to `/data/baseos-boot.log` (persistent, on p6) before the frontend card
+is mounted. rcS appends that buffer to `/mnt/sdcard/baseos-boot.log` once the
+card is writable, then removes the buffer. If mounting fails, the buffer remains
+for recovery after power-off. Keying
 idempotency on "does p7 already fill the disk" (rather than a `/data` flag or content
 check) is robust: expansion happens exactly once, and once done the partition is never
 touched again.

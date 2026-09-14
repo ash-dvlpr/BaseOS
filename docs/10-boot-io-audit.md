@@ -7,13 +7,22 @@ card are persistent. The tested vendor initramfs mounts the root writable.
 
 ## BaseOS changes
 
-- Removed routine boot/ADB breadcrumbs from `baseos-boot.log` and session-log
-  mirroring to `baseos-session.log` on the card. Session diagnostics stay in
-  `/tmp/nextui-session.log`.
-- Removed detailed stage traces and service timing files. Only the first
-  `/run/boot-frontend-exec` timestamp remains, on tmpfs.
-- Stopped persisting the normal "already expanded" message. Actual expansion
-  and errors still leave recovery information in `/data/expand.log`.
+- Boot, session/installer, ADB and system-update diagnostics append to a single
+  `/mnt/sdcard/baseos-boot.log` on the active frontend card (TF2, otherwise TF1).
+  Each boot starts a new heading; existing history is retained.
+- The first kernel-to-frontend handoff time is recorded in that log and retained
+  in `/run/boot-frontend-exec` across session respawns. Verbose profiling is off.
+- Update checks and storage expansion run before the card is mounted. They use
+  `/data/baseos-boot.log` as a persistent early buffer; rcS or the next successful
+  session mount appends it to the card log and removes it only after success.
+  The routine “already expanded” message is restored.
+- Session and ADB logs fall back to `/tmp/baseos-boot.log` for missing or
+  unwritable cards. System-update diagnostics use the persistent `/data` buffer
+  in that case. USB storage mode uses RAM and never writes to the host-owned
+  frontend volume. The early `/data` buffer remains available for recovery if
+  no card can be mounted.
+- Frontend-owned logs, Slot's `/tmp/slot.log`, and the NTP daemon's RAM log keep
+  their existing behavior. Old separate log files are not deleted or migrated.
 - Baked `/mnt/SDCARD` into the rootfs and guarded its compatibility repair,
   avoiding a rootfs symlink rewrite every boot.
 - Added `noatime` to fallback frontend mounts, matching normal mounts.
@@ -24,8 +33,18 @@ preferences, update verification/rollback and shutdown flushing. These serve
 specific persistence or recovery needs. No extra cache or persistent completion
 flag is needed.
 
-These are reductions in logical file operations. Buffered writes can coalesce,
-and repeated reads can hit cache; physical block-write savings were not measured.
+The RG34XXSP logging A/B test used five clean boots per variant, with identical
+messages and only the destination changed. Median handoff was 2.27 s for RAM
+and 2.28 s for SD; median NextUI process start was 3.72 s and 3.71 s respectively.
+Those differences did not establish a boot-speed benefit from RAM logging.
+The original messages added only 190 logical bytes per disk boot. These results
+do not measure frontend rendering or guarantee the same result on every card.
+
+Keep useful boot diagnostics accessible. Avoid rewriting unchanged settings.
+Flush at save, update and shutdown boundaries; logging itself adds no `sync`.
+
+Buffered writes can coalesce, and repeated reads can hit cache; physical
+block-write savings were not measured.
 
 ## NextUI follow-ups
 

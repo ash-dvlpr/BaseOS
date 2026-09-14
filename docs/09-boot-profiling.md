@@ -26,9 +26,11 @@ startup work.
 
 `nextui-session` writes the first field of `/proc/uptime` to
 `/run/boot-frontend-exec` immediately before its first frontend `exec`, after
-the handoff log. The marker is retained across frontend respawns. `/run` is
-tmpfs, so this records one value in memory per boot without writing to the SD
-card. There is no configuration switch or detailed stage trace.
+the handoff log. The marker is retained across frontend respawns on tmpfs.
+The same value is appended once per boot to `/mnt/sdcard/baseos-boot.log` as
+`BaseOS boot time: ... s (kernel start to frontend handoff)`. This is on TF2
+when it is the active frontend card, otherwise on TF1's BASEOS partition. Open
+the log from a computer to read it. There is no detailed stage trace.
 
 After the frontend starts, read the marker and boot ID over ADB:
 
@@ -60,8 +62,8 @@ the restart if preparation fails, and exclude any following boot that reports
 journal recovery. The vendor initramfs and `rcS` restore the normal writable
 mounts on the next boot.
 
-See the [SD-card I/O audit](10-boot-io-audit.md) for the removed routine writes
-and remaining frontend opportunities.
+See the [SD-card I/O audit](10-boot-io-audit.md) for the logging comparison,
+persistence policy and remaining frontend opportunities.
 
 ## RG34XXSP measurements, 2026-09-13
 
