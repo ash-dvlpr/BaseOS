@@ -37,6 +37,7 @@ python3 "$HERE/tools/source_manifest.py" verify "$WORK/source.json" "$TARGET"
 
 docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
   -v "$WORK":/work -v "$TOOLS":/tools:ro \
+  -v "$HERE/tools/strip_gpu_module.py":/build/strip_gpu_module.py:ro \
   -v "$HERE/overlay":/overlay:ro -v "$HERE/assets":/assets:ro \
   -e BASEOS_TARGET="$PROFILE_TARGET" \
   -e BASEOS_DEVICE="$PROFILE_BASEOS_DEVICE" \
@@ -48,6 +49,9 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
   -e BASEOS_VERSION="$BASEOS_VERSION" \
   -e BASEOS_BUILD="$BASEOS_BUILD" \
   alpine:3.20 sh -euc '
+  # Build tools remain outside the assembled rootfs. Native AArch64 binutils
+  # can strip the vendor module without changing its loadable code or ABI.
+  apk add --no-cache binutils python3 >/dev/null
   R=/tmp/rootfs
   rm -rf "$R"; mkdir -p "$R"
 
@@ -67,6 +71,15 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
 
   ## 3. Stock harvest on top
   tar -xf /work/stock-harvest.tar -C "$R"
+  # This alias is fixed; bake it in instead of recreating it on every boot.
+  ln -sfn /mnt/sdcard "$R/mnt/SDCARD"
+  # Keep the prepared stock harvest pristine. Only remove GPU debug data from
+  # this build copy, and fail rather than ship a changed module ABI/signature.
+  GPU="$R/usr/lib/modules/mali_kbase.ko"
+  [ -f "$GPU" ] || { echo "FATAL: missing harvested GPU module" >&2; exit 1; }
+  python3 /build/strip_gpu_module.py "$GPU" "$GPU.strip-debug" \
+    --report /work/gpu-strip-report.json
+  mv "$GPU.strip-debug" "$GPU"
   # alsa-lib plugin dir: drop static/libtool litter
   rm -f "$R"/usr/lib/aarch64-linux-gnu/alsa-lib/*.a "$R"/usr/lib/aarch64-linux-gnu/alsa-lib/*.la
   # flat module paths used by rcS / setBluetooth.sh

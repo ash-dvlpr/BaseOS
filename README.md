@@ -7,7 +7,9 @@ support for hardware features on other custom firmwares, BaseOS is for you.
 
 It is designed as a drop-in replacement for the stock OS. However, BaseOS does not have a user interface of its own. It will boot up as fast as possible, then hand off to your frontend of choice.
 
-Currently, that frontend is [NextUI](https://nextui.loveretro.games), but more might be added.
+Supported frontends are [NextUI](https://nextui.loveretro.games) and
+[Slot](https://github.com/BrandonKowalski/slot), a GBA frontend designed for the
+Anbernic RG SP.
 
 [Install BaseOS](https://github.com/pvaibhav/BaseOS/wiki/BaseOS-Install-Guide)
 
@@ -15,10 +17,15 @@ Currently, that frontend is [NextUI](https://nextui.loveretro.games), but more m
 
 We have a hard ceiling of 3.0 sec boot time. On top of that is NextUI which takes another 4.5 sec for a total of around 7.5 sec startup time.
 
-* **2.96 s BaseOS only** - power LED to frontend handoff.
+* **2.96 s BaseOS only** - kernel uptime at frontend handoff; excludes bootloader time.
 * **7.14 s BaseOS + NextUI** - power LED to NextUI, ready-to-game on RG40XXV.
 
 By comparison, stock Anbernic OS + NextUI takes 17.5 sec (manually measured with a stopwatch). Knulli takes 22 sec.
+
+GPU debug stripping reduced RG34XXSP kernel-to-frontend handoff from **3.01 s to
+2.26 s**, comparing medians of three clean warm boots per variant. See
+[boot measurements](docs/09-boot-profiling.md) for the results and measurement
+scope; cold-start timing is measured separately.
 
 ## What BaseOS provides
 
@@ -37,6 +44,19 @@ By comparison, stock Anbernic OS + NextUI takes 17.5 sec (manually measured with
 
 Follow **[installation guide](https://github.com/pvaibhav/BaseOS/wiki/BaseOS-Install-Guide)** for flashing, first boot, and NextUI setup on
 one-card or two-card configurations.
+
+To boot Slot, extract its H700 release on your computer and copy the contents of
+the extracted `slot-<version>` folder to the card root. Use either BaseOS's visible
+data partition on TF1 or a FAT32/exFAT card in TF2; a usable TF2 card takes priority.
+The card must contain `System/slot`, `System/mgba_libretro.so` and
+`System/gpsp_libretro.so`, alongside the release's other folders. Put GBA games in
+`Games/` and the optional BIOS in `BIOS/`. BaseOS boots Slot directly; it does not
+install a Slot zip or require a `launch.sh`.
+
+NextUI takes priority when both frontends are installed. Its pending `MinUI.zip`
+and `*.pakz` installers also run before frontend selection. For a Slot-only setup,
+use a card without NextUI's launcher or installer files. Update Slot by replacing
+its `System` folder with the one from a new release.
 
 ## Supported devices
 
@@ -67,8 +87,10 @@ holding MENU to return to normal.
 
 ## How does it work?
 
-BaseOS is derived from the stock Anbernic OS for H700-based handhelds. The 
-kernel, drivers, DTB etc are untouched, giving you perfect hardware support.
+BaseOS is derived from the stock Anbernic OS for H700-based handhelds. The
+vendor bootloader, kernel, initramfs and DTB are preserved. Drivers retain their
+original executable code; the GPU module has its debug data removed to reduce
+loading time.
 However, it replaces the stock Ubuntu userland with a custom BusyBox based
 rootfs. We retain all required features like WiFi, GLES, Bluetooth etc. but
 cut down everything else running in the background or increasing the boot

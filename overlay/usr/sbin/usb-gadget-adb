@@ -256,15 +256,6 @@ do_setup() {
 		sleep 0.25 2>/dev/null || sleep 1
 		n=$((n + 1))
 	done
-	# Boot-time breadcrumbs (repo convention, cf. rcS) — only on the FIRST
-	# successful bind: fast boot is a headline feature and these stamps are how a
-	# regression gets spotted. A repeated setup must not overwrite them.
-	if [ -n "$adb_enabled" ] && [ -n "$bound" ] && [ ! -e /run/boot-adb-gadget-done ]; then
-		{ cut -d" " -f1 /proc/uptime > /run/boot-adb-gadget-done; } 2>/dev/null || true
-		if mountpoint -q /mnt/sdcard 2>/dev/null; then
-			{ echo "$(cut -d' ' -f1 /proc/uptime) adb gadget ready" >> /mnt/sdcard/baseos-boot.log; } 2>/dev/null || true
-		fi
-	fi
 	if [ -n "$storage_requested" ]; then
 		if [ -n "$storage_device" ] && [ -n "$bound" ]; then
 			storage_status ready

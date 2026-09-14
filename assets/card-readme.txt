@@ -5,7 +5,7 @@ This card runs Base OS: a minimal Linux that boots your Allwinner H700
 handheld and hands off to a frontend. Base OS itself ships no frontend, so
 this data partition is empty and ready for you to add one.
 
-To install NextUI (the current first-class frontend):
+To install NextUI:
 
   1. Copy NextUI's release files onto the root of this card:
         MinUI.zip
@@ -17,8 +17,21 @@ To install NextUI (the current first-class frontend):
 Base OS detects MinUI.zip, runs NextUI's installer, and launches it. On every
 boot after that it goes straight to NextUI in a few seconds.
 
-To run a different frontend, drop its launch payload here instead; the OS
-hand-off contract is documented in the Base OS repo (docs/04, docs/01).
+To install Slot (a GBA frontend designed for the Anbernic RG SP):
+
+  1. Extract Slot's H700 release on your computer.
+  2. Copy the contents of its slot-<version> folder to the root of this card,
+     so System/slot, System/mgba_libretro.so and System/gpsp_libretro.so
+     are directly on the card alongside the other release folders.
+  3. Add games to Games/ and an optional gba_bios.bin to BIOS/, then reboot.
+
+Base OS launches Slot directly. No launch.sh or on-device Slot installer is
+needed. To update Slot, replace System/ with that folder from a new release.
+
+Both frontends can also live on a FAT32/exFAT card in TF2. A usable TF2 card
+takes priority over this card's data partition. If both frontends are on the
+selected card, NextUI wins; its MinUI.zip and *.pakz installers run first too.
+Use a card without NextUI's launcher or installer files for a Slot-only setup.
 
 Updating Base OS
 ----------------

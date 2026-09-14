@@ -36,7 +36,7 @@ splash() { [ -x /usr/bin/baseos-splash ] && /usr/bin/baseos-splash --important "
 grew=$?
 case "$grew" in
 	0) splash 45 "EXPANDING STORAGE" ;;
-	1) log "p7 already fills the disk; leaving it untouched"; exit 0 ;;
+	1) exit 0 ;;
 	*) log "gptgrow failed (exit $grew); leaving p7 untouched"; exit 1 ;;
 esac
 partprobe "$DISK" >> "$LOG" 2>&1 || blockdev --rereadpt "$DISK" >> "$LOG" 2>&1 || true

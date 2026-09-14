@@ -39,9 +39,9 @@ chk "update engine present"             "test -x /usr/sbin/baseos-update"
 /usr/sbin/baseos-update status 2>/dev/null | sed 's/^/  /'
 
 echo "=== boot speed ==="
-for m in rcS-start rcS-done frontend-exec dev-done adb-gadget-done; do
-	if [ -f /run/boot-$m ]; then echo "  boot-$m: $(cat /run/boot-$m)s"; else echo "  boot-$m: (absent)"; fi
-done
+if [ -f /run/boot-frontend-exec ]; then
+	echo "  boot-frontend-exec: $(cat /run/boot-frontend-exec)s"
+fi
 chk "frontend exec marker exists" "test -f /run/boot-frontend-exec"
 if [ "$BASEOS_EXPECTED_TARGET" = rg40xxv ]; then
 	chk "regular boot stays within the measured 3.00s frontend-exec budget" \

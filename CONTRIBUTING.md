@@ -194,6 +194,7 @@ Run checks relevant to the files changed. The main test entry points are:
 ./tests/test-baseos-config.sh
 ./tests/test-baseos-mdns.sh
 ./tests/test-boot-splash-policy.sh
+./tests/test-frontend-session.sh
 ./tests/test-splash-rotation.sh
 ./tests/test-baseos-ntp.sh
 ./tests/test-timedatectl.sh
@@ -225,6 +226,13 @@ reason and raise the acceptance ceiling explicitly.
 
 The RG40XX V `boot-frontend-exec` acceptance ceiling is currently 3.00 seconds and is
 enforced by `validate-on-device.sh`.
+
+The rootfs build strips GPU debug data with module ABI checks; rebuilt `.bosupd`
+updates deliver this improvement. The vendor boot partition is preserved.
+Boot measurement uses only `/run/boot-frontend-exec`, a kernel-uptime value written
+to tmpfs immediately before the first frontend handoff. See
+[boot optimization and measurement](docs/09-boot-profiling.md) for the GPU results
+and controlled cold-start or warm-reboot comparisons.
 
 ## Technical documentation
 
