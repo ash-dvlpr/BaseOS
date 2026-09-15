@@ -47,6 +47,10 @@ fi
 /bin/mkdir -p /var/lib /var/log /var/tmp /var/lib/alsa /var/lib/bluealsa /var/empty
 /bin/ln -s /run /var/run
 
+# Stock loads the Bluetooth wake-handshake driver during early boot
+# (/etc/modules); its probe drives BT_WAKE (PG17) high. Keep that state.
+[ ! -f /lib/modules/rtl_btlpm.ko ] || /sbin/insmod /lib/modules/rtl_btlpm.ko 2>/dev/null
+
 # GPU: the build strips debug data from the vendor module. Load it in the
 # background to overlap startup; nextui-session waits for /dev/mali0.
 /sbin/insmod /lib/modules/mali_kbase.ko 2>/dev/null &
@@ -87,25 +91,68 @@ fi
 # off, before 8821cs powers it up and registers its driver. Otherwise the driver
 # probes the stale card concurrently with its own rescan (-123 on H700).
 # Frontends own association/DHCP and may still need to wait for wlan0.
+#
+# Some radios only reset properly after a long power-off. The kernel cuts the
+# supply at about 1.85 s and the driver re-powers it about 0.6 s later; on
+# those units the fresh card then answers with a corrupt SDIO ID (020C:C821)
+# or not at all, while stock, which loads the driver ~3.8 s after the cut,
+# works. When the first enumeration fails, unload the driver (it powers the
+# radio off), keep it off for a stock-length interval, and load again. Remember
+# that on /data so later boots hold the first load instead of failing first.
+# Units whose first attempt works, the common case, are unaffected.
 (
-	wifi_rf=/sys/class/misc/sunxi-wlan/rf-ctrl
-	if [ -w "$wifi_rf/scan_device" ] && [ -r "$wifi_rf/power_state" ] \
-		&& read -r wifi_power < "$wifi_rf/power_state" && [ "$wifi_power" = 0 ]; then
-		printf '1\n' > "$wifi_rf/scan_device"
-		wifi_wait=0
-		for wifi_card in /sys/bus/sdio/devices/*; do
-			while [ -d "$wifi_card" ] && [ "$wifi_wait" -lt 20 ]; do
-				sleep 0.05
-				wifi_wait=$((wifi_wait + 1))
-			done
+	wifi_slow=/data/wifi-slow-radio
+	wifi_off_cs=500                 # power-off interval, centiseconds (stock: ~380)
+	wifi_cut_cs=185                 # kernel disables the WLAN supply about here
+	wifi_uptime() {                 # centiseconds; empty when unavailable
+		read -r wifi_up _ < /proc/uptime 2>/dev/null || wifi_up=
+		wifi_up="${wifi_up%.*}${wifi_up#*.}"
+		while [ "${wifi_up#0}" != "$wifi_up" ]; do wifi_up="${wifi_up#0}"; done
+	}
+	wifi_hold_until() {             # bounded wait for uptime >= $1 cs
+		wifi_n=0
+		wifi_uptime
+		while [ -n "$wifi_up" ] && [ "$wifi_up" -lt "$1" ] && [ "$wifi_n" -lt 80 ]; do
+			sleep 0.25 2>/dev/null || sleep 1
+			wifi_n=$((wifi_n + 1))
+			wifi_uptime
 		done
+	}
+	wifi_load() {
+		wifi_rf=/sys/class/misc/sunxi-wlan/rf-ctrl
+		if [ -w "$wifi_rf/scan_device" ] && [ -r "$wifi_rf/power_state" ] \
+			&& read -r wifi_power < "$wifi_rf/power_state" && [ "$wifi_power" = 0 ]; then
+			printf '1\n' > "$wifi_rf/scan_device"
+			wifi_wait=0
+			for wifi_card in /sys/bus/sdio/devices/*; do
+				while [ -d "$wifi_card" ] && [ "$wifi_wait" -lt 20 ]; do
+					sleep 0.05
+					wifi_wait=$((wifi_wait + 1))
+				done
+			done
+		fi
+		/sbin/insmod /lib/modules/8821cs.ko 2>/dev/null
+		wifi_wait=0
+		while [ ! -d /sys/class/net/wlan0 ] && [ "$wifi_wait" -lt "$1" ]; do
+			sleep 0.25 2>/dev/null || sleep 1
+			wifi_wait=$((wifi_wait + 1))
+		done
+	}
+	if [ -e "$wifi_slow" ]; then
+		echo 'baseos: wifi: holding the driver load for a slow-resetting radio' > /dev/kmsg
+		wifi_hold_until $((wifi_cut_cs + wifi_off_cs))
+		wifi_load 40
+	else
+		wifi_load 8
+		if [ ! -d /sys/class/net/wlan0 ]; then
+			echo 'baseos: wifi: no wlan0 after the first load; retrying after a longer power-off' > /dev/kmsg
+			/sbin/rmmod 8821cs 2>/dev/null
+			: > "$wifi_slow" 2>/dev/null
+			wifi_uptime
+			[ -n "$wifi_up" ] && wifi_hold_until $((wifi_up + wifi_off_cs)) || sleep 5
+			wifi_load 40
+		fi
 	fi
-	/sbin/insmod /lib/modules/8821cs.ko 2>/dev/null
-	wifi_wait=0
-	while [ ! -d /sys/class/net/wlan0 ] && [ "$wifi_wait" -lt 40 ]; do
-		sleep 0.25 2>/dev/null || sleep 1
-		wifi_wait=$((wifi_wait + 1))
-	done
 	if [ -d /sys/class/net/wlan0 ]; then
 		rfkill unblock wifi 2>/dev/null || true
 		ip link set wlan0 up 2>/dev/null || true

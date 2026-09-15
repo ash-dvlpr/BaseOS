@@ -44,3 +44,29 @@ For performance comparisons:
 `validate-on-device.sh` enforces a 3.00-second kernel-to-frontend handoff ceiling
 on RG40XX V. See [runtime power handling](05-runtime-power-network.md) for
 shutdown integration and [boot I/O](10-boot-io-audit.md) for persistence policy.
+
+## Stock-style radio initialization experiments (RG SP, 2026-09-15)
+
+Warm reboots of the same RG SP, SD card, NextUI installation and USB cable;
+kernel start to frontend handoff, three boots per row unless noted.
+
+| Initialization | Median | Range | Boots with a `-123` Wi-Fi probe error |
+| --- | ---: | ---: | ---: |
+| BaseOS 1.2.1 | 2.24 s | 2.23–2.28 s | 0/3 |
+| No stale-card discard; early `rtl_btlpm` | 2.29 s | 2.28–2.35 s | 3/3 |
+| Above plus stock udev coldplug before remaining init | 2.90 s | 2.88–2.91 s | 2/3 |
+| Above with udev startup in the background | 2.54 s | 2.47–2.55 s | 1/3 |
+| Above plus driver load held until uptime 7 s, frontend gated on `wlan0` (1 boot) | 9.17 s | — | 0/1 |
+
+Every boot connected on this unit, which never showed the reported failure.
+Two findings ruled these variants out as fixes: dropping the stale-card
+discard brings back the probe race that 1.2.1 fixed (it stayed dead on cold
+boots of this unit before 1.2.1), and udev cost 0.25–0.6 s while still
+re-powering the radio 0.5–1.2 s after the kernel disabled its supply, no
+different from the default path. An affected unit running the udev variant
+still failed. BaseOS keeps direct module loading and devtmpfs. Stock's own boot log later
+showed the decisive difference: its driver loads 3.8 s after the supply cut,
+and an affected unit recovered after a 20 s power-off but not after 1 s. The
+shipped change keeps the fast path and adds a remembered power-off retry for
+such units only, plus the early `rtl_btlpm` load; neither costs boot time. See
+[runtime notes](05-runtime-power-network.md).

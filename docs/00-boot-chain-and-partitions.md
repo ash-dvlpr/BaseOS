@@ -144,7 +144,7 @@ vendor kernel's built-in drivers:
 |---|---|---|
 | `mali_kbase.ko` | Mali-G31 GPU (`/dev/mali0`) | debug data stripped during the build; loaded in the background during `rcS` |
 | `8821cs.ko` | RTL8821CS WiFi (SDIO) | WiFi firmware embedded in the module; loaded async |
-| `rtl_btlpm.ko` | RTL8821C Bluetooth low-power handshake | loaded on BT enable |
+| `rtl_btlpm.ko` | RTL8821C Bluetooth low-power handshake | loaded during early boot |
 
 Bluetooth controller firmware lives at `/lib/firmware/rtlbt/` (`rtlbt_fw`,
 `rtlbt_config`), loaded by `rtk_hciattach -n -s 115200 ttyS1 rtk_h5`.

@@ -29,18 +29,33 @@ the counter has coarse resolution. Hook filenames must end in `.sh`.
 
 ## 3. Wi-Fi
 
-BaseOS owns interface startup. In a background task, `rcS` first asks the
-vendor WLAN controller to discard any SDIO card enumerated before its supply
-was turned off by the kernel's unused-regulator cleanup. It waits up to one
-second for that stale card to disappear before loading `8821cs.ko`. Without
-this ordering, H700 devices can fail the driver probe with `-123` and never create
-`wlan0`; merely delaying module insertion does not prevent the failed probe.
-Already powered radios and kernels without these controls skip this step.
+BaseOS owns interface startup. Like stock, `rcS` loads `rtl_btlpm.ko` during
+early boot. In a background task, `rcS` first asks the vendor WLAN controller
+to discard any SDIO card enumerated before its supply was turned off by the
+kernel's unused-regulator cleanup. It waits up to one second for that stale
+card to disappear before loading `8821cs.ko`. Without this ordering, H700
+devices can fail the driver probe with `-123` and never create `wlan0`; merely
+delaying module insertion does not prevent the failed probe. Already powered
+radios and kernels without these controls skip this step.
+
+Some radios only reset properly after a long power-off. The kernel disables
+the WLAN supply (`axp2202-cldo4`) at about 1.85 s and the driver re-powers it
+about 0.6 s later; on those units the fresh card answers with a corrupt SDIO ID
+(`020C:C821` instead of `024C:C821`, so no driver binds) or not at all, on
+every boot. Stock's own boot log shows its driver load 3.8 s after the cut,
+which is why the same units work there, and a 20 s power-off recovered such a
+unit at runtime while 1 s did not. When the first load produces no `wlan0`
+within 2 s, the task unloads the driver (which powers the radio off), keeps it
+off for 5 s, loads again, and creates `/data/wifi-slow-radio`. Later boots on
+that unit hold the first load until about 6.85 s uptime instead of failing
+first. Units whose first attempt works, the common case, are unaffected;
+delete the marker to return one to the fast path. Kernel messages prefixed
+`baseos: wifi:` record which path ran.
 
 The same background task waits for `wlan0`, then unblocks radio and brings
-the interface up. Neither wait delays frontend handoff. Frontends manage
+the interface up. None of these waits delay frontend handoff. Frontends manage
 network credentials, association and DHCP, and must wait if they start before
-the interface appears.
+the interface appears; NextUI's H700 Wi-Fi script waits up to 25 s.
 
 The `systemctl` compatibility shim implements a synchronous
 `stop wpa_supplicant` (including interface service names), with a bounded

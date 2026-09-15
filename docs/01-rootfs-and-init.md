@@ -55,9 +55,11 @@ which executes BusyBox init. `/etc/inittab` runs `rcS`, then respawns
    supported. Mount `debugfs` for the HDMI display-control and MENU GPIO interfaces.
 2. Handle charger-origin startup before ordinary initialization; see
    [charger-only boot](11-charger-only-boot.md).
-3. Load Mali in the background, mount `/data`, and check the system-update trial.
+3. Load the Bluetooth wake-handshake module, start Mali in the background,
+   mount `/data`, and check the system-update trial.
 4. Restore time preferences and entropy, read the RTC as UTC with `hwclock -u -s`,
-   and start Wi-Fi module/interface initialization in the background.
+   and start Wi-Fi module/interface initialization in the background (with a
+   remembered power-off retry for slow-resetting radios; see [runtime notes](05-runtime-power-network.md)).
 5. Restore or generate the machine ID, then run first-boot storage expansion.
 6. Sample MENU through `boot-menu-held`'s GPIO check, or use the marker retained
    by charger handling. Select USB-storage mode before mounting frontend storage.
