@@ -47,7 +47,7 @@ see [power handling](05-runtime-power-network.md).
 
 The vendor initramfs switches root to the regular executable `/init` script,
 which executes BusyBox init. `/etc/inittab` runs `rcS`, then respawns
-`nextui-session` and a serial getty. It invokes `rcK` on shutdown.
+`frontend-session` and a serial getty. It invokes `rcK` on shutdown.
 
 `rcS` performs this sequence:
 
@@ -73,24 +73,36 @@ or mdev; devtmpfs provides device nodes. Bluetooth starts D-Bus on demand.
 
 ## 4. Frontend session
 
-`nextui-session` confirms an update trial when the session starts, even if no
+`frontend-session` confirms an update trial when the session starts, even if no
 frontend is installed. In USB-storage mode it waits for the gadget result,
 displays the storage status and keeps the frontend stopped.
 
 Normal sessions retry card mounting, run pending `MinUI.zip`/`*.pakz` installers,
 then select these entry points in order:
 
-1. `.system/h700/paks/MinUI.pak/launch.sh`, invoked through `/bin/sh`.
+1. Generic frontend: `System/frontend` through `/lib/ld-linux-aarch64.so.1`, or
+   `System/launch_frontend.sh` through `/bin/sh` if the binary is absent.
 2. `System/slot`, invoked through `/lib/ld-linux-aarch64.so.1`.
+3. `.system/h700/paks/MinUI.pak/launch.sh`, invoked through `/bin/sh`.
+4. `spruce/scripts/runtime.sh`, invoked through `/bin/sh` using the
+   `/mnt/SDCARD` alias for the selected card.
 
-These are the explicit launch paths in the session script. Other compatible
-frontends must provide a supported entry point; there is no separate
-spruceOS-name check. Only regular files on the mounted card qualify.
+Only regular files on the mounted card qualify. Spruce's runtime owns its
+startup and uses its own helpers from the extracted release; BaseOS does not
+unpack spruceOS archives. Shell entry points do not need an executable bit.
 
 Slot uses `SLOT_ROOT=/mnt/sdcard` and that working directory. Its release is
 extracted on a computer; BaseOS does not unpack Slot archives. Invoking the
 loader supports copied binaries without an executable bit. Its optional
 AGS-102 `ags-net` helper is not shipped by BaseOS.
+
+Generic frontends run with `/mnt/sdcard` as their working directory, without
+`SLOT_ROOT`. The binary must target BaseOS's glibc AArch64 runtime, like Slot;
+the loader supports binaries without an executable bit. Use the shell launcher
+to configure a different runtime or additional environment variables. Generic
+stdout/stderr go to `/tmp/generic.log`, replaced on each launch. If the selected
+launcher fails, its exit status goes to init for respawn; it does not fall
+through to another entry point.
 
 Before the first handoff, the session performs a bounded wait for `/dev/mali0`
 and records `/run/boot-frontend-exec`. The marker survives session respawns.

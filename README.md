@@ -55,10 +55,21 @@ and `System/gpsp_libretro.so`, alongside the release's other folders. Put GBA
 games in `Games/` and the optional BIOS in `BIOS/`. BaseOS boots Slot directly;
 it does not install a Slot zip or require a `launch.sh`.
 
-NextUI takes priority when both frontends are installed. Its pending `MinUI.zip`
-and `*.pakz` installers also run before frontend selection. For a Slot-only
-setup, use a card without NextUI's launcher or installer files. Update Slot by
-replacing its `System` folder with the one from a new release.
+To boot spruceOS, copy its extracted H700 release onto the card root so it
+contains `spruce/scripts/runtime.sh` alongside the rest of the release.
+BaseOS launches that script through `/bin/sh`; `/mnt/SDCARD` points to the
+selected TF2 or TF1 data card. No NextUI-compatible launcher is required.
+
+For a generic frontend, provide `System/launch_frontend.sh` or a glibc AArch64
+binary at `System/frontend`. The binary takes priority and uses BaseOS's
+system loader; the script runs through `/bin/sh`. Both run from the
+card root, need no executable bit, and log output to `/tmp/generic.log`.
+
+When multiple frontends are installed, the priority is Generic, Slot, NextUI,
+then spruceOS. NextUI's pending `MinUI.zip` and `*.pakz` installers run before
+frontend selection. To select a lower-priority frontend, remove the launcher
+files for higher-priority frontends from the card. Update Slot by replacing
+its `System` folder with the one from a new release.
 
 ## Settings
 

@@ -9,11 +9,12 @@ HERE="$(cd "$(dirname "$0")/.." && pwd)"
 . "$HERE/tools/docker-platform.sh"
 
 docker run --rm -i --platform "$BASEOS_DOCKER_PLATFORM_HOST" \
-  -v "$HERE/overlay/usr/sbin/nextui-session":/usr/sbin/nextui-session:ro \
+  -v "$HERE/overlay/usr/sbin/frontend-session":/usr/sbin/frontend-session:ro \
   -v "$HERE/overlay/usr/share/baseos/boot-log.sh":/usr/share/baseos/boot-log.sh:ro \
   alpine:3.20 sh -eu <<'TEST'
 mkdir -p /usr/local/bin /usr/sbin /mnt/sdcard /data
 export PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ln -s /mnt/sdcard /mnt/SDCARD
 unset SLOT_ROOT
 BOOT_LOG=/mnt/sdcard/baseos-boot.log
 RAM_LOG=/tmp/baseos-boot.log
@@ -56,7 +57,16 @@ EOF
 # passing this file to /bin/sh or executing it directly cannot pass the test.
 cat > /lib/ld-linux-aarch64.so.1 <<'EOF'
 #!/bin/sh
-[ "$#" -eq 1 ] && [ "$1" = /mnt/sdcard/System/slot ] || exit 90
+[ "$#" -eq 1 ] || exit 90
+case "$1" in
+/mnt/sdcard/System/frontend)
+	[ "$(cat "$1")" = GENERIC-ELF-FIXTURE ] || exit 91
+	. /tmp/generic-checks
+	exit 0
+	;;
+/mnt/sdcard/System/slot) ;;
+*) exit 90 ;;
+esac
 [ "$(cat "$1")" = SLOT-ELF-FIXTURE ] || exit 91
 [ -s /run/boot-frontend-exec ] || exit 92
 [ "$(cat /tmp/update.log)" = confirm ] || exit 93
@@ -70,6 +80,31 @@ cat > /tmp/nextui-launch <<'EOF'
 [ -s /run/boot-frontend-exec ] || exit 92
 [ "$(cat /tmp/update.log)" = confirm ] || exit 93
 printf 'nextui\nroot=%s\n' "${SLOT_ROOT-unset}" > /tmp/frontend.log
+EOF
+cat > /tmp/spruce-runtime <<'EOF'
+#!/bin/sh
+[ "$0" = /mnt/SDCARD/spruce/scripts/runtime.sh ] || exit 90
+[ -s /run/boot-frontend-exec ] || exit 92
+[ "$(cat /tmp/update.log)" = confirm ] || exit 93
+. /mnt/SDCARD/spruce/scripts/helper.sh
+printf 'spruce\nroot=%s\nhelper=%s\n' "${SLOT_ROOT-unset}" "$SPRUCE_HELPER" > /tmp/frontend.log
+if [ -f /tmp/spruce-exit ]; then exit "$(cat /tmp/spruce-exit)"; fi
+EOF
+cat > /tmp/generic-checks <<'EOF'
+[ -s /run/boot-frontend-exec ] || exit 92
+[ "$(cat /tmp/update.log)" = confirm ] || exit 93
+[ "$PWD" = /mnt/sdcard ] || exit 94
+[ "${SLOT_ROOT-unset}" = unset ] || exit 95
+printf 'generic\n' > /tmp/frontend.log
+echo 'generic stdout'
+echo 'generic stderr' >&2
+if [ -f /tmp/generic-exit ]; then exit "$(cat /tmp/generic-exit)"; fi
+EOF
+cat > /tmp/generic-launch <<'EOF'
+#!/bin/sh
+[ "$0" = /mnt/sdcard/System/launch_frontend.sh ] || exit 90
+. /tmp/generic-checks
+echo script >> /tmp/frontend.log
 EOF
 cat > /tmp/installer <<'EOF'
 #!/bin/sh
@@ -93,13 +128,13 @@ cp /tmp/installer /mnt/sdcard/.tmp_update/h700.sh
 EOF
 chmod 755 /usr/local/bin/* /usr/sbin/baseos-update /usr/bin/baseos-splash \
   /lib/ld-linux-aarch64.so.1
-chmod 644 /tmp/nextui-launch /tmp/installer
+chmod 644 /tmp/nextui-launch /tmp/installer /tmp/spruce-runtime /tmp/generic-launch
 
 reset() {
 	rm -rf /mnt/sdcard
 	mkdir -p /mnt/sdcard
-	rm -f /tmp/*.log /tmp/no-card /tmp/gpu-ready-after /tmp/slot-exit /tmp/installer-exit \
-		"$EXPANSION_LOG" \
+	rm -f /tmp/*.log /tmp/no-card /tmp/gpu-ready-after /tmp/slot-exit /tmp/spruce-exit /tmp/installer-exit \
+		"$EXPANSION_LOG" /tmp/generic-exit \
 		/run/boot-frontend-exec /run/usb-storage-device \
 		/run/usb-storage-ready /run/usb-storage-failed
 	: > /dev/mali0
@@ -113,9 +148,23 @@ nextui_card() {
 	mkdir -p /mnt/sdcard/.system/h700/paks/MinUI.pak
 	cp /tmp/nextui-launch /mnt/sdcard/.system/h700/paks/MinUI.pak/launch.sh
 }
+spruce_card() {
+	mkdir -p /mnt/sdcard/spruce/scripts
+	cp /tmp/spruce-runtime /mnt/sdcard/spruce/scripts/runtime.sh
+	echo 'SPRUCE_HELPER=loaded' > /mnt/sdcard/spruce/scripts/helper.sh
+}
+generic_card() {
+	mkdir -p /mnt/sdcard/System
+	if [ "$1" = binary ]; then
+		echo GENERIC-ELF-FIXTURE > /mnt/sdcard/System/frontend
+		chmod 644 /mnt/sdcard/System/frontend
+	else
+		cp /tmp/generic-launch /mnt/sdcard/System/launch_frontend.sh
+	fi
+}
 run_session() {
 	status=0
-	timeout 5 sh /usr/sbin/nextui-session > /tmp/console.log 2>&1 || status=$?
+	timeout 5 sh /usr/sbin/frontend-session > /tmp/console.log 2>&1 || status=$?
 }
 no_legacy_logs() {
 	[ ! -e /tmp/nextui-session.log ] \
@@ -194,7 +243,52 @@ no_legacy_logs
 echo 'ok: an unwritable card log falls back to RAM without losing the expansion spool'
 
 reset
+spruce_card
+run_session
+[ "$status" -eq 0 ]
+[ "$(cat /tmp/frontend.log)" = "$(printf 'spruce\nroot=unset\nhelper=loaded\n')" ]
+[ ! -x /mnt/SDCARD/spruce/scripts/runtime.sh ]
+[ ! -e /tmp/slot.log ] && [ ! -e /tmp/splash.log ]
+check_handoff_log "$BOOT_LOG" 1
+first_handoff=$(cat /run/boot-frontend-exec)
+echo 42 > /tmp/spruce-exit
+rm /tmp/update.log
+run_session
+[ "$status" -eq 42 ]
+[ "$(cat /run/boot-frontend-exec)" = "$first_handoff" ]
+check_handoff_log "$BOOT_LOG" 1
+echo 'ok: spruceOS shell handoff resolves card helpers and preserves respawn exit status'
+
+reset
+spruce_card
+slot_card
+run_session
+[ "$status" -eq 0 ]
+grep -qx slot /tmp/frontend.log
+echo 'ok: Slot retains priority over spruceOS'
+
+reset
+spruce_card
+rm /dev/mali0
+echo 3 > /tmp/gpu-ready-after
+run_session
+[ "$status" -eq 0 ]
+grep -qx spruce /tmp/frontend.log
+[ "$(grep -c '^0.1$' /tmp/sleep.log)" -eq 3 ]
+echo 'ok: spruceOS waits for GPU readiness before handoff'
+
+reset
+spruce_card
+: > /mnt/sdcard/MinUI.zip
+run_session
+[ "$status" -eq 0 ]
+grep -qx nextui /tmp/frontend.log
+grep -qx install /tmp/install.log
+echo 'ok: NextUI installer retains priority over spruceOS'
+
+reset
 nextui_card
+spruce_card
 run_session
 [ "$status" -eq 0 ]
 [ "$(cat /tmp/frontend.log)" = "$(printf 'nextui\nroot=unset\n')" ]
@@ -204,17 +298,16 @@ slot_card
 rm /tmp/update.log
 run_session
 [ "$status" -eq 0 ]
-[ "$(cat /tmp/frontend.log)" = "$(printf 'nextui\nroot=unset\n')" ]
-[ ! -e /tmp/slot.log ]
+grep -qx slot /tmp/frontend.log
 check_handoff_log "$BOOT_LOG" 1
-echo 'ok: NextUI shell launch and priority when both frontends are present'
+echo 'ok: Slot wins over NextUI, which wins over spruceOS'
 
 reset
 slot_card
 : > /mnt/sdcard/MinUI.zip
 run_session
 [ "$status" -eq 0 ]
-grep -qx nextui /tmp/frontend.log
+grep -qx slot /tmp/frontend.log
 grep -qx unzip /tmp/unzip.log
 grep -qx install /tmp/install.log
 grep -qx -- '--important 85 INSTALLING FRONTEND' /tmp/splash.log
@@ -224,7 +317,7 @@ grep -qx 'installer stdout' "$BOOT_LOG"
 grep -qx 'installer stderr' "$BOOT_LOG"
 check_handoff_log "$BOOT_LOG" 1
 no_legacy_logs
-echo 'ok: NextUI archive installation takes priority over an existing Slot'
+echo 'ok: NextUI archive installs before Slot handoff'
 
 reset
 nextui_card
@@ -234,7 +327,7 @@ cp /tmp/installer /mnt/sdcard/.tmp_update/h700.sh
 : > /mnt/sdcard/nextui.update.pakz
 run_session
 [ "$status" -eq 0 ]
-grep -qx nextui /tmp/frontend.log
+grep -qx slot /tmp/frontend.log
 grep -qx install /tmp/install.log
 [ ! -e /tmp/unzip.log ]
 grep -qx -- '--important 85 UPDATING FRONTEND' /tmp/splash.log
@@ -269,9 +362,96 @@ run_session
 [ "$(grep -c '^0.1$' /tmp/sleep.log)" -eq 30 ]
 echo 'ok: Slot shares the bounded GPU readiness wait'
 
+# Both generic forms share card-root cwd, output handling, GPU wait and respawn.
+for kind in binary script; do
+	reset
+	generic_card "$kind"
+	rm /dev/mali0
+	echo 3 > /tmp/gpu-ready-after
+	run_session
+	[ "$status" -eq 0 ]
+	grep -qx generic /tmp/frontend.log
+	[ "$(grep -c '^0.1$' /tmp/sleep.log)" -eq 3 ]
+	[ "$(cat /tmp/generic.log)" = "$(printf 'generic stdout\ngeneric stderr\n')" ]
+	! grep -qE '^generic (stdout|stderr)$' "$BOOT_LOG"
+	[ ! -e /tmp/splash.log ] && [ ! -e /tmp/slot.log ]
+	check_handoff_log "$BOOT_LOG" 1
+	if [ "$kind" = script ]; then
+		grep -qx script /tmp/frontend.log
+		[ ! -x /mnt/sdcard/System/launch_frontend.sh ]
+	else
+		[ ! -x /mnt/sdcard/System/frontend ]
+		# The binary wins even when a shell launcher is also installed.
+		generic_card script
+	fi
+	first_handoff=$(cat /run/boot-frontend-exec)
+	echo stale >> /tmp/generic.log
+	echo 42 > /tmp/generic-exit
+	rm /tmp/update.log
+	run_session
+	[ "$status" -eq 42 ]
+	[ "$(cat /run/boot-frontend-exec)" = "$first_handoff" ]
+	check_handoff_log "$BOOT_LOG" 1
+	[ "$(cat /tmp/generic.log)" = "$(printf 'generic stdout\ngeneric stderr\n')" ]
+	[ "$(cat /tmp/frontend.log)" = generic ]
+	echo "ok: generic $kind handoff, output, GPU wait and respawn"
+done
+
 reset
-# Directories at either entry point must not be mistaken for a frontend.
-mkdir -p /mnt/sdcard/System/slot /mnt/sdcard/.system/h700/paks/MinUI.pak/launch.sh
+generic_card binary
+generic_card script
+run_session
+[ "$status" -eq 0 ]
+[ "$(cat /tmp/frontend.log)" = generic ]
+echo 'ok: generic binary takes priority over shell launcher'
+
+# A directory is not a binary; still allow the shell launcher.
+reset
+generic_card script
+mkdir /mnt/sdcard/System/frontend
+run_session
+[ "$status" -eq 0 ]
+grep -qx script /tmp/frontend.log
+echo 'ok: generic script runs when binary path is a directory'
+
+for kind in binary script; do
+	reset
+	generic_card "$kind"
+	nextui_card
+	slot_card
+	spruce_card
+	run_session
+	[ "$status" -eq 0 ]
+	grep -qx generic /tmp/frontend.log
+	[ -e /tmp/generic.log ] && [ ! -e /tmp/slot.log ]
+done
+echo 'ok: both generic launch methods take priority over all named frontends'
+
+reset
+generic_card binary
+: > /mnt/sdcard/MinUI.zip
+run_session
+[ "$status" -eq 0 ]
+grep -qx generic /tmp/frontend.log
+grep -qx install /tmp/install.log
+echo 'ok: pending NextUI install runs before generic frontend handoff'
+
+reset
+generic_card binary
+generic_card script
+: > /tmp/no-card
+run_session
+[ "$status" -eq 1 ]
+[ ! -e /tmp/frontend.log ] && [ ! -e /tmp/generic.log ]
+[ ! -e /run/boot-frontend-exec ]
+grep -qx -- '--important -1 INSERT SD CARD' /tmp/splash.log
+echo 'ok: generic frontends do not run without a mounted card'
+
+reset
+# Directories at any entry point must not be mistaken for a frontend.
+mkdir -p /mnt/sdcard/System/slot /mnt/sdcard/.system/h700/paks/MinUI.pak/launch.sh \
+	/mnt/sdcard/spruce/scripts/runtime.sh \
+	/mnt/sdcard/System/frontend /mnt/sdcard/System/launch_frontend.sh
 run_session
 [ "$status" -eq 1 ]
 grep -qx -- '--important -1 ADD FRONTEND TO SD CARD' /tmp/splash.log
@@ -287,8 +467,7 @@ run_session
 echo 'ok: an incomplete NextUI installation retains its failure prompt'
 
 reset
-slot_card
-nextui_card
+spruce_card
 : > /tmp/no-card
 echo 'pending expansion diagnostics' > "$EXPANSION_LOG"
 before_card=$(card_snapshot)
@@ -309,6 +488,9 @@ for state in ready failed; do
 	reset
 	slot_card
 	nextui_card
+	spruce_card
+	generic_card binary
+	generic_card script
 	: > /mnt/sdcard/MinUI.zip
 	echo /dev/mmcblk1 > /run/usb-storage-device
 	: > "/run/usb-storage-$state"
@@ -331,6 +513,6 @@ for state in ready failed; do
 		grep -q ' USB storage gadget did not become ready$' "$RAM_LOG"
 	fi
 done
-echo 'ok: USB storage mode blocks card access, installers and both frontends'
+echo 'ok: USB storage mode blocks card access, installers and all frontends'
 echo 'frontend session tests passed'
 TEST

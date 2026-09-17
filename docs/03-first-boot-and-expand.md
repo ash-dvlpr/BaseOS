@@ -69,7 +69,7 @@ that p7 fills the disk; automatic formatting is not retried.
 ## 4. Adding a frontend (the hand-off)
 
 BaseOS ships no frontend, so after expansion the card contains only setup files and
-`nextui-session` shows **`ADD FRONTEND TO SD CARD`** and waits (init respawns it). The
+`frontend-session` shows **`ADD FRONTEND TO SD CARD`** and waits (init respawns it). The
 user then:
 
 1. mounts the card on a computer — it now presents the full-capacity `BASEOS` volume
@@ -77,7 +77,7 @@ user then:
 2. copies a frontend onto it — for NextUI, `MinUI.zip` (+ any `nextui.*.pakz`);
 3. reboots the handheld.
 
-On the next normal boot, `nextui-session` bootstraps `.tmp_update/h700.sh`
+On the next normal boot, `frontend-session` bootstraps `.tmp_update/h700.sh`
 from `MinUI.zip` when needed and runs that frontend installer. Pending `*.pakz`
 files also trigger it. BaseOS displays a static installation/update pill;
 see [boot splash](04-boot-splash.md). Slot's extracted release needs no installer.

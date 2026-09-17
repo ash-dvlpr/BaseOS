@@ -52,7 +52,7 @@ fi
 [ ! -f /lib/modules/rtl_btlpm.ko ] || /sbin/insmod /lib/modules/rtl_btlpm.ko 2>/dev/null
 
 # GPU: the build strips debug data from the vendor module. Load it in the
-# background to overlap startup; nextui-session waits for /dev/mali0.
+# background to overlap startup; frontend-session waits for /dev/mali0.
 /sbin/insmod /lib/modules/mali_kbase.ko 2>/dev/null &
 
 # Persistent state partition (p6, label "userdata"). It survives system
@@ -253,4 +253,4 @@ fi
 # Dev image extras (serial getty is in inittab; this starts SSH).
 [ -x /etc/init.d/dev ] && /etc/init.d/dev &
 
-: # rcS must succeed; init proceeds to respawn nextui-session
+: # rcS must succeed; init proceeds to respawn frontend-session

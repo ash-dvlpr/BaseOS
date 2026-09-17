@@ -1,8 +1,7 @@
 #!/bin/sh
 # The frontend session, respawned by busybox init. Replaces the whole stock
 # chain (launcher.service -> launcher.sh -> loadapp.sh -> dmenu_ln -> boot
-# shim). Runs NextUI's standard launch.sh or the Slot binary from the card.
-# Keep this entry point for compatibility with existing init configurations.
+# shim). Runs NextUI, Slot, spruceOS or a generic frontend from the card.
 
 SD=/mnt/sdcard
 . /usr/share/baseos/boot-log.sh
@@ -107,18 +106,36 @@ if mountpoint -q "$SD" 2>/dev/null; then
 	fi
 fi
 
-LAUNCH="$SD/.system/h700/paks/MinUI.pak/launch.sh"
-FRONTEND=nextui
-# Preserve NextUI's install/update and boot priority on cards with both
-# frontends. Slot releases are already extracted; there is no installer or
-# launch.sh in their System directory.
-if [ ! -f "$LAUNCH" ]; then
+LAUNCH=
+FRONTEND=
+LAUNCH_TYPE=script
+# Select Generic, Slot, NextUI, then spruceOS after any pending install/update.
+# Prefer the generic binary over its shell launcher.
+if [ -f "$SD/System/frontend" ]; then
+	LAUNCH="$SD/System/frontend"
+	FRONTEND=generic
+	LAUNCH_TYPE=binary
+elif [ -f "$SD/System/launch_frontend.sh" ]; then
+	LAUNCH="$SD/System/launch_frontend.sh"
+	FRONTEND=generic
+elif [ -f "$SD/System/slot" ]; then
 	LAUNCH="$SD/System/slot"
 	FRONTEND=slot
+	LAUNCH_TYPE=binary
+elif [ -f "$SD/.system/h700/paks/MinUI.pak/launch.sh" ]; then
+	LAUNCH="$SD/.system/h700/paks/MinUI.pak/launch.sh"
+	FRONTEND=nextui
+elif [ -f /mnt/SDCARD/spruce/scripts/runtime.sh ]; then
+	# rcS aliases /mnt/SDCARD to the selected card. Spruce uses that path
+	# for its runtime and helpers; invoke the script without needing chmod.
+	LAUNCH=/mnt/SDCARD/spruce/scripts/runtime.sh
+	FRONTEND=spruce
 fi
 if [ "$CARD_MISSING" -eq 0 ] && [ -f "$LAUNCH" ]; then
 	if [ "$FRONTEND" = slot ]; then
 		export SLOT_ROOT="$SD"
+	fi
+	if [ "$FRONTEND" = slot ] || [ "$FRONTEND" = generic ]; then
 		cd "$SD" || exit 1
 	fi
 	# rcS loads mali_kbase in the background; make sure /dev/mali0 exists
@@ -136,11 +153,14 @@ if [ "$CARD_MISSING" -eq 0 ] && [ -f "$LAUNCH" ]; then
 			&& printf '%s BaseOS boot time: %s s (kernel start to frontend handoff)\n' \
 				"$boot_uptime" "$boot_uptime" >> "$LOG"; } 2>/dev/null || :
 	fi
-	if [ "$FRONTEND" = slot ]; then
-		# Slot is a glibc AArch64 ELF, not a shell script. Use the system
+	if [ "$LAUNCH_TYPE" = binary ]; then
+		# Binaries use the glibc AArch64 runtime. Use the system
 		# loader so a copied binary needs no executable bit or chmod on the
 		# card. Frontend output stays in RAM and is replaced on each launch.
-		exec /lib/ld-linux-aarch64.so.1 "$LAUNCH" > /tmp/slot.log 2>&1
+		exec /lib/ld-linux-aarch64.so.1 "$LAUNCH" > "/tmp/$FRONTEND.log" 2>&1
+	fi
+	if [ "$FRONTEND" = generic ]; then
+		exec /bin/sh "$LAUNCH" > /tmp/generic.log 2>&1
 	fi
 	exec /bin/sh "$LAUNCH"
 fi

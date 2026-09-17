@@ -16,7 +16,7 @@
 #   apply       find and apply a *.bosupd payload (called from rcS)
 #   boot-check  count boots since an update and roll back a slot that never
 #               reaches a frontend session (called from rcS)
-#   confirm     end the trial — the new slot works (called from nextui-session)
+#   confirm     end the trial — the new slot works (called from frontend-session)
 #   status      print the current slot and update state
 #
 # Payload: an uncompressed tar named *.bosupd containing, in order,

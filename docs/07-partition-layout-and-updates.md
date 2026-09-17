@@ -94,7 +94,7 @@ only to seed history on migration. Diagnostics, including confirmation, use
 
 `rcS` calls `baseos-update boot-check` before frontend startup. It increments
 an open trial's attempt count and flips back on the third boot that reaches
-this check without prior confirmation. `nextui-session` confirms the trial
+this check without prior confirmation. `frontend-session` confirms the trial
 on session start, even without an installed frontend, then removes trial state.
 Charging-only sessions do not reach either operation.
 

@@ -25,7 +25,7 @@ if grep -Eq 'baseos-splash|fbsplash' \
 	exit 1
 fi
 if grep -Eq '(^|[[:space:]])splash[[:space:]]+100' \
-	"$HERE/overlay/usr/sbin/nextui-session"; then
+	"$HERE/overlay/usr/sbin/frontend-session"; then
 	echo "frontend hand-off invokes routine splash progress" >&2
 	exit 1
 fi

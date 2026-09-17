@@ -1,7 +1,7 @@
 #!/bin/sh
 # Userspace boot smoke test: run the assembled rootfs as an initramfs under
 # QEMU (generic aarch64 virt machine, Alpine linux-virt kernel) so busybox
-# /init -> inittab -> rcS -> nextui-session executes for real. Hardware
+# /init -> inittab -> rcS -> frontend-session executes for real. Hardware
 # steps (insmod, /data ext4, SD mount, ttyS0 getty) fail gracefully by
 # design; this validates the init plumbing, not the drivers.
 # A test-only inittab line prints a marker once rcS has completed.
@@ -56,7 +56,7 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_HOST" \
     -nographic -no-reboot > /tmp/boot.log 2>&1 || true
 
   echo "=== userspace-relevant console lines ==="
-  grep -aE "BASEOS|init|rcS|nextui|getty|panic|Kernel panic|not found|can.t" /tmp/boot.log | head -20 || true
+  grep -aE "BASEOS|init|rcS|frontend|getty|panic|Kernel panic|not found|can.t" /tmp/boot.log | head -20 || true
   if grep -aq "BASEOS-USERSPACE-BOOT-OK-$TARGET" /tmp/boot.log; then
     echo "RESULT: PASS — $TARGET busybox init + inittab + rcS completed"
   else

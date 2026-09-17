@@ -7,7 +7,7 @@ See [boot performance](09-boot-profiling.md) for measurement instructions and
 the acceptance ceiling.
 
 `rcS` loads `mali_kbase.ko` in the background to overlap storage and service
-startup. `nextui-session` performs a bounded wait for `/dev/mali0` before
+startup. `frontend-session` performs a bounded wait for `/dev/mali0` before
 handoff. Ordinary boots leave the bootloader logo untouched until the frontend
 renders its first frame.
 

@@ -132,7 +132,7 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
             "$R/etc/init.d/rcS" "$R/etc/init.d/rcK" "$R/etc/init.d/dev" \
             "$R/usr/bin/baseos-splash" "$R/usr/bin/timedatectl" \
             "$R/usr/sbin/baseos-ntp" "$R/usr/sbin/baseos-ntp-notify" \
-            "$R/usr/sbin/nextui-session" "$R/usr/sbin/systemctl" \
+            "$R/usr/sbin/frontend-session" "$R/usr/sbin/systemctl" \
             "$R/usr/sbin/expand-storage" "$R/usr/sbin/baseos-update" \
             "$R/usr/sbin/boot-menu-held" "$R/usr/sbin/baseos-charger" \
             "$R/usr/sbin/baseos-poweroff" "$R/usr/sbin/baseos-reboot" \
@@ -147,7 +147,7 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
   ln -s /run/shadow "$R/etc/shadow"
   # Guard: every boot-critical script must be executable (a non-exec script is
   # skipped by its `[ -x ]` guard and fails silently — cost us one flash).
-  for s in /init /etc/init.d/rcS /etc/init.d/rcK /usr/sbin/nextui-session \
+  for s in /init /etc/init.d/rcS /etc/init.d/rcK /usr/sbin/frontend-session \
            /usr/bin/baseos-splash /usr/bin/timedatectl \
            /usr/sbin/baseos-ntp /usr/sbin/baseos-ntp-notify \
            /usr/sbin/expand-storage /usr/sbin/baseos-update /usr/sbin/systemctl \

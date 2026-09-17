@@ -47,7 +47,7 @@ chroot $R /usr/bin/dbus-uuidgen > $R/run/machine-id
 mkdir -p $R/mnt/sdcard
 mountpoint -q $R/mnt/sdcard || mount --bind /mnt/sdcard $R/mnt/sdcard
 # run our session exactly as busybox init would (respawn loop not needed for demo)
-chroot $R /sbin/nextui-session \
+chroot $R /sbin/frontend-session \
 	> /tmp/takeover-session.log 2>&1 &
 echo "session started (pid $!)"'
 
@@ -55,7 +55,7 @@ echo "== 4/5 wait for NextUI, then verify"
 sleep 20
 $SSH '
 if pidof nextui.elf >/dev/null; then echo "PASS: nextui.elf is RUNNING under the base OS rootfs"; else
-	echo "FAIL: nextui.elf not running"; tail -30 /tmp/takeover-session.log /tmp/baseos/tmp/nextui-session.log 2>/dev/null; fi
+	echo "FAIL: nextui.elf not running"; tail -30 /tmp/takeover-session.log /tmp/baseos/tmp/baseos-boot.log 2>/dev/null; fi
 pidof keymon.elf >/dev/null && echo "PASS: keymon running" || echo "note: keymon not detected"
 ls -la /proc/$(pidof nextui.elf 2>/dev/null | cut -d" " -f1)/root 2>/dev/null | grep -o "baseos" | head -1 | sed "s/^/PASS: nextui root is /"'
 

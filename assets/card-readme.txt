@@ -20,18 +20,29 @@ boot after that it goes straight to NextUI in a few seconds.
 To install Slot (a GBA frontend designed for the Anbernic RG SP):
 
   1. Extract Slot's H700 release on your computer.
-  2. Copy the contents of its slot-<version> folder to the root of this card,
-     so System/slot, System/mgba_libretro.so and System/gpsp_libretro.so
-     are directly on the card alongside the other release folders.
+  2. Copy the contents of its slot-<version> folder to the root of this card.
   3. Add games to Games/ and an optional gba_bios.bin to BIOS/, then reboot.
 
-Base OS launches Slot directly. No launch.sh or on-device Slot installer is
-needed. To update Slot, replace System/ with that folder from a new release.
+To update Slot, replace its System folder with the one from a new release.
 
-Both frontends can also live on a FAT32/exFAT card in TF2. A usable TF2 card
-takes priority over this card's data partition. If both frontends are on the
-selected card, NextUI wins; its MinUI.zip and *.pakz installers run first too.
-Use a card without NextUI's launcher or installer files for a Slot-only setup.
+To install spruceOS:
+
+  1. Copy the extracted H700 release contents to the root of this card.
+  2. Put the card back in the handheld and reboot.
+
+To install another compatible frontend:
+
+  Follow its installation instructions and copy its release files to the
+  root of this card, then reboot.
+  Base OS launches System/frontend (binary), or System/launch_frontend.sh
+  if the binary is absent.
+
+Base OS detects and starts your installed frontend automatically. You can
+also use a FAT32/exFAT card in TF2; when inserted, that card is used instead
+of this card's data partition.
+
+Frontend setup and developer details:
+https://github.com/pvaibhav/BaseOS#installation
 
 Updating Base OS
 ----------------

@@ -15,7 +15,7 @@ The vendor bootloader, kernel, initramfs and DTB remain unchanged.
 
 ## Measuring startup
 
-`nextui-session` writes kernel uptime to `/run/boot-frontend-exec` immediately
+`frontend-session` writes kernel uptime to `/run/boot-frontend-exec` immediately
 before its first frontend `exec`. The marker is retained across frontend
 respawns on tmpfs. The same value is appended once per boot to
 `/mnt/sdcard/baseos-boot.log` as `BaseOS boot time: ... s (kernel start to
