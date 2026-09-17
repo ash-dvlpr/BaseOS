@@ -9,28 +9,16 @@ handles the hardware and starts your choice of frontend:
 
 ## Startup time
 
-BaseOS takes about **2.2 seconds after Linux starts** to hand over to your
-frontend on RG SP. We check this against a **2.50-second** limit. Your frontend
-then takes additional time to display its menu.
+BaseOS v1.3.0 gets out of the way a little sooner: around **300 ms less time
+loading the kernel**, plus a small improvement after Linux starts — about
+**2.2 seconds**, down from **2.25 seconds in v1.2.0**.
 
-BaseOS 1.3.0 also measures startup more accurately using the hardware timer and
-a clock unaffected by network time corrections. The boot log now separates
-**pre-kernel** time (loading the kernel and its earliest startup work) from
-**post-kernel** time (the rest of startup up to frontend handoff).
+Our latest RG SP restart tests measured about **5.6 seconds including kernel
+loading**, up to the point where your frontend starts. Your frontend adds its
+own time to display the menu, and results vary with the device and SD card.
 
-In the latest three RG SP restart tests, the medians were **3.42 seconds
-pre-kernel**, **2.17 seconds post-kernel**, and **5.62 seconds combined**. These
-measurements end when BaseOS starts the frontend; they are not a power-button
-to visible-menu measurement. Times vary with the device and SD card.
-See the [measurements](experiments/h700-kernel-gzip/README.md#steady-state-measurements)
-and [timing details](docs/09-boot-profiling.md#measuring-startup).
-
-For comparison, v1.2.0 reported **2.25 seconds after kernel start**, versus
-about **2.17 seconds** now. Its uncompressed boot path also took longer before
-the kernel: earlier RG SP tests measured about **3.72 seconds**, versus
-**3.42 seconds** now. That pre-kernel baseline was measured on a later
-development build using the old boot path, so it is an approximate comparison.
-See the [earlier results](experiments/rgsp-boot-timing/RESULTS.md).
+The boot log now shows more accurate pre- and post-kernel timings, making it
+easier to see where startup time goes. [Timing details](docs/09-boot-profiling.md).
 
 ## Features
 
