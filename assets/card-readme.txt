@@ -75,6 +75,9 @@ mDNS enables that name with .local on Wi-Fi. Set mdns=false to disable it.
 Hostnames accept 1-63 ASCII letters, digits and hyphens, with no hyphen at
 either end. TF1 supplies settings even when the frontend is on TF2.
 
+Full settings reference, including SSH password configuration:
+https://github.com/pvaibhav/BaseOS#settings
+
 Boot diagnostics
 ----------------
 

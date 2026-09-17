@@ -141,7 +141,10 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
             "$R/usr/sbin/usb-gadget-adb" "$R/usr/sbin/usb-storage-mode" \
             "$R/mnt/vendor/ctrl/setBluetooth.sh" \
             "$R/usr/share/udhcpc/default.script"
-  chmod 600 "$R/etc/shadow"
+  mkdir -p "$R/usr/share/baseos"
+  mv "$R/etc/shadow" "$R/usr/share/baseos/shadow"
+  chmod 600 "$R/usr/share/baseos/shadow"
+  ln -s /run/shadow "$R/etc/shadow"
   # Guard: every boot-critical script must be executable (a non-exec script is
   # skipped by its `[ -x ]` guard and fails silently — cost us one flash).
   for s in /init /etc/init.d/rcS /etc/init.d/rcK /usr/sbin/nextui-session \

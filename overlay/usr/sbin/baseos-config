@@ -1,7 +1,7 @@
 #!/bin/sh
 # Apply TF1's plain-text settings once, before services start. rcS supplies the
 # mounted TF1 file; no argument (including USB-storage boots) means defaults.
-# Card contents are data, never shell code. Only the two known keys survive in
+# Card contents are data, never shell code. Only non-secret settings survive in
 # /run/baseos.conf; /etc/hostname and /etc/hosts point at the runtime files.
 set -eu
 export LC_ALL=C
@@ -24,10 +24,12 @@ default_name="$(awk '/^BASEOS_TARGET=/ { sub(/^BASEOS_TARGET=/, ""); print tolow
 valid_hostname "$default_name" || default_name=baseos
 name=$default_name
 mdns=true
+password=
 
 if [ -f "$CONFIG" ] && [ -r "$CONFIG" ]; then
 	while IFS= read -r line || [ -n "$line" ]; do
-		line=${line%%#*}
+		case "$line" in *[![:space:]]*) ;; *) continue ;; esac
+		case "${line#"${line%%[![:space:]]*}"}" in \#*) continue ;; esac
 		case "$line" in *=*) ;; *) continue ;; esac
 		key=${line%%=*}
 		value=${line#*=}
@@ -35,9 +37,12 @@ if [ -f "$CONFIG" ] && [ -r "$CONFIG" ]; then
 		# internal whitespace that would make a hostname invalid.
 		key=${key#"${key%%[![:space:]]*}"}
 		key=${key%"${key##*[![:space:]]}"}
+		# Passwords may contain literal # characters; other keys allow comments.
+		[ "$key" = ssh_password ] || value=${value%%#*}
 		value=${value#"${value%%[![:space:]]*}"}
 		value=${value%"${value##*[![:space:]]}"}
 		case "$key" in
+			ssh_password) password=$value ;;
 			hostname)
 				name=$default_name
 				if valid_hostname "$value"; then name=$value; fi
@@ -51,6 +56,25 @@ if [ -f "$CONFIG" ] && [ -r "$CONFIG" ]; then
 fi
 
 mkdir -p "$RUN"
+# Build shadow in RAM: the system image stays read-only, and TF1 supplies the
+# password again after updates. Never copy the cleartext into effective config.
+umask 077
+shadow_default="${BASEOS_SHADOW_DEFAULT:-/usr/share/baseos/shadow}"
+shadow_tmp="$RUN/shadow.tmp"
+trap 'rm -f "$shadow_tmp"' EXIT HUP INT TERM
+if [ -n "$password" ]; then
+	# -P reads a file descriptor, keeping the password out of process arguments.
+	hash="$(printf '%s\n' "$password" | "${BASEOS_MKPASSWD_BIN:-mkpasswd}" -m sha512 -P 0)"
+	case "$hash" in '$6$'*) ;; *) echo 'baseos-config: password hashing failed' >&2; exit 1 ;; esac
+	awk -F: -v OFS=: -v hash="$hash" '$1 == "root" { $2 = hash } { print }' \
+		"$shadow_default" > "$shadow_tmp"
+else
+	cat "$shadow_default" > "$shadow_tmp"
+fi
+chmod 600 "$shadow_tmp"
+mv -f "$shadow_tmp" "$RUN/shadow"
+unset password
+umask 022
 printf '%s\n' "$name" > "$RUN/hostname"
 printf '127.0.0.1 localhost %s\n::1 localhost\n' "$name" > "$RUN/hosts"
 printf 'hostname=%s\nmdns=%s\n' "$name" "$mdns" > "$RUN/baseos.conf"

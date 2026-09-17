@@ -9,6 +9,8 @@ RCS="$HERE/overlay/etc/init.d/rcS"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 mkdir -p "$TMP/run" "$TMP/bin" "$TMP/sdcard" "$TMP/tf1-data" "$TMP/system"
+export BASEOS_SHADOW_DEFAULT="$HERE/overlay/etc/shadow"
+export BASEOS_MKPASSWD_BIN="$TMP/bin/mkpasswd"
 export BASEOS_RUN_ROOT="$TMP/run"
 export BASEOS_RELEASE_FILE="$TMP/release"
 export BASEOS_HOSTNAME_BIN="$TMP/bin/hostname"
@@ -24,6 +26,14 @@ cat > "$TMP/bin/hostname" <<'EOF'
 printf 'hostname %s\n' "$1" >> "$BASEOS_TEST_LOG"
 EOF
 chmod 755 "$TMP/bin/hostname"
+
+cat > "$TMP/bin/mkpasswd" <<'EOF'
+#!/bin/sh
+[ "$*" = '-m sha512 -P 0' ] || exit 1
+cat > "$BASEOS_TEST_TMP/password-input"
+printf '$6$fixture$hash\n'
+EOF
+chmod 755 "$TMP/bin/mkpasswd"
 
 reset_runtime() { rm -f "$TMP/run"/*; : > "$TMP/events"; }
 apply() { reset_runtime; sh "$SCRIPT" "$@"; }
@@ -50,6 +60,22 @@ check_runtime rg34xxsp false
 printf 'hostname=BaseOS\n' > "$TMP/config"
 apply "$TMP/config"
 check_runtime BaseOS true
+
+# Passwords are literal data, including #, = and shell metacharacters.
+printf '%s\r\n' 'ssh_password=  secret#=$(touch nope)  ' > "$TMP/config"
+apply "$TMP/config"
+check_runtime rg34xxsp true
+[ "$(cat "$TMP/password-input")" = 'secret#=$(touch nope)' ] || fail 'password parsing'
+grep -q '^root:\$6\$fixture\$hash:' "$TMP/run/shadow" || fail 'root hash'
+[ "$(ls -l "$TMP/run/shadow" | cut -c1-10)" = '-rw-------' ] || fail 'shadow permissions'
+grep -v '^root:' "$BASEOS_SHADOW_DEFAULT" > "$TMP/accounts-want"
+grep -v '^root:' "$TMP/run/shadow" > "$TMP/accounts-got"
+cmp "$TMP/accounts-want" "$TMP/accounts-got" || fail 'other accounts changed'
+printf 'ssh_password=first\nssh_password=\n' > "$TMP/config"
+apply "$TMP/config"
+cmp "$BASEOS_SHADOW_DEFAULT" "$TMP/run/shadow" || fail 'empty restores default'
+apply
+cmp "$BASEOS_SHADOW_DEFAULT" "$TMP/run/shadow" || fail 'missing restores default'
 
 # The exact model ID preserves variant names and is normalized to lowercase.
 for target in $(sed -n 's/      "id": "\([^"]*\)",/\1/p' "$HERE/devices.json"); do

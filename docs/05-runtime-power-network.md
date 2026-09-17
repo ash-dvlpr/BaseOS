@@ -70,14 +70,12 @@ writes `/run/resolv.conf`, linked from `/etc/resolv.conf`.
 ### Hostname and mDNS
 
 `baseos-config` reads `baseos.conf` from TF1's visible partition, even when
-TF2 holds the frontend. It recognizes `hostname` and `mdns`; defaults are the
-lowercase device model ID and `true`. Hostnames accept 1–63 ASCII letters,
-digits or hyphens, without a leading/trailing hyphen. Missing or invalid values
-use defaults; unknown keys are ignored. Settings are data, never shell code.
+TF2 holds the frontend. Unknown keys are ignored. The
+[README settings reference](../README.md#settings) documents
+the supported keys, defaults and value syntax.
 
 The file is read once during normal boot. USB-storage mode uses defaults
-without opening the exported card. See [README settings](../README.md#settings)
-for editing instructions.
+without opening the exported card.
 
 After Wi-Fi receives an IPv4 address, the DHCP hook starts the static Avahi
 responder asynchronously through `baseos-mdns`. It publishes `<hostname>.local`

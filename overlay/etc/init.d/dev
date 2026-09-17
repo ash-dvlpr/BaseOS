@@ -9,7 +9,7 @@ for t in rsa ed25519; do
 	[ -f "$k" ] || dropbearkey -t "$t" -f "$k" >/dev/null 2>&1
 done
 
-# SSH daemon (password: root/root — dev images only).
+# SSH daemon (root password from baseos.conf; default root — dev images only).
 dropbear -r /data/dropbear/dropbear_rsa_host_key \
          -r /data/dropbear/dropbear_ed25519_host_key -B 2>/dev/null
 

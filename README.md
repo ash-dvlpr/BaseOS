@@ -77,6 +77,12 @@ mdns=true
 
 Omitted settings use their defaults. Lines starting with `#` are comments.
 
+SSH password: set `ssh_password=your-password` in baseos.conf and reboot.
+It defaults to `root` when omitted or empty. The setting survives OS updates
+because it stays on TF1. The password is plain text on the card; do not reuse
+an important password. Values are unquoted, surrounding whitespace is trimmed,
+and `#` is literal in passwords (no inline comments on this key).
+
 ## Supported devices
 
 - Anbernic RG28XX
