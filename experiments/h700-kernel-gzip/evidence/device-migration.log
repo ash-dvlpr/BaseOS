@@ -1,0 +1,23 @@
+2560+0 records in
+2560+0 records out
+1310720 bytes (1.3MB) copied, 0.078159 seconds, 16.0MB/s
+64+0 records in
+64+0 records out
+67108864 bytes (64.0MB) copied, 6.334705 seconds, 10.1MB/s
+1+1 records in
+1+1 records out
+1310720 bytes (1.3MB) copied, 0.073376 seconds, 17.0MB/s
+boot-gzip: original pair verified; backups complete; installing gzip pair
+9+1 records in
+9+1 records out
+9842688 bytes (9.4MB) copied, 0.502783 seconds, 18.7MB/s
+2560+0 records in
+2560+0 records out
+1310720 bytes (1.3MB) copied, 0.075982 seconds, 16.5MB/s
+2560+0 records in
+2560+0 records out
+1310720 bytes (1.3MB) copied, 0.014939 seconds, 83.7MB/s
+64+0 records in
+64+0 records out
+67108864 bytes (64.0MB) copied, 2.951092 seconds, 21.7MB/s
+boot-gzip: gzip pair verified by direct readback

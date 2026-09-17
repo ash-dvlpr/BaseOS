@@ -1,0 +1,63 @@
+image:   /Users/pvaibhav/Code/Me/BaseOS/work/rgsp/baseos-rgsp.img
+payload: /Users/pvaibhav/Code/Me/BaseOS/work/rgsp/baseos-rgsp-1.3.0.bosupd
+SLOT_ACTIVE=A
+SLOT_BASE=434176
+SLOT_SECTORS=1048576
+SLOT_ACTIVE_START=434176
+SLOT_INACTIVE_START=1482752
+
+== applying ==
+--important 0 UPDATING SYSTEM
+--important 3 UPDATING SYSTEM
+--important 7 UPDATING SYSTEM
+--important 11 UPDATING SYSTEM
+--important 15 UPDATING SYSTEM
+--important 18 UPDATING SYSTEM
+--important 22 UPDATING SYSTEM
+--important 26 UPDATING SYSTEM
+--important 30 UPDATING SYSTEM
+--important 33 UPDATING SYSTEM
+--important 37 UPDATING SYSTEM
+--important 41 UPDATING SYSTEM
+--important 45 UPDATING SYSTEM
+--important 48 UPDATING SYSTEM
+--important 52 UPDATING SYSTEM
+--important 56 UPDATING SYSTEM
+--important 60 UPDATING SYSTEM
+--important 62 UPDATING SYSTEM
+--important 64 UPDATING SYSTEM
+--important 66 UPDATING SYSTEM
+--important 68 UPDATING SYSTEM
+--important 70 UPDATING SYSTEM
+--important 73 UPDATING SYSTEM
+--important 75 UPDATING SYSTEM
+--important 77 UPDATING SYSTEM
+--important 79 UPDATING SYSTEM
+--important 81 UPDATING SYSTEM
+--important 84 UPDATING SYSTEM
+--important 86 UPDATING SYSTEM
+--important 88 UPDATING SYSTEM
+--important 90 UPDATING SYSTEM
+--important 92 UPDATING SYSTEM
+--important 95 UPDATING SYSTEM
+--important 98 UPDATING SYSTEM
+
+== the GPT committed to the other slot ==
+SLOT_ACTIVE=B
+SLOT_BASE=434176
+SLOT_SECTORS=1048576
+SLOT_ACTIVE_START=1482752
+SLOT_INACTIVE_START=434176
+
+== the new slot is the payload, byte for byte ==
+55ab7b40f91a9341cacfb01a24949b3e9dfe44d48ad7b3187625dad6905bdd04
+
+== the new slot is a mountable rootfs ==
+e2fsck 1.47.0 (5-Feb-2023)
+BASEOS_VERSION=1.3.0
+BASEOS_TARGET=rgsp
+
+== user data was not touched ==
+UDISK and primary unchanged
+
+RESULT: PASS — real payload applied to the inactive slot and committed

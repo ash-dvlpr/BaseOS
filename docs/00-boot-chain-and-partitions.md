@@ -1,9 +1,11 @@
-# 00 — Boot chain & partitions (the immutable half)
+# 00 — Boot chain & partitions
 
 The vendor bootloader, kernel and initramfs come from each target's prepared
 firmware. Preparation normalizes stock layouts to StockMod geometry; image
-composition replaces the p2 bootlogo and regenerates GPT metadata. The vendor
-executable boot code remains unchanged.
+composition replaces the p2 bootlogo and regenerates GPT metadata. It also
+compresses the kernel with gzip and changes one pinned U-Boot instruction to
+select the existing gzip decoder. The decompressed kernel, initramfs, DTBs,
+boot0 and environment remain unchanged. See [gzip boot pairs](12-kernel-gzip.md).
 
 The geometry below is the normalized H700 layout. Target-specific inputs and
 preserved-region hashes are recorded in `source.json`.
@@ -25,11 +27,11 @@ Windows drive letter. macOS can still expose the vendor FAT volume; see
 
 | # | name | start LBA | size (stock) | contents | our image |
 |---|---|---|---|---|---|
-| — | (gap) | 0–73727 | 36 MiB | protective MBR, primary GPT, **boot0 + U-Boot blobs** | verbatim |
+| — | (gap) | 0–73727 | 36 MiB | protective MBR, primary GPT, **boot0 + U-Boot blobs** | regenerated GPT; U-Boot selector and checksums updated |
 | 1 | `special` | 73728 | 64 MiB | vendor special (an almost-empty ext4) | verbatim, hidden |
 | 2 | `boot-resource` | 204800 | 32 MiB | **vfat**: `bootlogo.bmp`, `fastbootlogo.bmp`, fonts, DTBs | verbatim except `bootlogo.bmp` ([04](04-boot-splash.md)), hidden |
 | 3 | `env` | 270336 | 16 MiB | U-Boot environment (bootargs) | verbatim, hidden |
-| 4 | `boot` | 303104 | 64 MiB | **Android boot image**: kernel + vendor initramfs | verbatim, hidden |
+| 4 | `boot` | 303104 | 64 MiB | **Android boot image**: kernel + vendor initramfs | gzip kernel, original initramfs/DTB, hidden |
 | 5 | `rootfs` | **434176 or 1482752** | 7 GiB stock | Ubuntu 22.04 (4.1 GB used) | **the active 512 MiB slot**, hidden |
 | — | *(slot B)* | 1482752 or 434176 | — | — | **512 MiB unallocated — the update target** |
 | 6 | `UDISK` | 2531328 | 512 MiB stock | stock scratch/swap | **128 MiB ext4 — `/data` persistent state**, hidden |

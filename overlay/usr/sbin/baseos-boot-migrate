@@ -1,0 +1,167 @@
+#!/bin/sh
+# One-time migration delivered inside an ordinary rootfs update. No updater
+# format change is needed. The caller does not execute us after completion.
+# Shared boot sectors are not A/B protected: uninterrupted power is required.
+set -eu
+ROOT=${BASEOS_BOOT_TEST_ROOT:-}
+if [ -n "$ROOT" ]; then
+	[ "${BASEOS_BOOT_TESTING:-}" = 1 ] && [ -f "$ROOT/.boot-migration-test" ] || exit 1
+fi
+STATE="$ROOT/data/boot-gzip-v1"
+ASSETS="$ROOT/usr/share/baseos/boot-gzip"
+DISK="$ROOT/dev/mmcblk0"
+BOOT="$ROOT/dev/mmcblk0p4"
+SYS="$ROOT/sys"
+[ ! -e "$STATE/complete" ] || exit 0
+[ ! -s "$ROOT/run/usb-storage-device" ] || exit 0
+[ -f "$ASSETS/manifest" ] || exit 0
+# rcS can substitute tmpfs when userdata cannot mount. Backups on that fallback
+# would disappear at reboot, so never migrate without the real writable ext4.
+if [ -z "$ROOT" ] && ! awk '
+  $1 == "/dev/mmcblk0p6" && $2 == "/data" && $3 == "ext4" &&
+  ("," $4 ",") ~ /,rw,/ { persistent = 1 }
+  END { exit !persistent }
+' /proc/mounts; then
+	printf '%s\n' 'boot-gzip: deferred; persistent writable userdata is unavailable' >&2
+	exit 0
+fi
+mkdir -p "$STATE"
+log() { printf '%s\n' "boot-gzip: $*" >> "$STATE/migration.log"; }
+splash() {
+	if [ -x "$ROOT/usr/bin/baseos-splash" ]; then
+		"$ROOT/usr/bin/baseos-splash" --important -1 "$*" 2>/dev/null || :
+	fi
+}
+complete() {
+	printf '%s\n' "$1" > "$STATE/complete.tmp" || return 1
+	sync
+	mv "$STATE/complete.tmp" "$STATE/complete" || return 1
+	sync
+}
+skip() {
+	log "$*; preserving the existing boot pair"
+	complete "skipped: $*"
+}
+hash() { sha256sum "$1" | cut -d ' ' -f 1; }
+matches() { [ "$(hash "$1")" = "$2" ]; }
+
+# Both files belong to the verified installed rootfs, not a card manifest.
+. "$ASSETS/manifest"
+. "$ROOT/etc/baseos-release"
+if [ "$BASEOS_TARGET" != "$BOOT_TARGET" ]; then skip 'target mismatch'; exit 0; fi
+if [ -z "$ROOT" ] && { [ ! -b "$DISK" ] || [ ! -b "$BOOT" ]; }; then
+	skip 'boot block device unavailable'; exit 0
+fi
+if [ "$(cat "$SYS/class/block/mmcblk0p4/start")" != "$BOOT_BOOT_START" ] \
+	|| [ "$(cat "$SYS/class/block/mmcblk0p4/size")" != "$BOOT_BOOT_SECTORS" ]; then
+	skip 'unrecognized boot partition geometry'; exit 0
+fi
+
+# Defer a low-battery upgrade; the new rootfs can still boot the original
+# kernel. A later ordinary boot retries. No network or frontend setup needed.
+powered=0
+capacity=0
+for supply in "$SYS"/class/power_supply/*; do
+	[ ! -r "$supply/online" ] || {
+		read -r online < "$supply/online" || online=0
+		[ "$online" != 1 ] || powered=1
+	}
+	[ ! -r "$supply/capacity" ] || read -r capacity < "$supply/capacity" || capacity=0
+done
+case "$capacity" in ''|*[!0-9]*) capacity=0 ;; esac
+if [ "$powered" -ne 1 ] && [ "$capacity" -lt 50 ]; then
+	log 'deferred until external power or at least 50% battery'
+	exit 0
+fi
+if ! matches "$ASSETS/boot-package.bin" "$BOOT_PACKAGE_SHA256" \
+	|| ! matches "$ASSETS/boot.img" "$BOOT_BOOT_IMAGE_SHA256"; then
+	skip 'migration assets failed verification'; exit 0
+fi
+
+WORK=$(mktemp -d "$ROOT/tmp/boot-gzip.XXXXXX")
+trap 'rm -rf "$WORK"' EXIT
+package_read() {
+	dd if="$DISK" of="$WORK/package" bs=512 skip=$((BOOT_PACKAGE_OFFSET / 512)) \
+		count=$((BOOT_PACKAGE_SIZE / 512)) iflag=direct 2>>"$STATE/migration.log"
+}
+verify_pair() {
+	package_read || return 1
+	matches "$WORK/package" "$1" || return 1
+	dd if="$BOOT" of="$WORK/boot-readback" bs=1M iflag=direct 2>>"$STATE/migration.log" || return 1
+	matches "$WORK/boot-readback" "$2"
+}
+if ! package_read; then skip 'cannot read boot package'; exit 0; fi
+current_package=$(hash "$WORK/package")
+current_boot=$(hash "$BOOT")
+if [ "$current_package" = "$BOOT_PACKAGE_SHA256" ] \
+	&& [ "$current_boot" = "$BOOT_BOOT_PARTITION_SHA256" ]; then
+	log 'gzip boot pair already installed'
+	complete already-installed
+	exit 0
+fi
+if [ "$current_package" != "$BOOT_ORIGINAL_PACKAGE_SHA256" ] \
+	|| [ "$current_boot" != "$BOOT_ORIGINAL_BOOT_SHA256" ]; then
+	skip 'firmware differs from the audited original pair'; exit 0
+fi
+
+# Backups are durable on userdata before either shared boot component changes.
+# Never overwrite an existing backup unless its exact original hash matches.
+backup() {
+	if [ -e "$STATE/$2" ]; then
+		matches "$STATE/$2" "$3" || return 1
+	else
+		dd if="$1" of="$STATE/$2.tmp" bs=1M conv=fsync 2>>"$STATE/migration.log" || return 1
+		matches "$STATE/$2.tmp" "$3" || return 1
+		mv "$STATE/$2.tmp" "$STATE/$2" || return 1
+		sync
+	fi
+}
+need_kb=4096
+[ -f "$STATE/boot-original.bin" ] || need_kb=$((need_kb + BOOT_BOOT_SECTORS / 2))
+[ -f "$STATE/package-original.bin" ] || need_kb=$((need_kb + BOOT_PACKAGE_SIZE / 1024))
+free_kb=$(df -Pk "$STATE" | awk 'END { print $4 }')
+case "$free_kb" in ''|*[!0-9]*) skip 'cannot determine backup space'; exit 0 ;; esac
+if [ "$free_kb" -lt "$need_kb" ]; then skip 'insufficient userdata space for backups'; exit 0; fi
+splash 'OPTIMISING STARTUP: KEEP POWER ON'
+if ! backup "$BOOT" boot-original.bin "$BOOT_ORIGINAL_BOOT_SHA256" \
+	|| ! backup "$WORK/package" package-original.bin "$BOOT_ORIGINAL_PACKAGE_SHA256"; then
+	skip 'could not save and verify original boot backups'; exit 0
+fi
+
+install_pair() {
+	dd if="$ASSETS/boot.img" of="$BOOT" bs=1M conv=notrunc,fsync 2>>"$STATE/migration.log" || return 1
+	dd if="$ASSETS/boot-package.bin" of="$DISK" bs=512 seek=$((BOOT_PACKAGE_OFFSET / 512)) \
+		conv=notrunc,fsync 2>>"$STATE/migration.log" || return 1
+	sync
+	verify_pair "$BOOT_PACKAGE_SHA256" "$BOOT_BOOT_PARTITION_SHA256"
+}
+restore_pair() {
+	# Attempt both writes even if one fails, then judge actual direct readback.
+	dd if="$STATE/boot-original.bin" of="$BOOT" bs=1M conv=notrunc,fsync 2>>"$STATE/migration.log" || :
+	dd if="$STATE/package-original.bin" of="$DISK" bs=512 seek=$((BOOT_PACKAGE_OFFSET / 512)) \
+		conv=notrunc,fsync 2>>"$STATE/migration.log" || :
+	sync
+	verify_pair "$BOOT_ORIGINAL_PACKAGE_SHA256" "$BOOT_ORIGINAL_BOOT_SHA256"
+}
+# Do not allow a frontend/process signal to interrupt the paired write. This
+# cannot protect against loss of power; the backups support offline recovery.
+trap '' HUP INT TERM
+log 'original pair verified; backups complete; installing gzip pair'
+if install_pair; then
+	log 'gzip pair verified by direct readback'
+	complete installed
+	# The already-running kernel is byte-identical to the decompressed Image.
+	# Continue this session; the next ordinary boot uses the optimised pair.
+	# No migration-only restart, shutdown race or extra trial boot is needed.
+	log 'continuing startup; gzip takes effect at the next ordinary boot'
+	exit 0
+fi
+log 'installation failed; restoring the original boot pair'
+if restore_pair; then
+	log 'original pair restored and verified; continuing normal startup'
+	complete rolled-back
+	exit 0
+fi
+log 'RESTORE FAILED: keep power on; ADB remains available; do not reboot'
+splash 'BOOT UPDATE FAILED: KEEP POWER ON'
+exit 1

@@ -1,0 +1,50 @@
+== no payload is a silent no-op ==
+ok
+== a payload for another target is refused ==
+ok
+== a payload for a different slot size is refused ==
+ok
+== a corrupted image is refused after the write ==
+ok: written but never committed
+== a card with no A/B layout is left alone ==
+ok
+== a failed slot flip retains the payload ==
+ok
+== a good payload is written, verified and committed ==
+  progress: 0 7 15 22 30 37 45 52 60 64 68 73 77 81 86 90 95 98
+ok
+ok
+== the trial ends when a frontend session starts ==
+ok
+== a deleted payload leaves the next boot with no update work ==
+== an already-applied payload copied back is skipped ==
+ok: history still prevents reapplication
+== TF1 read-only scan mount is restored after cleanup ==
+ok
+== failed writable remount keeps the payload and still reboots ==
+ok
+== failed deletion keeps the committed update successful ==
+ok
+== a payload matching the running build is skipped ==
+ok: no reboot loop on the first boot after an update
+== a stale payload does not mask a newer one beside it ==
+ok: only the applied payload is deleted
+== an older payload is never applied ==
+ok: no downgrade ping-pong
+== a rolled-back payload is not applied again ==
+ok: a bad update cannot oscillate
+== a slot that never reaches a session is restored ==
+ok: rollback state and pre-card diagnostics survive without probing the card
+== confirmation cleans a payload left by an older updater ==
+ok: exact applied archive removed; unrelated update retained
+== confirmation preserves a same-build payload with a different image hash ==
+ok
+== confirmation without a frontend card retains diagnostics on data ==
+ok
+== an unavailable card log falls back without blocking confirmation ==
+ok
+== an unavailable early log falls back without blocking a trial boot ==
+ok
+== USB storage confirmation logs in RAM without probing the card ==
+ok
+RESULT: PASS — payload validation, verify-then-commit, and rollback

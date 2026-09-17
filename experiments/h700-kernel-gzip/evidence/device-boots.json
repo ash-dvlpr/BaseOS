@@ -1,0 +1,155 @@
+[
+  {
+    "label": "raw-before-migration-1",
+    "boot_id": "4f334e9b-10af-4430-b2d3-c1246d564d38",
+    "handoff_stages_s": {
+      "legacy": 2.24,
+      "pre_kernel": 3.475,
+      "post_kernel_raw": 2.248,
+      "combined": 5.723
+    },
+    "raw_offset_intersection_s": [
+      3.475242873,
+      3.475244706
+    ],
+    "recovery_warnings": [
+      "[    2.033689] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  },
+  {
+    "label": "raw-before-migration-2",
+    "boot_id": "2a90e1bb-88c6-40e6-875c-52bb4bbd0e68",
+    "handoff_stages_s": {
+      "legacy": 2.29,
+      "pre_kernel": 3.479,
+      "post_kernel_raw": 2.294,
+      "combined": 5.772
+    },
+    "raw_offset_intersection_s": [
+      3.478543747,
+      3.478545456
+    ],
+    "recovery_warnings": [
+      "[    2.078128] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  },
+  {
+    "label": "raw-before-migration-3",
+    "boot_id": "3b52612c-78f3-4b13-a872-a19cddcb10bf",
+    "handoff_stages_s": {
+      "legacy": 2.28,
+      "pre_kernel": 3.444,
+      "post_kernel_raw": 2.283,
+      "combined": 5.727
+    },
+    "raw_offset_intersection_s": [
+      3.444401289,
+      3.444403118
+    ],
+    "recovery_warnings": [
+      "[    2.069078] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  },
+  {
+    "label": "gzip-completed-1",
+    "boot_id": "0a58c47b-9ba2-4741-b0ca-e84c30cb40cb",
+    "handoff_stages_s": {
+      "legacy": 2.13,
+      "pre_kernel": 3.429,
+      "post_kernel_raw": 2.136,
+      "combined": 5.565
+    },
+    "raw_offset_intersection_s": [
+      3.429143122,
+      3.429144827
+    ],
+    "recovery_warnings": [
+      "[    2.034397] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  },
+  {
+    "label": "gzip-completed-2",
+    "boot_id": "9944f0a3-2375-43f4-9e86-50bb34b11e67",
+    "handoff_stages_s": {
+      "legacy": 2.27,
+      "pre_kernel": 3.408,
+      "post_kernel_raw": 2.28,
+      "combined": 5.688
+    },
+    "raw_offset_intersection_s": [
+      3.408205081,
+      3.408206868
+    ],
+    "recovery_warnings": [
+      "[    2.179072] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  },
+  {
+    "label": "gzip-completed-3",
+    "boot_id": "15434795-968a-4471-9457-d3ed0e4e63f7",
+    "handoff_stages_s": {
+      "legacy": 2.21,
+      "pre_kernel": 3.685,
+      "post_kernel_raw": 2.217,
+      "combined": 5.902
+    },
+    "raw_offset_intersection_s": [
+      3.685234618,
+      3.685236789
+    ],
+    "recovery_warnings": [
+      "[    2.116963] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  },
+  {
+    "label": "gzip-clean-card-1",
+    "boot_id": "8498c376-43df-4cc5-bdd8-223b73f64e3b",
+    "handoff_stages_s": {
+      "legacy": 2.16,
+      "pre_kernel": 3.394,
+      "post_kernel_raw": 2.168,
+      "combined": 5.562
+    },
+    "raw_offset_intersection_s": [
+      3.394092872,
+      3.394094873
+    ],
+    "recovery_warnings": [
+      "[    2.104640] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  },
+  {
+    "label": "gzip-clean-card-2",
+    "boot_id": "88eed4e7-127e-466f-bad0-bc693299882d",
+    "handoff_stages_s": {
+      "legacy": 2.2,
+      "pre_kernel": 3.417,
+      "post_kernel_raw": 2.201,
+      "combined": 5.617
+    },
+    "raw_offset_intersection_s": [
+      3.41661066,
+      3.416612452
+    ],
+    "recovery_warnings": [
+      "[    2.138648] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  },
+  {
+    "label": "gzip-clean-card-3",
+    "boot_id": "5151fbe1-c0d0-4190-a333-77706b728b53",
+    "handoff_stages_s": {
+      "legacy": 2.1,
+      "pre_kernel": 3.66,
+      "post_kernel_raw": 2.107,
+      "combined": 5.767
+    },
+    "raw_offset_intersection_s": [
+      3.660158123,
+      3.660160373
+    ],
+    "recovery_warnings": [
+      "[    2.043927] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  }
+]

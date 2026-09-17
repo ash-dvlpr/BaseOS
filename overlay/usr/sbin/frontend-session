@@ -9,6 +9,19 @@ select_boot_log
 INSTALL_FAILED=0
 CARD_MISSING=0
 
+# One persistent marker is the entire steady-state migration cost: a shell
+# builtin, no spawned helper, firmware reads, hashes or backup checks. A fresh
+# image records its already-optimised state once. Maintenance boots never write
+# disks owned by the USB host. Keep this before update-trial confirmation.
+if [ ! -e /data/boot-gzip-v1/complete ] && [ ! -s /run/usb-storage-device ] \
+	&& [ -x /usr/sbin/baseos-boot-migrate ]; then
+	if ! /usr/sbin/baseos-boot-migrate; then
+		# Failure with an unverified restore must not trigger a reboot or trial
+		# confirmation. ADB started by rcS stays available for recovery.
+		while :; do sleep 3600; done
+	fi
+fi
+
 # A frontend session starting is what ends a system-update trial: the OS came
 # up far enough to hand off. Keying it here rather than on the frontend exec is
 # deliberate — a card with no frontend is a perfectly healthy OS, and keying it
@@ -148,7 +161,7 @@ if [ "$CARD_MISSING" -eq 0 ] && [ -f "$LAUNCH" ]; then
 	log "exec $LAUNCH (mali wait ${m}x)"
 	# Keep the first handoff across respawns and record it in the readable log.
 	if [ ! -s /run/boot-frontend-exec ]; then
-		# boot-clock is installed only on a target with a validated counter.
+		# boot-clock validates counter access/frequency at the first handoff.
 		# Keep BOOTTIME for the existing marker/budget. The additional split
 		# uses the unadjusted clock so NTP cannot masquerade as boot work.
 		boot_pre= boot_post= boot_total=

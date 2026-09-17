@@ -1,0 +1,18 @@
+test_bad_backup (__main__.Migration.test_bad_backup) ... ok
+test_bad_readback_restores (__main__.Migration.test_bad_readback_restores) ... ok
+test_corrupt_assets (__main__.Migration.test_corrupt_assets) ... ok
+test_external_power_allows_low_battery (__main__.Migration.test_external_power_allows_low_battery) ... ok
+test_fresh_image (__main__.Migration.test_fresh_image) ... ok
+test_install_and_completed_path (__main__.Migration.test_install_and_completed_path) ... ok
+test_low_battery_and_storage_defer (__main__.Migration.test_low_battery_and_storage_defer) ... ok
+test_no_backup_space (__main__.Migration.test_no_backup_space) ... ok
+test_package_write_failure_restores (__main__.Migration.test_package_write_failure_restores) ... ok
+test_real_path_refuses_nonpersistent_userdata (__main__.Migration.test_real_path_refuses_nonpersistent_userdata) ... ok
+test_restore_failure_blocks_reboot (__main__.Migration.test_restore_failure_blocks_reboot) ... ok
+test_target_and_geometry (__main__.Migration.test_target_and_geometry) ... ok
+test_unknown_firmware (__main__.Migration.test_unknown_firmware) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 1.696s
+
+OK

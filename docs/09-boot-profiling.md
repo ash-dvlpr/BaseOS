@@ -1,6 +1,6 @@
 # 09 — Boot performance
 
-## Build optimization
+## Build optimisation
 
 `build-rootfs.sh` runs `tools/strip_gpu_module.py` on the harvested GPU module.
 The helper removes debug data from a temporary copy and verifies allocated
@@ -9,8 +9,10 @@ accepting it. Signed modules are refused. The original `stock-harvest.tar`
 remains unchanged; validation results are written to
 `work/<target>/gpu-strip-report.json`.
 
-The optimized module ships in the rootfs and through normal `.bosupd` updates.
-The vendor bootloader, kernel, initramfs and DTB remain unchanged.
+The optimised module ships in the rootfs and through normal `.bosupd` updates.
+Kernel compression is a separate [boot-pair optimisation](12-kernel-gzip.md):
+it changes the kernel's storage format and U-Boot's compression selector,
+while preserving the decompressed kernel, initramfs and DTB.
 `tests/test-strip-gpu-module.py` covers the stripping checks.
 
 ## Measuring startup
@@ -33,9 +35,9 @@ time and frontend rendering. Measure power-on to a usable frontend separately
 for user-facing startup time; USB discovery and host polling delays are not
 boot timings.
 
-### RG SP counter-based stages
+### Standard counter-based stages
 
-RG SP builds also install `boot-clock`. At the first handoff it reads the
+Every supported H700 target installs `boot-clock`. At the first handoff it reads the
 24 MHz ARM generic counter and `CLOCK_MONOTONIC_RAW` together and logs:
 
 ```text
@@ -59,7 +61,8 @@ combined seconds. Records are retained across frontend respawns.
 Counter reset and within-boot stability have been measured with NextUI warm
 reboots on RG SP. Counter zero is **not calibrated to LED-on**, and handoff is
 not the first rendered frame. Cold starts and suspend/resume still need separate
-validation. Other targets retain uptime-only logging. Missing, unavailable,
+validation. Other targets use the same interface; their reset behavior still
+needs physical-device validation. Missing, unavailable,
 unexpected-frequency or imprecisely sampled counters also fall back to the
 existing uptime-only path. See the [measurement evidence](../experiments/rgsp-boot-timing/README.md).
 

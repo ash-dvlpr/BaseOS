@@ -10,6 +10,7 @@ import struct
 from pathlib import Path
 
 from prepare_stock import BASEOS_NAMES, EXPECTED_NAMES, parse_gpt, sha256_file, sha256_range
+from kernel_gzip import derive as derive_gzip, sha as blob_sha
 
 
 def load(path: Path, expected_target: str) -> dict:
@@ -56,9 +57,10 @@ def verify_composed(data: dict, prefix: Path, image: Path, logo: Path) -> None:
     verify_prepared(data, prefix.parent)
     source_layout = data["layout"]
     output_layout = parse_gpt(image, BASEOS_NAMES)
+    gzip_boot = derive_gzip(data["target"], prefix)
 
-    # All four boot partitions retain their GPT identity and geometry. p2 is
-    # not byte-identical because bootlogo.bmp is intentionally replaced.
+    # All four boot partitions retain their GPT identity and geometry. p2 has
+    # the replacement bootlogo; p4 must match the exact gzip derivation.
     for number in range(1, 5):
         source = partition(source_layout, number)
         output = partition(output_layout, number)
@@ -72,14 +74,21 @@ def verify_composed(data: dict, prefix: Path, image: Path, logo: Path) -> None:
         expected = next(
             item["sha256"] for item in data["preserved_regions"] if item["partition"] == number
         )
+        if number == 4:
+            expected = blob_sha(gzip_boot["expected_boot"])
         if sha256_range(image, offset, size) != expected:
-            raise ValueError(f"preserved partition {number} differs from the StockMod input")
+            raise ValueError(f"partition {number} differs from its expected composed bytes")
 
     first_partition = partition(source_layout, 1)
     raw_offset = 4 * 512
     raw_size = (first_partition["start_sector"] - 4) * 512
-    if sha256_range(image, raw_offset, raw_size) != sha256_range(prefix, raw_offset, raw_size):
-        raise ValueError("raw boot region after the primary GPT changed")
+    with prefix.open("rb") as handle:
+        handle.seek(raw_offset)
+        expected_raw = bytearray(handle.read(raw_size))
+    package_at = gzip_boot["profile"]["package_offset"] - raw_offset
+    expected_raw[package_at:package_at + len(gzip_boot["package"])] = gzip_boot["package"]
+    if sha256_range(image, raw_offset, raw_size) != blob_sha(expected_raw):
+        raise ValueError("raw boot region differs from the exact gzip bootloader derivation")
 
     source_root = partition(source_layout, 5)
     output_root = partition(output_layout, 5)

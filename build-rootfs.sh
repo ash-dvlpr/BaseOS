@@ -20,12 +20,9 @@ TOOLS="$HERE/work/tools"
 
 [ -f "$WORK/source.json" ] || { echo "missing $WORK/source.json (run prepare-stock.sh $TARGET IMAGE)"; exit 1; }
 [ -f "$WORK/stock-harvest.tar" ] || { echo "missing $WORK/stock-harvest.tar (run prepare-stock.sh $TARGET IMAGE)"; exit 1; }
-for tool in busybox dropbearmulti curl fbsplash gptgrow gptslot sftp-server adbd axp-off charger-wait avahi-daemon; do
+for tool in busybox dropbearmulti curl fbsplash gptgrow gptslot sftp-server adbd axp-off charger-wait avahi-daemon boot-clock; do
   [ -x "$TOOLS/$tool" ] || { echo "missing $TOOLS/$tool (run build-tools.sh)"; exit 1; }
 done
-if [ "$TARGET" = rgsp ]; then
-  [ -x "$TOOLS/boot-clock" ] || { echo "missing $TOOLS/boot-clock (run build-tools.sh)"; exit 1; }
-fi
 BASEOS_VERSION="$(tr -d ' \n' < "$HERE/VERSION")"
 [ -n "$BASEOS_VERSION" ] || { echo "VERSION is empty"; exit 1; }
 BASEOS_BUILD="$(git -C "$HERE" describe --always --dirty 2>/dev/null || echo unknown)"
@@ -39,6 +36,7 @@ BASEOS_BUILD="$(git -C "$HERE" describe --always --dirty 2>/dev/null || echo unk
 python3 "$HERE/tools/source_manifest.py" verify "$WORK/source.json" "$TARGET"
 python3 "$HERE/tools/verify_harvest.py" "$WORK/stock-harvest.tar" \
   "$HERE/manifest/harvest.list" "$HERE/devices.json" "$TARGET"
+python3 "$HERE/tools/kernel_gzip.py" prepare "$TARGET" "$WORK/boot-prefix.img" "$WORK/boot-gzip"
 
 # Every released rootfs must contain the module built for this exact vendor kernel.
 "$HERE/build-audio-module.sh" "$TARGET"
@@ -226,11 +224,14 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
     cp "/tools/$tool" "$R/usr/sbin/$tool"
     chmod 755 "$R/usr/sbin/$tool"
   done
-  # Counter origin/reset behavior has only been measured on RG SP so far.
-  if [ "$BASEOS_TARGET" = rgsp ]; then
-    cp /tools/boot-clock "$R/usr/sbin/boot-clock"
-    chmod 755 "$R/usr/sbin/boot-clock"
-  fi
+  # Shared H700 counter reader; unavailable counters retain uptime-only logs.
+  cp /tools/boot-clock "$R/usr/sbin/boot-clock"
+  chmod 755 "$R/usr/sbin/boot-clock"
+  # Existing updaters install this ordinary rootfs. The new system performs
+  # the one-time boot-pair migration before confirming its update trial.
+  mkdir -p "$R/usr/share/baseos/boot-gzip"
+  cp /work/boot-gzip/boot.img /work/boot-gzip/boot-package.bin \
+    /work/boot-gzip/manifest "$R/usr/share/baseos/boot-gzip/"
   # Card settings and README are restored after first-boot FAT expansion.
   mkdir -p "$R/usr/share/baseos"
   [ -f /assets/card-readme.txt ] && cp /assets/card-readme.txt "$R/usr/share/baseos/card-readme.txt"
@@ -261,7 +262,7 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
   find "$R/usr/bin" "$R/usr/sbin" "$R/usr/libexec" -type f | while read -r f; do
     head -c4 "$f" | grep -q "^.ELF" || continue
     case "$f" in
-      */busybox|*/dropbearmulti|*/curl|*/fbsplash|*/gptgrow|*/gptslot|*/ldconfig|*/ldconfig.real|*/rtk_hciattach|*/sftp-server|*/adbd|*/axp-off|*/charger-wait|*/avahi-daemon) continue ;;
+      */busybox|*/dropbearmulti|*/curl|*/fbsplash|*/gptgrow|*/gptslot|*/ldconfig|*/ldconfig.real|*/rtk_hciattach|*/sftp-server|*/adbd|*/axp-off|*/charger-wait|*/avahi-daemon|*/boot-clock) continue ;;
     esac
     if ! chroot "$R" /usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1 --list \
         "${f#"$R"}" 2>/dev/null | grep -q "=>"; then

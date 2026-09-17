@@ -28,7 +28,7 @@ class PreparedCacheTests(unittest.TestCase):
             shutil.copy2(REPO / filename, self.root / filename)
         for filename in (
             "device_profile.py", "docker-platform.sh", "prepare_stock.py",
-            "source_manifest.py", "verify_harvest.py",
+            "source_manifest.py", "kernel_gzip.py", "verify_harvest.py",
         ):
             shutil.copy2(REPO / "tools" / filename, self.root / "tools" / filename)
         profiles = json.loads((REPO / "devices.json").read_text())

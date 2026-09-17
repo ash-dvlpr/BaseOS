@@ -57,7 +57,11 @@ image-sha256=<sha256 of decompressed rootfs image>
 The rootfs bytes come from the image built by `build-image.sh`. The manifest
 hash verifies decompressed image integrity; payloads are not signed.
 `build-all.sh` also prints download-file checksums for the release page.
-Updates replace rootfs only; they do not update the bootloader or p2 artwork.
+The updater replaces rootfs only and leaves p2 artwork alone. A rootfs can carry
+the [one-time gzip boot migration](12-kernel-gzip.md): the new system installs a
+matched U-Boot/kernel pair on its first boot, then continues to the frontend and
+confirms the trial. The next ordinary boot uses gzip. Those shared boot sectors
+are outside rootfs A/B rollback protection.
 
 ## 4. Selection and application
 
@@ -89,6 +93,10 @@ kernel retains its cached active-slot offsets until reboot.
 
 Only the successfully applied payload is deleted; skipped or rejected files
 remain on the card. Cleanup failures are logged without blocking the reboot.
+When upgrading from an older updater that leaves its archive behind, confirmation
+also removes archives matching the current trial's exact image hash, target,
+version and build. This one-time compatibility cleanup does not scan on later
+confirmed boots and does not delete unrelated skipped payloads.
 History is recorded at commit, so a payload left behind or copied back is not
 reapplied after rollback. The old `committed-sha` file is read
 only to seed history on migration. Diagnostics, including confirmation, use

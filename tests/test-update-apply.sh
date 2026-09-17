@@ -334,6 +334,32 @@ EOF
     || { echo "FAIL: rollback diagnostics missing from persistent early log" >&2; exit 1; }
   echo "ok: rollback state and pre-card diagnostics survive without probing the card"
 
+  echo "== confirmation cleans a payload left by an older updater =="
+  reset; make_payload rg40xxv "$SLOT_SECTORS" clean
+  matched_sha="$sha"
+  cp /etc/baseos-release /tmp/old-release
+  sed -e "s/BASEOS_VERSION=.*/BASEOS_VERSION=1.0.1/" \
+      -e "s/BASEOS_BUILD=.*/BASEOS_BUILD=test/" /tmp/old-release > /etc/baseos-release
+  mkdir -p /data/update
+  printf "trial=1.0.1\nbuild=test\nsha=%s\nattempts=1\n" "$matched_sha" > /data/update/state
+  make_payload rg40xxv "$SLOT_SECTORS" clean 1.0.2 keep
+  baseos-update confirm
+  test ! -e /mnt/sdcard/baseos-rg40xxv-1.0.1.bosupd
+  test -e /mnt/sdcard/baseos-rg40xxv-1.0.2.bosupd
+  test ! -e /data/update/state
+  no_flip "trial archive cleanup"
+  echo "ok: exact applied archive removed; unrelated update retained"
+
+  echo "== confirmation preserves a same-build payload with a different image hash =="
+  reset; make_payload rg40xxv "$SLOT_SECTORS" clean
+  mkdir -p /data/update
+  printf "trial=1.0.1\nbuild=test\nsha=%s\nattempts=1\n" "$matched_sha" > /data/update/state
+  baseos-update confirm
+  test -e /mnt/sdcard/baseos-rg40xxv-1.0.1.bosupd
+  echo "ok"
+  mv /tmp/old-release /etc/baseos-release
+  rm -f /mnt/sdcard/*.bosupd
+
   echo "== confirmation without a frontend card retains diagnostics on data =="
   reset
   : > /tmp/no-card

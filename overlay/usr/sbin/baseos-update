@@ -390,9 +390,40 @@ boot_check() {
 	return 0
 }
 
+# Older updaters leave their successfully applied archive on the card. Clean
+# only the exact image belonging to this running trial, once at confirmation.
+# Ordinary boots return from confirm before any of these scans or hashes.
+remove_trial_payload() {
+	[ ! -e /run/usb-storage-device ] || return 0
+	trial_version="$(field "$STATE" trial)"
+	trial_build="$(field "$STATE" build)"
+	trial_sha="$(field "$STATE" sha)"
+	[ "${#trial_sha}" -eq 64 ] || return 0
+	case "$trial_sha" in *[!0-9a-f]*) return 0 ;; esac
+	. /etc/baseos-release
+	[ "$trial_version" = "${BASEOS_VERSION:-}" ] \
+		&& [ "$trial_build" = "${BASEOS_BUILD:-}" ] || return 0
+	load_geometry || return 0
+	scan_dirs
+	for dir in $DIRS; do
+		mountpoint -q "$dir" || continue
+		for candidate in "$dir"/*.bosupd; do
+			[ -f "$candidate" ] || continue
+			evaluate "$candidate"; verdict=$?
+			[ "$verdict" -ne 2 ] && [ "$EV_SHA" = "$trial_sha" ] \
+				&& [ "$EV_VERSION" = "$trial_version" ] \
+				&& [ "$EV_BUILD" = "$trial_build" ] || continue
+			payload="$candidate"
+			remove_payload
+		done
+	done
+	cleanup
+}
+
 confirm() {
 	[ -f "$STATE" ] || return 0
 	version="$(field "$STATE" trial)"
+	remove_trial_payload
 	rm -f "$STATE"
 	update_log "update to $version confirmed"
 	return 0

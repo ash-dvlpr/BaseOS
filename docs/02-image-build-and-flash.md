@@ -94,7 +94,8 @@ NextUI-compatible `/mnt/vendor/bin/dmenu.bin` model stub from `devices.json`.
 family; `BASEOS_MODEL_STRING` is the stock-style compatibility value.
 
 `build-image.sh` reads p2/p5 offsets from `source.json`, not constants. It preserves
-the boot chain and p1/p3/p4 byte-for-byte, retains p2 geometry while replacing only
+boot0 and p1/p3 byte-for-byte, derives the exact [gzip boot pair](12-kernel-gzip.md),
+retains p2 geometry while replacing only
 `bootlogo.bmp`, regenerates both GPTs, creates 4.9-safe journalled ext4 filesystems,
 and creates the small FAT data partition expanded on first boot. Bootlogos are rendered
 per target at 480×640, 640×480, 720×480 or 720×720; runtime `fbsplash` still reads the

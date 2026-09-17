@@ -44,6 +44,7 @@ PRIMARY_SECTORS=$((TOTAL_SECTORS - 4 - PRIMARY_START + 1))
 # earlier). Explicit host platform avoids a cached arm64 image on Intel.
 docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_HOST" \
   -v "$WORK":/work -v "$HERE/tools":/tools:ro \
+  -v "$HERE/manifest":/manifest:ro \
   -e TARGET="$TARGET" -e OUT_NAME="$(basename "$OUT")" \
   -e TOTAL_SECTORS="$TOTAL_SECTORS" \
   -e P2_START="$SOURCE_P2_START" \
@@ -61,6 +62,10 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_HOST" \
   cp /work/boot-prefix.img "$OUT"
   truncate -s $((TOTAL_SECTORS * 512)) "$OUT"
   python3 /tools/mkgpt.py "$OUT" "$TOTAL_SECTORS" "$SLOT_SECTORS" "$UDISK_SECTORS"
+
+  # Derive the matched gzip kernel/U-Boot pair from verified prepared inputs.
+  # The original prepared cache stays untouched for provenance and recovery.
+  python3 /tools/kernel_gzip.py apply "$TARGET" /work/boot-prefix.img "$OUT"
 
   # The boot-resource partition is preserved except for BaseOS bootlogo.bmp.
   export MTOOLS_SKIP_CHECK=1

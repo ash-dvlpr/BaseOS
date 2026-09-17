@@ -219,6 +219,8 @@ python3 tests/test-audio-module.py
 ./tests/test-baseos-mdns.sh
 ./tests/test-boot-splash-policy.sh
 ./tests/test-frontend-session.sh
+./tests/test-boot-migration.sh
+python3 tests/test-kernel-gzip.py  # requires all prepared firmware inputs
 ./tests/test-wifi-init.sh
 ./tests/test-systemctl-wifi.sh
 ./tests/test-poweroff-policy.sh
@@ -257,10 +259,11 @@ measurement scope, comparison procedure and GPU module optimization.
 
 ## Technical documentation
 
-The post-v1.3.0 [RG SP gzip-kernel experiment](experiments/rgsp-kernel-gzip/README.md)
-contains its source, validation evidence and recovery procedure. It is separate
-from the release build and update paths; its measured gain is power-on-relative,
-not part of the kernel-to-frontend handoff budget.
+The [gzip boot-pair implementation](docs/12-kernel-gzip.md) covers every supported
+target, including one-time migration through a normal `.bosupd`. Its benefit
+appears in the pre-kernel and combined timings, outside the existing
+kernel-to-frontend budget. The original
+[RG SP experiment](experiments/rgsp-kernel-gzip/README.md) retains investigation evidence.
 The [RG SP boot-timing follow-up](experiments/rgsp-boot-timing/README.md) records
 counter-based stages and the repeated gzip/original-kernel comparison separately
 from LED-on and frontend rendering measurements.

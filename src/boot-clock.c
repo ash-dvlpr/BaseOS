@@ -1,6 +1,7 @@
-/* RG SP first-handoff timing. CNTVCT includes time before Linux timekeeping;
+/* H700 first-handoff timing. CNTVCT includes time before Linux timekeeping;
  * MONOTONIC_RAW shares Linux's initial uptime origin without NTP frequency
- * correction. Only install on devices whose counter reset has been validated.
+ * correction. Hardware reset/clock comparison was measured on RG SP; other
+ * H700 targets share this counter interface and fall back if it is unavailable.
  * Output: legacy BOOTTIME centiseconds, pre/raw-post/combined seconds.
  */
 #define _POSIX_C_SOURCE 200809L

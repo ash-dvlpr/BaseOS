@@ -71,9 +71,14 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_HOST" \
   truncate -s $((150000 * 512)) "$T/composed.img"
   python3 /src/tools/mkgpt.py "$T/composed.img" 150000 4096 4096 4096 >/dev/null
   python3 -c "import struct; open(\"$T/logo.bmp\", \"wb\").write(b\"BM\" + b\"\\0\" * 16 + struct.pack(\"<ii\", 640, 480))"
-  python3 /src/tools/source_manifest.py verify-image \
+  # Synthetic boot bytes are deliberately not an audited vendor boot pair.
+  # Check the importer/layout contract with an explicit test-only identity
+  # derivation; production must reject these same inputs for gzip composition.
+  python3 /src/tests/check-synthetic-composition.py "$T"
+  must_fail python3 /src/tools/source_manifest.py verify-image \
     "$T/out1/source.json" rg40xxv "$T/out1/boot-prefix.img" \
     "$T/composed.img" "$T/logo.bmp"
+  grep -q "unknown original TOC1" "$T/expected-failure.log"
   mkdir "$T/extracted"
   tar -xf "$T/out1/stock-harvest.tar" -C "$T/extracted"
   test ! -L "$T/extracted/usr/lib/libdemo-relative.so"

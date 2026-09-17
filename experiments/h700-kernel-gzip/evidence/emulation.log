@@ -1,0 +1,78 @@
+debconf: delaying package configuration, since apt-utils is not installed
+rg28xx images 0x4a0e7f88 printf 0x6a5dc
+rg28xx SD bytes 20211712 PASS
+rg28xx SD bytes 9764864 PASS
+rg28xx original PASS
+rg28xx gzip-without-patch PASS
+rg28xx gzip-with-patch PASS
+rg28xx kernel-sha256 bebac83c075423ed6126f1e7be442b43bbe69f18937f16664667dbced1360791
+rg34xx images 0x4a0e6b30 printf 0x69f94
+rg34xx SD bytes 20211712 PASS
+rg34xx SD bytes 9766912 PASS
+rg34xx original PASS
+rg34xx gzip-without-patch PASS
+rg34xx gzip-with-patch PASS
+rg34xx kernel-sha256 39cf8c3eb9a75ff0eda51b4074cd65860c5aa5386093bcaf69339819421d84b7
+rg34xxsp images 0x4a0e7348 printf 0x6a7bc
+rg34xxsp SD bytes 20436992 PASS
+rg34xxsp SD bytes 9842688 PASS
+rg34xxsp original PASS
+rg34xxsp gzip-without-patch PASS
+rg34xxsp gzip-with-patch PASS
+rg34xxsp kernel-sha256 1332da28ef5dd078963c98cc4e11de816b8fddc7c7b75dab93b79eda68d01bf0
+rg35xxh images 0x4a0e8a40 printf 0x6b054
+rg35xxh SD bytes 20344832 PASS
+rg35xxh SD bytes 9773056 PASS
+rg35xxh original PASS
+rg35xxh gzip-without-patch PASS
+rg35xxh gzip-with-patch PASS
+rg35xxh kernel-sha256 71d73e1d7ca4d2de982a7a4cf27f7b780957c5f7e6ccfbdb21e8dfada74823b6
+rg35xxplus images 0x4a0e8a38 printf 0x6b04c
+rg35xxplus SD bytes 20817920 PASS
+rg35xxplus SD bytes 9994240 PASS
+rg35xxplus original PASS
+rg35xxplus gzip-without-patch PASS
+rg35xxplus gzip-with-patch PASS
+rg35xxplus kernel-sha256 d10411bddb1ea1bb0c159e5afe033ae3632c2f5270b2de3881ba341b4291c69a
+rg35xxpro images 0x4a0e8a40 printf 0x6b054
+rg35xxpro SD bytes 20344832 PASS
+rg35xxpro SD bytes 9773056 PASS
+rg35xxpro original PASS
+rg35xxpro gzip-without-patch PASS
+rg35xxpro gzip-with-patch PASS
+rg35xxpro kernel-sha256 dceb8673671f69e80eb0011302acc0437e2ad72c8ffa85c4742fde55cd4c73e1
+rg35xxsp images 0x4a0e7550 printf 0x6a9cc
+rg35xxsp SD bytes 20277248 PASS
+rg35xxsp SD bytes 9768960 PASS
+rg35xxsp original PASS
+rg35xxsp gzip-without-patch PASS
+rg35xxsp gzip-with-patch PASS
+rg35xxsp kernel-sha256 302f3f49a9034c5450b67b16b100e559554913a51c48471ddb46b11a94b7715d
+rg40xxh images 0x4a0e9180 printf 0x6b7ac
+rg40xxh SD bytes 20436992 PASS
+rg40xxh SD bytes 9842688 PASS
+rg40xxh original PASS
+rg40xxh gzip-without-patch PASS
+rg40xxh gzip-with-patch PASS
+rg40xxh kernel-sha256 74693b084583de5eb19c9ed2dd4c4010849968410f5625c6eddfcc98d3f44594
+rg40xxv images 0x4a0e9180 printf 0x6b7ac
+rg40xxv SD bytes 20436992 PASS
+rg40xxv SD bytes 9842688 PASS
+rg40xxv original PASS
+rg40xxv gzip-without-patch PASS
+rg40xxv gzip-with-patch PASS
+rg40xxv kernel-sha256 8eebdca73a5282dcc6bdcdead8197d2cc8cf17baec02ecdb772f5064cd68f009
+rgcubexx images 0x4a0e8838 printf 0x6ae8c
+rgcubexx SD bytes 20344832 PASS
+rgcubexx SD bytes 9773056 PASS
+rgcubexx original PASS
+rgcubexx gzip-without-patch PASS
+rgcubexx gzip-with-patch PASS
+rgcubexx kernel-sha256 097aa5fd60963ab1673c0ee46349b03302c3d9c13093ef2d93e932c4274a27d5
+rgsp images 0x4a0e7348 printf 0x6a7bc
+rgsp SD bytes 20436992 PASS
+rgsp SD bytes 9842688 PASS
+rgsp original PASS
+rgsp gzip-without-patch PASS
+rgsp gzip-with-patch PASS
+rgsp kernel-sha256 3328c2fab9f19f7ea6a80e34b0a76238cf594bc631f77e05fec32f8adabad042

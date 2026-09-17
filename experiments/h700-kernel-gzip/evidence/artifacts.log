@@ -1,0 +1,11 @@
+rg28xx: 20211712 -> 9764864 bytes; corruption gates PASS
+rg34xx: 20211712 -> 9766912 bytes; corruption gates PASS
+rg34xxsp: 20436992 -> 9842688 bytes; corruption gates PASS
+rg35xxh: 20344832 -> 9773056 bytes; corruption gates PASS
+rg35xxplus: 20817920 -> 9994240 bytes; corruption gates PASS
+rg35xxpro: 20344832 -> 9773056 bytes; corruption gates PASS
+rg35xxsp: 20277248 -> 9768960 bytes; corruption gates PASS
+rg40xxh: 20436992 -> 9842688 bytes; corruption gates PASS
+rg40xxv: 20436992 -> 9842688 bytes; corruption gates PASS
+rgcubexx: 20344832 -> 9773056 bytes; corruption gates PASS
+rgsp: 20436992 -> 9842688 bytes; corruption gates PASS

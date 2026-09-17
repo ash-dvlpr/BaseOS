@@ -1,16 +1,16 @@
 # RG SP gzip kernel experiment
 
-This branch preserves the single-core gzip experiment for work after the v1.3.0
-release. Kernel compression remains separate from the normal image builder,
-prepared-artifact trust anchors, `.bosupd` format, and release kernel defaults.
-The later timing follow-up adds an RG SP rootfs helper on this branch.
+This directory preserves the original single-core gzip experiment and its
+evidence. The production implementation now covers all supported targets in
+the normal image/rootfs builders; see [gzip boot pairs and migration](../../docs/12-kernel-gzip.md).
+The experimental installers below remain historical tools, not the release path.
 
 The experimental pair booted on an RG SP. The user reported approximately
 **60 frames faster at 240 fps: 250 ms saved from LED-on to the first UI frame**.
 The repeated-trial count and absolute baseline duration were not supplied.
 BaseOS's legacy kernel-relative boot log excludes this improvement. The
 [counter-based timing follow-up](../rgsp-boot-timing/README.md) adds a separate
-pre-kernel/combined record on this branch.
+pre-kernel/combined record, now standard on all supported targets.
 
 The patch changes one Thumb instruction in the pinned vendor U-Boot to select
 its existing gzip decoder for Android kernels. It **forces gzip**, so an

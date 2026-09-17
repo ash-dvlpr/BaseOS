@@ -9,7 +9,7 @@
 #   work/tools/gptgrow        (grow last GPT partition on first boot)
 #   work/tools/gptslot        (A/B root-slot geometry + flip for updates)
 #   work/tools/charger-wait   (blocking charger recovery input)
-#   work/tools/boot-clock     (RG SP hardware-counter boot-stage timing)
+#   work/tools/boot-clock     (H700 hardware-counter boot-stage timing)
 #   work/tools/axp-off        (cut power at the PMIC; rcK's last step)
 #   work/tools/sftp-server    (OpenSSH sftp subsystem child for dropbear)
 #   work/tools/adbd           (Android adb daemon, USB-only, static)

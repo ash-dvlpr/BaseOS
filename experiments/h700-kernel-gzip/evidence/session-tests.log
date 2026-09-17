@@ -1,0 +1,28 @@
+ok: Slot handoff uses the shared boot log while frontend output stays in RAM
+ok: respawn preserves one boot timing record and refreshes Slot diagnostics
+ok: a later boot appends its timing without discarding prior boot logs
+ok: an unwritable card log falls back to RAM without losing the expansion spool
+ok: spruceOS shell handoff resolves card helpers and preserves respawn exit status
+ok: Slot retains priority over spruceOS
+ok: spruceOS waits for GPU readiness before handoff
+ok: NextUI installer retains priority over spruceOS
+ok: Slot wins over NextUI, which wins over spruceOS
+ok: NextUI archive installs before Slot handoff
+ok: NextUI pakz updates still run before handoff
+ok: a failing installer keeps stderr and exit status in the shared log
+ok: Slot shares the bounded GPU readiness wait
+ok: generic binary handoff, output, GPU wait and respawn
+ok: generic script handoff, output, GPU wait and respawn
+ok: generic binary takes priority over shell launcher
+ok: generic script runs when binary path is a directory
+ok: both generic launch methods take priority over all named frontends
+ok: pending NextUI install runs before generic frontend handoff
+ok: generic frontends do not run without a mounted card
+ok: missing frontend retains the add-frontend prompt
+ok: an incomplete NextUI installation retains its failure prompt
+ok: a missing card uses RAM logging and leaves card files and expansion diagnostics untouched
+ok: USB storage mode blocks card access, installers and all frontends
+ok: counter stages retain BOOTTIME compatibility and survive respawns
+ok: failed counter sampling falls back to uptime-only handoff
+ok: migration precedes confirmation; completion and maintenance skip it; recovery failure blocks startup
+frontend session tests passed

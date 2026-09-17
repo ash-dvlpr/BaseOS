@@ -1,11 +1,12 @@
 # RG SP boot-stage timing
 
-See [measured results](RESULTS.md) for the gzip/original comparison and final
-device state.
+See [measured results](RESULTS.md) for the gzip/original comparison and device
+state at the end of those original trials.
 
-This follow-up stays on `codex/rgsp-kernel-gzip`, separate from the v1.3.0 main
-branch. It adds an RG SP-only rootfs helper and first-handoff log record. It
-does not change the release kernel/bootloader defaults or `.bosupd` format.
+This directory preserves the original RG SP timing follow-up. The helper and
+first-handoff records are now standard for all supported targets on main;
+see [boot profiling](../../docs/09-boot-profiling.md). Gzip image generation and
+one-time update migration are described in [the production documentation](../../docs/12-kernel-gzip.md).
 
 The device initially still had the gzip kernel and patched U-Boot, despite its
 rootfs having been updated to BaseOS 1.3.0. The user then requested restoration

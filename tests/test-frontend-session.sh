@@ -552,5 +552,39 @@ run_session
 check_handoff_log "$BOOT_LOG" 1
 ! grep -q 'BaseOS boot stages:' "$BOOT_LOG"
 echo 'ok: failed counter sampling falls back to uptime-only handoff'
+
+# The migration guard must short-circuit before executing its helper on all
+# later boots. A pending migration runs before confirming a rootfs update.
+reset
+nextui_card
+cat > /usr/sbin/baseos-boot-migrate <<'EOF'
+#!/bin/sh
+[ ! -e /tmp/update.log ] || exit 90
+echo called >> /tmp/migration.log
+[ ! -e /tmp/migration-fail ]
+EOF
+chmod 755 /usr/sbin/baseos-boot-migrate
+run_session
+[ "$status" -eq 0 ]
+[ "$(cat /tmp/migration.log)" = called ]
+reset
+nextui_card
+mkdir -p /data/boot-gzip-v1
+echo installed > /data/boot-gzip-v1/complete
+run_session
+[ "$status" -eq 0 ] && [ ! -e /tmp/migration.log ]
+rm /data/boot-gzip-v1/complete
+reset
+nextui_card
+echo /dev/mmcblk1 > /run/usb-storage-device
+run_session
+[ "$status" -eq 143 ] && [ ! -e /tmp/migration.log ]
+reset
+nextui_card
+touch /tmp/migration-fail
+run_session
+[ "$status" -eq 143 ]
+[ ! -e /tmp/update.log ] && [ ! -e /tmp/frontend.log ]
+echo 'ok: migration precedes confirmation; completion and maintenance skip it; recovery failure blocks startup'
 echo 'frontend session tests passed'
 TEST
