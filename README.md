@@ -90,8 +90,8 @@ mdns=true
   Defaults to `false`; set `headphone_pop_fix=true` to enable it and restart.
   Keeps analogue output buffers powered between streams, which may increase
   awake/screen-off idle consumption. Buffers are disabled before deep sleep.
-  The speaker fix remains enabled independently. Requires a compatible audio
-  module; see [runtime audio support](docs/05-runtime-power-network.md#optional-headphone-pop-workaround).
+  The speaker fix remains enabled independently. Each image includes its
+  matching audio module; see [runtime audio support](docs/05-runtime-power-network.md#speaker-and-headphone-pop-repair).
 
 Omitted settings use their defaults. Lines starting with `#` are comments.
 

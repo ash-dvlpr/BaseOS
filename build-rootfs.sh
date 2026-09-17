@@ -37,6 +37,9 @@ python3 "$HERE/tools/source_manifest.py" verify "$WORK/source.json" "$TARGET"
 python3 "$HERE/tools/verify_harvest.py" "$WORK/stock-harvest.tar" \
   "$HERE/manifest/harvest.list" "$HERE/devices.json" "$TARGET"
 
+# Every released rootfs must contain the module built for this exact vendor kernel.
+"$HERE/build-audio-module.sh" "$TARGET"
+
 docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
   -v "$WORK":/work -v "$TOOLS":/tools:ro \
   -v "$HERE/tools/strip_gpu_module.py":/build/strip_gpu_module.py:ro \
@@ -84,6 +87,9 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
   mv "$GPU.strip-debug" "$GPU"
   # alsa-lib plugin dir: drop static/libtool litter
   rm -f "$R"/usr/lib/aarch64-linux-gnu/alsa-lib/*.a "$R"/usr/lib/aarch64-linux-gnu/alsa-lib/*.la
+  # The build is mandatory: do not silently ship only its userspace loader.
+  install -m 644 /work/audio-module/h700_speaker_amp.ko "$R/usr/lib/modules/h700_speaker_amp.ko"
+
   # flat module paths used by rcS / setBluetooth.sh
   [ ! -f "$R/usr/lib/modules/4.9.170/kernel/drivers/net/wireless/rtl8821cs/8821cs.ko" ] \
     || ln -sf 4.9.170/kernel/drivers/net/wireless/rtl8821cs/8821cs.ko "$R/usr/lib/modules/8821cs.ko"

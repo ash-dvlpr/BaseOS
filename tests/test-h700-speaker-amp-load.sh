@@ -41,4 +41,23 @@ export BASEOS_AUDIO_TEST_FAIL=7
 status=0
 sh "$loader" || status=$?
 [ "$status" -eq 7 ]
+# Exercise the rcS handoff: audio attachment must finish before frontends can
+# run, and USB storage maintenance must skip it entirely.
+awk '/^if .*USB_STORAGE_MODE.*h700-speaker-amp-load/ { copying=1 }
+     copying { print }
+     copying && /^fi$/ { exit }' "$HERE/overlay/etc/init.d/rcS" \
+    | sed "s#/usr/sbin/h700-speaker-amp-load#$TMP/boot-loader#g; s#/run/h700-speaker-amp.log#$TMP/boot.log#g" \
+    > "$TMP/boot-audio"
+[ -s "$TMP/boot-audio" ]
+cat > "$TMP/boot-loader" <<'EOF'
+#!/bin/sh
+sleep 0.05
+: > "$BASEOS_AUDIO_TEST_READY"
+EOF
+chmod +x "$TMP/boot-loader"
+export BASEOS_AUDIO_TEST_READY="$TMP/ready"
+# An asynchronous loader would return before the ready marker exists.
+( USB_STORAGE_MODE=0; . "$TMP/boot-audio"; [ -f "$TMP/ready" ] )
+rm "$TMP/ready"
+( USB_STORAGE_MODE=1; . "$TMP/boot-audio"; [ ! -e "$TMP/ready" ] )
 echo 'h700-speaker-amp-load tests passed'

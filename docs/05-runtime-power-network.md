@@ -82,19 +82,32 @@ Name collisions receive an mDNS suffix, such as `rg34xxsp-2.local`, without
 changing the configured hostname. Set distinct hostnames for stable addresses.
 `mdns=false` disables the responder.
 
-### Optional headphone pop workaround
+### Speaker and headphone pop repair
 
-`headphone_pop_fix` defaults to `false`. The background audio-module loader runs
-after `baseos-config` and passes the normalized setting as a read-only module
-parameter. `true` retains the analogue line-output buffers between streams;
-`false` uses the vendor shutdown sequence while keeping the speaker amplifier
-repair. Missing or invalid values select `false`. Restart after editing TF1's
-configuration. Neither card settings nor runtime settings are sourced as shell.
+Each rootfs includes `h700_speaker_amp.ko`, built for its exact vendor kernel.
+`rcS` loads it after settings are read and before the frontend starts audio.
+The module gates the speaker amplifier around codec power transitions and
+filters jack-worker GPIO writes so they cannot enable an idle amplifier.
+Other GPIOs and the vendor's jack detection remain under vendor control.
 
-Retention can increase idle power. The module releases retained buffers before
-kernel suspend; full hardware sleep-drain measurements remain outstanding.
-Images without a validated `h700_speaker_amp.ko` skip loading it. BaseOS does
-not build or package this optional module; it must match the device kernel.
+`headphone_pop_fix` defaults to `false`. Enabling it retains the analogue
+line-output buffers between streams to suppress the headphone exit pop.
+Retention can increase idle power; buffers are released before suspend and
+shutdown. Missing or invalid settings select `false`. Restart after changing
+TF1's configuration. The speaker repair is active with either setting.
+
+The build pins each kernel Image and configuration and checks module symbol
+versions and layout. At load time, the module checks kernel identity, codec
+widgets and GPIO callbacks before attaching. Addresses are resolved during
+the build; initialization performs no symbol searches or settling sleeps.
+The module cannot be unloaded because live kernel callbacks reference it;
+reboot to replace it. A different firmware kernel requires a new reviewed
+profile and hardware validation before it can be packaged.
+
+Regression tests cover GPIO arbitration and startup order. Hardware acceptance
+must also check audible start/stop behavior, headphone insertion/removal,
+suspend/resume and the additional boot cost on each target. A successful
+cross-build does not establish those hardware results.
 
 ## 4. Bluetooth audio
 

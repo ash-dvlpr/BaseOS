@@ -152,6 +152,20 @@ than as a `<MODEL>-...` vendor release; `stockmod_prefix` covers the usual case.
 the bundle to `work/prepared/`, and prints the `gh release create` and `git add`
 commands to finish with. Artifact releases are tagged by date, `prepared-YYYYMMDD`.
 
+## Audio module builds
+
+`build-rootfs.sh` runs `build-audio-module.sh <target>` and packages the resulting
+speaker/headphone repair module. The build uses a pinned kernel source archive
+and compiler, the target's embedded kernel configuration, and recovered vendor
+symbol versions. Its cache is separate from `work/tools` and invalidates when
+module sources, build inputs or the reviewed profile change.
+
+The exact kernel hashes and private-symbol offsets live in
+`src/h700-speaker-amp/profiles.json`. A firmware refresh must verify the codec,
+GPIO and ASoC layouts before updating that profile; a matching release string
+or exported-symbol CRC alone is insufficient. See
+[audio behavior and validation](docs/05-runtime-power-network.md#speaker-and-headphone-pop-repair).
+
 ## Tracking a new vendor firmware
 
 Each target pins a specific vendor firmware through its committed `source.json`, so
@@ -199,6 +213,9 @@ python3 tests/test-verify-harvest.py
 python3 tests/test-prepared-cache.py
 ./test-expand-storage.sh
 ./tests/test-baseos-config.sh
+./tests/test-h700-speaker-amp-load.sh
+python3 tests/test-audio-gating.py
+python3 tests/test-audio-module.py
 ./tests/test-baseos-mdns.sh
 ./tests/test-boot-splash-policy.sh
 ./tests/test-frontend-session.sh

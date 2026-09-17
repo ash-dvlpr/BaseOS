@@ -1,0 +1,156 @@
+{
+  "rg28xx": {
+    "image_sha256": "bebac83c075423ed6126f1e7be442b43bbe69f18937f16664667dbced1360791",
+    "config_sha256": "227791d28d252d19c1dc94f8315d2e32af66ea8d88b56fb6a22940c583589afd",
+    "symbol_offsets": {
+      "linux_banner": 8788072,
+      "sunxi_spk_event": 6397368,
+      "sunxi_lineout_event": 6400368,
+      "client_mutex": 16392024,
+      "codec_list": 16392256,
+      "allen_spk_state": 16393936,
+      "sunxi_pinctrl_gpio_set": 2887480,
+      "sunxi_pinctrl_gpio_direction_output": 2889728
+    }
+  },
+  "rg34xx": {
+    "image_sha256": "39cf8c3eb9a75ff0eda51b4074cd65860c5aa5386093bcaf69339819421d84b7",
+    "config_sha256": "227791d28d252d19c1dc94f8315d2e32af66ea8d88b56fb6a22940c583589afd",
+    "symbol_offsets": {
+      "linux_banner": 8788072,
+      "sunxi_spk_event": 6403712,
+      "sunxi_lineout_event": 6406712,
+      "client_mutex": 16392024,
+      "codec_list": 16392256,
+      "allen_spk_state": 16393936,
+      "sunxi_pinctrl_gpio_set": 2887480,
+      "sunxi_pinctrl_gpio_direction_output": 2889728
+    }
+  },
+  "rg34xxsp": {
+    "image_sha256": "1332da28ef5dd078963c98cc4e11de816b8fddc7c7b75dab93b79eda68d01bf0",
+    "config_sha256": "565948300ae2d0f68a8ec85a18be033cde06ad4c46a988bebf708b9ce35cb119",
+    "symbol_offsets": {
+      "linux_banner": 8919144,
+      "sunxi_spk_event": 6493484,
+      "sunxi_lineout_event": 6496484,
+      "client_mutex": 16611224,
+      "codec_list": 16611456,
+      "allen_spk_state": 16613136,
+      "sunxi_pinctrl_gpio_set": 2887480,
+      "sunxi_pinctrl_gpio_direction_output": 2889728
+    }
+  },
+  "rg35xxh": {
+    "image_sha256": "71d73e1d7ca4d2de982a7a4cf27f7b780957c5f7e6ccfbdb21e8dfada74823b6",
+    "config_sha256": "227791d28d252d19c1dc94f8315d2e32af66ea8d88b56fb6a22940c583589afd",
+    "symbol_offsets": {
+      "linux_banner": 8853664,
+      "sunxi_spk_event": 6417324,
+      "sunxi_lineout_event": 6420324,
+      "client_mutex": 16523792,
+      "codec_list": 16524024,
+      "allen_spk_state": 16525704,
+      "sunxi_pinctrl_gpio_set": 2895600,
+      "sunxi_pinctrl_gpio_direction_output": 2897848
+    }
+  },
+  "rg35xxplus": {
+    "image_sha256": "d10411bddb1ea1bb0c159e5afe033ae3632c2f5270b2de3881ba341b4291c69a",
+    "config_sha256": "f7320c7657ec01f925fada017e1c938eff716fb8ce9e96bf0279e667aec2b47f",
+    "symbol_offsets": {
+      "linux_banner": 9115752,
+      "sunxi_spk_event": 6707320,
+      "sunxi_lineout_event": 6710320,
+      "client_mutex": 16983704,
+      "codec_list": 16983936,
+      "allen_spk_state": 16985616,
+      "sunxi_pinctrl_gpio_set": 2887480,
+      "sunxi_pinctrl_gpio_direction_output": 2889728
+    }
+  },
+  "rg35xxpro": {
+    "image_sha256": "dceb8673671f69e80eb0011302acc0437e2ad72c8ffa85c4742fde55cd4c73e1",
+    "config_sha256": "227791d28d252d19c1dc94f8315d2e32af66ea8d88b56fb6a22940c583589afd",
+    "symbol_offsets": {
+      "linux_banner": 8853664,
+      "sunxi_spk_event": 6417032,
+      "sunxi_lineout_event": 6420032,
+      "client_mutex": 16523792,
+      "codec_list": 16524024,
+      "allen_spk_state": 16525704,
+      "sunxi_pinctrl_gpio_set": 2895600,
+      "sunxi_pinctrl_gpio_direction_output": 2897848
+    }
+  },
+  "rg35xxsp": {
+    "image_sha256": "302f3f49a9034c5450b67b16b100e559554913a51c48471ddb46b11a94b7715d",
+    "config_sha256": "227791d28d252d19c1dc94f8315d2e32af66ea8d88b56fb6a22940c583589afd",
+    "symbol_offsets": {
+      "linux_banner": 8788072,
+      "sunxi_spk_event": 6409116,
+      "sunxi_lineout_event": 6412116,
+      "client_mutex": 16457560,
+      "codec_list": 16457792,
+      "allen_spk_state": 16459472,
+      "sunxi_pinctrl_gpio_set": 2887480,
+      "sunxi_pinctrl_gpio_direction_output": 2889728
+    }
+  },
+  "rg40xxh": {
+    "image_sha256": "74693b084583de5eb19c9ed2dd4c4010849968410f5625c6eddfcc98d3f44594",
+    "config_sha256": "565948300ae2d0f68a8ec85a18be033cde06ad4c46a988bebf708b9ce35cb119",
+    "symbol_offsets": {
+      "linux_banner": 8919200,
+      "sunxi_spk_event": 6502372,
+      "sunxi_lineout_event": 6505372,
+      "client_mutex": 16611280,
+      "codec_list": 16611512,
+      "allen_spk_state": 16613192,
+      "sunxi_pinctrl_gpio_set": 2895600,
+      "sunxi_pinctrl_gpio_direction_output": 2897848
+    }
+  },
+  "rg40xxv": {
+    "image_sha256": "8eebdca73a5282dcc6bdcdead8197d2cc8cf17baec02ecdb772f5064cd68f009",
+    "config_sha256": "565948300ae2d0f68a8ec85a18be033cde06ad4c46a988bebf708b9ce35cb119",
+    "symbol_offsets": {
+      "linux_banner": 8919200,
+      "sunxi_spk_event": 6502416,
+      "sunxi_lineout_event": 6505416,
+      "client_mutex": 16611280,
+      "codec_list": 16611512,
+      "allen_spk_state": 16613192,
+      "sunxi_pinctrl_gpio_set": 2895600,
+      "sunxi_pinctrl_gpio_direction_output": 2897848
+    }
+  },
+  "rgcubexx": {
+    "image_sha256": "097aa5fd60963ab1673c0ee46349b03302c3d9c13093ef2d93e932c4274a27d5",
+    "config_sha256": "227791d28d252d19c1dc94f8315d2e32af66ea8d88b56fb6a22940c583589afd",
+    "symbol_offsets": {
+      "linux_banner": 8853664,
+      "sunxi_spk_event": 6417428,
+      "sunxi_lineout_event": 6420428,
+      "client_mutex": 16523920,
+      "codec_list": 16524152,
+      "allen_spk_state": 16525832,
+      "sunxi_pinctrl_gpio_set": 2895600,
+      "sunxi_pinctrl_gpio_direction_output": 2897848
+    }
+  },
+  "rgsp": {
+    "image_sha256": "3328c2fab9f19f7ea6a80e34b0a76238cf594bc631f77e05fec32f8adabad042",
+    "config_sha256": "565948300ae2d0f68a8ec85a18be033cde06ad4c46a988bebf708b9ce35cb119",
+    "symbol_offsets": {
+      "linux_banner": 8919144,
+      "sunxi_spk_event": 6485896,
+      "sunxi_lineout_event": 6488896,
+      "client_mutex": 16610456,
+      "codec_list": 16610688,
+      "allen_spk_state": 16612368,
+      "sunxi_pinctrl_gpio_set": 2887480,
+      "sunxi_pinctrl_gpio_direction_output": 2889728
+    }
+  }
+}
