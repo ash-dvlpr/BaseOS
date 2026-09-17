@@ -1,0 +1,24 @@
+#!/bin/sh
+# Load the kernel-specific audio repair after baseos-config, before frontend audio.
+# The headphone workaround is opt-in; the speaker repair remains enabled.
+set -eu
+CONFIG="${BASEOS_AUDIO_CONFIG:-/run/baseos.conf}"
+MODULE="${BASEOS_AUDIO_MODULE:-/lib/modules/h700_speaker_amp.ko}"
+INSMOD="${BASEOS_AUDIO_INSMOD:-/sbin/insmod}"
+
+# Builds without a validated module keep their existing audio behaviour.
+[ -f "$MODULE" ] || exit 0
+headphone_pop_fix=false
+if [ -r "$CONFIG" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+        case "$line" in
+            headphone_pop_fix=true) headphone_pop_fix=true ;;
+            headphone_pop_fix=*) headphone_pop_fix=false ;;
+        esac
+    done < "$CONFIG"
+fi
+echo "h700_amp: headphone_pop_fix=$headphone_pop_fix"
+# This vendor kernel accepts numeric bool parameters, not the word "true".
+retain=0
+[ "$headphone_pop_fix" != true ] || retain=1
+exec "$INSMOD" "$MODULE" apply=1 "headphone_pop_fix=$retain"

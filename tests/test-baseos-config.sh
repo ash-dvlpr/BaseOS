@@ -41,7 +41,7 @@ check_runtime() {
 	[ "$(cat "$TMP/run/hostname")" = "$1" ] || fail "runtime hostname: $1"
 	printf '127.0.0.1 localhost %s\n::1 localhost\n' "$1" > "$TMP/want"
 	cmp -s "$TMP/want" "$TMP/run/hosts" || fail "runtime hosts: $1"
-	printf 'hostname=%s\nmdns=%s\n' "$1" "$2" > "$TMP/want"
+	printf 'hostname=%s\nmdns=%s\nheadphone_pop_fix=%s\n' "$1" "$2" "${3:-false}" > "$TMP/want"
 	cmp -s "$TMP/want" "$TMP/run/baseos.conf" || fail "effective settings: $1/$2"
 	[ "$(grep '^hostname ' "$TMP/events")" = "hostname $1" ] \
 		|| fail "hostname must be applied exactly once"
@@ -60,6 +60,17 @@ check_runtime rg34xxsp false
 printf 'hostname=BaseOS\n' > "$TMP/config"
 apply "$TMP/config"
 check_runtime BaseOS true
+
+# Headphone retention is strictly opt-in; malformed later duplicates reset it.
+printf ' headphone_pop_fix = true # opt in\r\n' > "$TMP/config"
+apply "$TMP/config"
+check_runtime rg34xxsp true true
+for value in false '' True 1 yes 'true false' '$(touch config-executed)'; do
+	printf 'headphone_pop_fix=true\nheadphone_pop_fix=%s\n' "$value" > "$TMP/config"
+	(cd "$TMP"; apply "$TMP/config")
+	check_runtime rg34xxsp true false
+done
+[ ! -e "$TMP/config-executed" ] || fail "headphone setting executed shell code"
 
 # Passwords are literal data, including #, = and shell metacharacters.
 printf '%s\r\n' 'ssh_password=  secret#=$(touch nope)  ' > "$TMP/config"
@@ -262,7 +273,9 @@ line_of() { grep -nF "$1" "$RCS" | head -1 | cut -d: -f1; }
 charger="$(line_of '/usr/sbin/baseos-charger')"
 storage="$(line_of '/usr/sbin/usb-storage-mode prepare')"
 config="$(line_of '/usr/sbin/baseos-config "$BASEOS_CONFIG"')"
+audio="$(line_of '/usr/sbin/h700-speaker-amp-load >')"
 services="$(line_of '/etc/init.d/dev &')"
+[ "$config" -lt "$audio" ] && [ "$audio" -lt "$services" ] || fail "audio configuration order"
 [ "$charger" -lt "$storage" ] && [ "$storage" -lt "$config" ] && [ "$config" -lt "$services" ] \
 	|| fail "boot ordering"
 [ "$(grep -c '/usr/sbin/baseos-config "$BASEOS_CONFIG"' "$RCS")" -eq 1 ] || fail "multiple config applications"

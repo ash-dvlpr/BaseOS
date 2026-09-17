@@ -87,6 +87,21 @@ Name collisions receive an mDNS suffix, such as `rg34xxsp-2.local`, without
 changing the configured hostname. Set distinct hostnames for stable addresses.
 `mdns=false` disables the responder.
 
+### Optional headphone pop workaround
+
+`headphone_pop_fix` defaults to `false`. The background audio-module loader runs
+after `baseos-config` and passes the normalized setting as a read-only module
+parameter. `true` retains the analogue line-output buffers between streams;
+`false` uses the vendor shutdown sequence while keeping the speaker amplifier
+repair. Missing or invalid values select `false`. Restart after editing TF1's
+configuration. Neither card settings nor runtime settings are sourced as shell.
+
+Retention can increase idle power. The module releases retained buffers before
+kernel suspend; full hardware sleep-drain measurements remain outstanding.
+Images without a validated `h700_speaker_amp.ko` skip loading it. The current
+module remains an RG SP diagnostic build; other kernel profiles and production
+module packaging are separate work.
+
 ## 4. Bluetooth audio
 
 `rtk_hciattach` attaches the controller UART. The `systemctl` shim starts D-Bus

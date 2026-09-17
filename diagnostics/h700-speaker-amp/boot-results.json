@@ -1,0 +1,110 @@
+[
+  {
+    "run": 1,
+    "mode": "baseline",
+    "boot_id": "ecd8646a-2701-47f8-b7e6-52cac103d0d7",
+    "frontend_seconds": 2.14,
+    "module_trace": "start=1.98\nend=2.02\nresult=0\n947A8B564F7D5595C6DF9DE",
+    "parameter": "cat: can't open '/sys/module/h700_speaker_amp/parameters/headphone_pop_fix': No such file or directory",
+    "effective_config": "hostname=rgsp\nmdns=true",
+    "filesystem_recovery": [
+      "[    2.089743] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  },
+  {
+    "run": 2,
+    "mode": "off",
+    "boot_id": "69d90256-3485-4d2d-88c7-188157442f74",
+    "frontend_seconds": 2.17,
+    "module_trace": "start=2.12\nh700_amp: headphone_pop_fix=false\nend=2.26\nresult=0\nB81F7A6D23DADCF3C45B7D1",
+    "parameter": "N",
+    "effective_config": "hostname=rgsp\nmdns=true\nheadphone_pop_fix=false",
+    "filesystem_recovery": [
+      "[    2.105099] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  },
+  {
+    "run": 3,
+    "mode": "on",
+    "boot_id": "55a78359-6b67-4d1e-a697-88e6e228a0f8",
+    "frontend_seconds": 2.25,
+    "module_trace": "start=2.19\nh700_amp: headphone_pop_fix=true\nend=2.34\nresult=0\nB81F7A6D23DADCF3C45B7D1",
+    "parameter": "Y",
+    "effective_config": "hostname=rgsp\nmdns=true\nheadphone_pop_fix=true",
+    "filesystem_recovery": [
+      "[    2.176376] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  },
+  {
+    "run": 4,
+    "mode": "baseline",
+    "boot_id": "46ad115a-bbad-4c74-b055-f2768d4084fa",
+    "frontend_seconds": 2.18,
+    "module_trace": "start=2.01\nend=2.06\nresult=0\n947A8B564F7D5595C6DF9DE",
+    "parameter": "cat: can't open '/sys/module/h700_speaker_amp/parameters/headphone_pop_fix': No such file or directory",
+    "effective_config": "hostname=rgsp\nmdns=true",
+    "filesystem_recovery": [
+      "[    2.126329] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  },
+  {
+    "run": 5,
+    "mode": "off",
+    "boot_id": "0f185c0e-2b33-443b-aaad-ce221cf9e9a9",
+    "frontend_seconds": 2.24,
+    "module_trace": "start=2.18\nh700_amp: headphone_pop_fix=false\nend=2.32\nresult=0\nB81F7A6D23DADCF3C45B7D1",
+    "parameter": "N",
+    "effective_config": "hostname=rgsp\nmdns=true\nheadphone_pop_fix=false",
+    "filesystem_recovery": [
+      "[    2.165970] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  },
+  {
+    "run": 6,
+    "mode": "on",
+    "boot_id": "eb8076e6-a5b7-43fa-b16e-274767b7f517",
+    "frontend_seconds": 2.16,
+    "module_trace": "start=2.10\nh700_amp: headphone_pop_fix=true\nend=2.25\nresult=0\nB81F7A6D23DADCF3C45B7D1",
+    "parameter": "Y",
+    "effective_config": "hostname=rgsp\nmdns=true\nheadphone_pop_fix=true",
+    "filesystem_recovery": [
+      "[    2.088212] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  },
+  {
+    "run": 7,
+    "mode": "baseline",
+    "boot_id": "36c6f57d-c4e1-4c83-bc5e-a7210b1fe266",
+    "frontend_seconds": 2.21,
+    "module_trace": "start=2.04\nend=2.09\nresult=0\n947A8B564F7D5595C6DF9DE",
+    "parameter": "cat: can't open '/sys/module/h700_speaker_amp/parameters/headphone_pop_fix': No such file or directory",
+    "effective_config": "hostname=rgsp\nmdns=true",
+    "filesystem_recovery": [
+      "[    2.154681] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  },
+  {
+    "run": 8,
+    "mode": "on",
+    "boot_id": "ab27b62f-106e-4f6a-a3bd-e155100c65e8",
+    "frontend_seconds": 2.21,
+    "module_trace": "start=2.16\nh700_amp: headphone_pop_fix=true\nend=2.30\nresult=0\nB81F7A6D23DADCF3C45B7D1",
+    "parameter": "Y",
+    "effective_config": "hostname=rgsp\nmdns=true\nheadphone_pop_fix=true",
+    "filesystem_recovery": [
+      "[    2.145807] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  },
+  {
+    "run": 9,
+    "mode": "off",
+    "boot_id": "d5cd46bc-dc74-4370-80a3-64d3126596ed",
+    "frontend_seconds": 2.2,
+    "module_trace": "start=2.15\nh700_amp: headphone_pop_fix=false\nend=2.30\nresult=0\nB81F7A6D23DADCF3C45B7D1",
+    "parameter": "N",
+    "effective_config": "hostname=rgsp\nmdns=true\nheadphone_pop_fix=false",
+    "filesystem_recovery": [
+      "[    2.134916] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+    ]
+  }
+]

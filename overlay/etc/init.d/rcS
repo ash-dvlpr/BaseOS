@@ -244,6 +244,12 @@ if [ "$USB_STORAGE_MODE" -eq 0 ]; then
 fi
 [ "$TF1_CONFIG_MOUNTED" -eq 0 ] || /bin/umount /mnt/system
 
+# Configuration is ready; keep module loading in the background. Only builds
+# carrying a validated module attach the repair. Skip USB-storage maintenance.
+if [ "$USB_STORAGE_MODE" -eq 0 ] && [ -x /usr/sbin/h700-speaker-amp-load ]; then
+	/usr/sbin/h700-speaker-amp-load >/run/h700-speaker-amp.log 2>&1 &
+fi
+
 # Dev image extras (serial getty is in inittab; this starts SSH).
 [ -x /etc/init.d/dev ] && /etc/init.d/dev &
 

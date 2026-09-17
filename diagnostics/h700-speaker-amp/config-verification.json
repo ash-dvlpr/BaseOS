@@ -1,0 +1,98 @@
+[
+  {
+    "mode": "omitted",
+    "rate": 44100,
+    "during": {
+      "digital": 2147483648,
+      "analog": 1441024,
+      "amp_high": true,
+      "pcm": "state: RUNNING"
+    },
+    "after": {
+      "digital": 0,
+      "analog": 1381632,
+      "amp_high": false,
+      "pcm": "closed"
+    }
+  },
+  {
+    "mode": "omitted",
+    "rate": 48000,
+    "during": {
+      "digital": 2147483648,
+      "analog": 1441024,
+      "amp_high": true,
+      "pcm": "state: RUNNING"
+    },
+    "after": {
+      "digital": 0,
+      "analog": 1381632,
+      "amp_high": false,
+      "pcm": "closed"
+    }
+  },
+  {
+    "mode": "true",
+    "rate": 44100,
+    "during": {
+      "digital": 2147483648,
+      "analog": 1441024,
+      "amp_high": true,
+      "pcm": "state: RUNNING"
+    },
+    "after": {
+      "digital": 0,
+      "analog": 1391872,
+      "amp_high": false,
+      "pcm": "closed"
+    }
+  },
+  {
+    "mode": "true",
+    "rate": 48000,
+    "during": {
+      "digital": 2147483648,
+      "analog": 1441024,
+      "amp_high": true,
+      "pcm": "state: RUNNING"
+    },
+    "after": {
+      "digital": 0,
+      "analog": 1391872,
+      "amp_high": false,
+      "pcm": "closed"
+    }
+  },
+  {
+    "mode": "false",
+    "rate": 44100,
+    "during": {
+      "digital": 2147483648,
+      "analog": 1441024,
+      "amp_high": true,
+      "pcm": "state: RUNNING"
+    },
+    "after": {
+      "digital": 0,
+      "analog": 1381632,
+      "amp_high": false,
+      "pcm": "closed"
+    }
+  },
+  {
+    "mode": "false",
+    "rate": 48000,
+    "during": {
+      "digital": 2147483648,
+      "analog": 1441024,
+      "amp_high": true,
+      "pcm": "state: RUNNING"
+    },
+    "after": {
+      "digital": 0,
+      "analog": 1381632,
+      "amp_high": false,
+      "pcm": "closed"
+    }
+  }
+]
