@@ -85,7 +85,9 @@ else:
   echo
 
   echo "== applying =="
+  want="$(tar -xOf "/mnt/sdcard/$PAYLOAD_NAME" manifest | sed -n "s/^image-sha256=//p")"
   baseos-update apply
+  test ! -e "/mnt/sdcard/$PAYLOAD_NAME" || { echo "FAIL: applied payload remains" >&2; exit 1; }
   cat /tmp/splash.log
   test -f /tmp/reboot.log || { echo "FAIL: no reboot requested" >&2; exit 1; }
 
@@ -100,7 +102,6 @@ else:
 
   echo
   echo "== the new slot is the payload, byte for byte =="
-  want="$(tar -xOf "/mnt/sdcard/$PAYLOAD_NAME" manifest | sed -n "s/^image-sha256=//p")"
   got="$(digest "$1" "$2")"
   test "$got" = "$want" || { echo "FAIL: new slot $got != payload $want" >&2; exit 1; }
   echo "$got"

@@ -54,8 +54,8 @@ its spare system slot, checks it, switches over and restarts — about a minute.
 Your Roms, Bios, Saves and settings are not touched, and the previous version
 stays on the card. If initialization repeatedly fails before the frontend
 session starts, Base OS can roll back automatically. Failures before the
-update checker can run require recovery or reflashing. You can leave the
-.bosupd file here; its committed image is not applied again.
+update checker can run require recovery or reflashing. The applied .bosupd
+file is deleted automatically after the update is verified and committed.
 
 This card's whole capacity is available now — Base OS expanded it to fill the
 card on first boot.

@@ -213,6 +213,31 @@ select_payload() {
 	[ -n "$CHOSEN" ]
 }
 
+# Delete only the committed payload. TF1 may have been mounted read-only for
+# the config/update scan; restore that mount mode after removing the file.
+# Cleanup failure must not prevent rebooting into an already committed slot.
+remove_payload() {
+	payload_dir="${payload%/*}"
+	was_ro="$(awk -v path="$payload_dir" '$2 == path && $4 ~ /(^|,)ro(,|$)/ { print 1; exit }' /proc/mounts)"
+	if [ "$was_ro" = 1 ]; then
+		if ! mount -o remount,rw "$payload_dir" 2>>"$LOG"; then
+			update_log "could not make $payload_dir writable; keeping $payload"
+			return 0
+		fi
+	fi
+	if rm -f -- "$payload" 2>>"$LOG"; then
+		update_log "removed applied payload $payload"
+	else
+		update_log "could not remove applied payload $payload"
+	fi
+	sync
+	if [ "$was_ro" = 1 ]; then
+		mount -o remount,ro "$payload_dir" 2>>"$LOG" \
+			|| update_log "could not restore read-only mount $payload_dir"
+	fi
+	return 0
+}
+
 apply() {
 	scan_dirs
 	# Ordinary boot: no payload anywhere. One failed glob and we are done.
@@ -325,6 +350,7 @@ apply() {
 		printf "sha=%s\n" "$want_sha"
 	} > "$STATE"
 	sync
+	remove_payload
 	# Paint the last value only once every write is actually on the card. The
 	# flip, the history append and this sync take a few seconds between them,
 	# and painting before them left the bar looking stalled at its final value.
@@ -345,7 +371,7 @@ boot_check() {
 	attempts=$((attempts + 1))
 	if [ "$attempts" -ge "$MAX_TRIAL_BOOTS" ]; then
 		update_log "slot failed to reach a frontend session in $attempts boots — restoring;"
-		update_log "the payload that produced it stays on the card but is not retried"
+		update_log "the payload that produced it is not retried even if copied back"
 		splash -1 "RESTORING SYSTEM"
 		if /usr/sbin/gptslot "$DISK" flip >> "$LOG" 2>&1; then
 			rm -f "$STATE"

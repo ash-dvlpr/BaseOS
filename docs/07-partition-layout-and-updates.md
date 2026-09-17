@@ -78,15 +78,19 @@ Application proceeds as follows:
 3. Read the slot back and verify its SHA-256.
 4. Flip GPT partition 5 to the verified slot.
 5. Append `<sha> <version> <build>` to `/data/update/history`, write trial state
-   to `/data/update/state`, flush and reboot.
+   to `/data/update/state` and flush.
+6. Delete the applied payload, flush and reboot. A read-only payload volume is
+   temporarily remounted writable and then restored to read-only.
 
 Before the GPT flip, a failed write or verification leaves the active slot
 selected. The inactive slot and diagnostic logs may already have changed;
 the whole card is not byte-identical to its pre-update state. The running
 kernel retains its cached active-slot offsets until reboot.
 
-Payload files remain on the card. History is recorded at commit, so a failed
-payload is not reapplied after rollback. The old `committed-sha` file is read
+Only the successfully applied payload is deleted; skipped or rejected files
+remain on the card. Cleanup failures are logged without blocking the reboot.
+History is recorded at commit, so a payload left behind or copied back is not
+reapplied after rollback. The old `committed-sha` file is read
 only to seed history on migration. Diagnostics, including confirmation, use
 `baseos-boot.log`; see [boot I/O](10-boot-io-audit.md).
 

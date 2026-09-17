@@ -49,7 +49,7 @@ case "$2" in
     echo "SLOT_ACTIVE_START=2048"
     echo "SLOT_INACTIVE_START=18432"
     ;;
-  flip) echo flip >> /tmp/flip.log ;;
+  flip) [ ! -f /tmp/fail-flip ] || exit 1; echo flip >> /tmp/flip.log ;;
   *) exit 2 ;;
 esac
 EOF
@@ -98,6 +98,7 @@ EOF
   reset; make_payload rg35xxh "$SLOT_SECTORS" clean
   if baseos-update apply; then echo "FAIL: wrong target accepted" >&2; exit 1; fi
   no_flip "wrong target"
+  test -f /mnt/sdcard/baseos-rg40xxv-1.0.1.bosupd
   echo "ok"
 
   echo "== a payload for a different slot size is refused =="
@@ -110,6 +111,7 @@ EOF
   reset; make_payload rg40xxv "$SLOT_SECTORS" corrupt
   if baseos-update apply; then echo "FAIL: corrupt image accepted" >&2; exit 1; fi
   no_flip "hash mismatch"
+  test -f /mnt/sdcard/baseos-rg40xxv-1.0.1.bosupd
   grep -q "UPDATE FAILED" /tmp/splash.log || { echo "FAIL: no failure pill" >&2; exit 1; }
   echo "ok: written but never committed"
 
@@ -121,6 +123,16 @@ EOF
   no_flip "pre-1.0 layout"
   echo "ok"
 
+  echo "== a failed slot flip retains the payload =="
+  reset; make_payload rg40xxv "$SLOT_SECTORS" clean
+  : > /tmp/fail-flip
+  if baseos-update apply; then echo "FAIL: failed flip accepted" >&2; exit 1; fi
+  rm -f /tmp/fail-flip
+  no_flip "failed commit"
+  test -f /mnt/sdcard/baseos-rg40xxv-1.0.1.bosupd
+  test ! -f /tmp/reboot.log
+  echo "ok"
+
   echo "== a good payload is written, verified and committed =="
   reset; make_payload rg40xxv "$SLOT_SECTORS" clean
   want="$(sha256sum /tmp/pay/slot.img | cut -d" " -f1)"
@@ -129,6 +141,7 @@ EOF
   test "$got" = "$want" || { echo "FAIL: inactive slot content" >&2; exit 1; }
   test -f /tmp/flip.log || { echo "FAIL: no commit" >&2; exit 1; }
   test -f /tmp/reboot.log || { echo "FAIL: no reboot" >&2; exit 1; }
+  test ! -e /mnt/sdcard/baseos-rg40xxv-1.0.1.bosupd || { echo "FAIL: applied payload remains" >&2; exit 1; }
   grep -q "UPDATING SYSTEM" /tmp/splash.log || { echo "FAIL: no progress pill" >&2; exit 1; }
   # The bar must actually move, and never backwards: one paint before the write,
   # one per written chunk, one per verified chunk, one at the commit.
@@ -159,11 +172,71 @@ EOF
     || { echo "FAIL: legacy update logs were recreated" >&2; exit 1; }
   echo "ok"
 
-  echo "== an already-applied payload is skipped =="
+  echo "== a deleted payload leaves the next boot with no update work =="
+  rm -f /tmp/flip.log /tmp/splash.log
+  baseos-update apply
+  no_flip "empty card after update"
+  test ! -f /tmp/splash.log
+
+  echo "== an already-applied payload copied back is skipped =="
+  tar -cf /mnt/sdcard/baseos-rg40xxv-1.0.1.bosupd -C /tmp/pay manifest rootfs.img.gz
   rm -f /tmp/flip.log
   baseos-update apply
   no_flip "re-applying the same image"
-  echo "ok: one card can update several handhelds"
+  echo "ok: history still prevents reapplication"
+
+  echo "== TF1 read-only scan mount is restored after cleanup =="
+  reset; make_payload rg40xxv "$SLOT_SECTORS" clean
+  mkdir -p /mnt/system
+  mv /mnt/sdcard/*.bosupd "/mnt/system/update with spaces.bosupd"
+  # Supply mount metadata without requiring privileged mounts in the test.
+  cat > /usr/local/bin/awk <<"EOF"
+#!/bin/sh
+case "$*" in
+  */proc/mounts) printf "%s\n" "/dev/mmcblk0p7 /mnt/system vfat ro,relatime 0 0" | /usr/bin/awk "$1" "$2" "$3" ;;
+  *) exec /usr/bin/awk "$@" ;;
+esac
+EOF
+  cat > /usr/local/bin/mount <<"EOF"
+#!/bin/sh
+printf "%s\n" "$*" >> /tmp/remount.log
+[ ! -f /tmp/fail-remount ]
+EOF
+  chmod 755 /usr/local/bin/awk /usr/local/bin/mount
+  baseos-update apply
+  test ! -e "/mnt/system/update with spaces.bosupd"
+  test "$(cat /tmp/remount.log)" = "-o remount,rw /mnt/system
+-o remount,ro /mnt/system"
+  test -f /tmp/reboot.log
+  echo "ok"
+
+  echo "== failed writable remount keeps the payload and still reboots =="
+  reset; make_payload rg40xxv "$SLOT_SECTORS" clean
+  mv /mnt/sdcard/*.bosupd /mnt/system/update.bosupd
+  : > /tmp/fail-remount
+  baseos-update apply
+  test -f /mnt/system/update.bosupd
+  test -f /tmp/reboot.log
+  grep -q "keeping /mnt/system/update.bosupd" /mnt/sdcard/baseos-boot.log
+  rm -f /usr/local/bin/awk /usr/local/bin/mount /tmp/fail-remount /mnt/system/update.bosupd
+  echo "ok"
+
+  echo "== failed deletion keeps the committed update successful =="
+  reset; make_payload rg40xxv "$SLOT_SECTORS" clean
+  cat > /usr/local/bin/rm <<"EOF"
+#!/bin/sh
+case "$*" in
+  *.bosupd) exit 1 ;;
+  *) exec /bin/rm "$@" ;;
+esac
+EOF
+  chmod 755 /usr/local/bin/rm
+  baseos-update apply
+  /bin/rm /usr/local/bin/rm
+  test -f /mnt/sdcard/baseos-rg40xxv-1.0.1.bosupd
+  test -f /tmp/reboot.log
+  grep -q "could not remove applied payload" /mnt/sdcard/baseos-boot.log
+  echo "ok"
 
   echo "== a payload matching the running build is skipped =="
   # A payload whose version and build match the running system is skipped
@@ -200,7 +273,9 @@ EOF
   got="$(dd if=/dev/mmcblk0 bs=1M skip=$INACTIVE_MB count=8 status=none | sha256sum | cut -d" " -f1)"
   test "$got" = "$newer" || { echo "FAIL: applied the wrong payload" >&2; exit 1; }
   grep -qx "trial=1.0.2" /data/update/state || { echo "FAIL: wrong version applied" >&2; exit 1; }
-  echo "ok: every payload is considered, not just the first"
+  test -f /mnt/sdcard/baseos-rg40xxv-1.0.1.bosupd
+  test ! -e /mnt/sdcard/baseos-rg40xxv-1.0.2.bosupd
+  echo "ok: only the applied payload is deleted"
 
   echo "== an older payload is never applied =="
   # Without this the stale payload becomes applicable again the moment you
@@ -234,7 +309,8 @@ EOF
   baseos-update boot-check                     # boot 2
   baseos-update boot-check                     # boot 3: restore the old slot
   test "$(wc -l < /tmp/flip.log)" -eq 2 || { echo "FAIL: no rollback flip" >&2; exit 1; }
-  baseos-update apply                          # back on the old slot, payload still there
+  tar -cf /mnt/sdcard/baseos-rg40xxv-1.0.1.bosupd -C /tmp/pay manifest rootfs.img.gz
+  baseos-update apply                          # back on the old slot, payload copied back
   test "$(wc -l < /tmp/flip.log)" -eq 2 \
     || { echo "FAIL: the rolled-back payload was applied again" >&2; exit 1; }
   echo "ok: a bad update cannot oscillate"
