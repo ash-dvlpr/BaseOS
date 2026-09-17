@@ -18,7 +18,7 @@ loading**, up to the point where your frontend starts. Your frontend adds its
 own time to display the menu, and results vary with the device and SD card.
 
 The boot log now shows more accurate pre- and post-kernel timings, making it
-easier to see where startup time goes. [Timing details](docs/09-boot-profiling.md).
+easier to see where startup time goes.
 
 ## Features
 
