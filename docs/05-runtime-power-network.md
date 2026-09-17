@@ -22,11 +22,6 @@ suspend. This stops USB host controllers and excludes the hall sensor from
 the wake set: POWER wakes the device, while opening the lid alone does not.
 Non-SP kernels do not expose `os_sleep` and use the full USB-stop path.
 
-For standby measurements, `diagnostics/sleep-drain/` provides
-`pre-sleep.d`/`post-resume.d` hooks that record the battery charge counter and
-system timestamps in `/mnt/sdcard/sleep-drain.log`. Use a long sleep interval because
-the counter has coarse resolution. Hook filenames must end in `.sh`.
-
 ## 3. Wi-Fi
 
 BaseOS owns interface startup. Like stock, `rcS` loads `rtl_btlpm.ko` during
@@ -98,9 +93,8 @@ configuration. Neither card settings nor runtime settings are sourced as shell.
 
 Retention can increase idle power. The module releases retained buffers before
 kernel suspend; full hardware sleep-drain measurements remain outstanding.
-Images without a validated `h700_speaker_amp.ko` skip loading it. The current
-module remains an RG SP diagnostic build; other kernel profiles and production
-module packaging are separate work.
+Images without a validated `h700_speaker_amp.ko` skip loading it. BaseOS does
+not build or package this optional module; it must match the device kernel.
 
 ## 4. Bluetooth audio
 

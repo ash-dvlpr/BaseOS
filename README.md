@@ -90,9 +90,8 @@ mdns=true
   Defaults to `false`; set `headphone_pop_fix=true` to enable it and restart.
   Keeps analogue output buffers powered between streams, which may increase
   awake/screen-off idle consumption. Buffers are disabled before deep sleep.
-  The speaker fix remains enabled independently. The current experimental
-  module is validated only against the RG SP kernel documented in
-  [the diagnostic notes](diagnostics/h700-speaker-amp/README.md).
+  The speaker fix remains enabled independently. Requires a compatible audio
+  module; see [runtime audio support](docs/05-runtime-power-network.md#optional-headphone-pop-workaround).
 
 Omitted settings use their defaults. Lines starting with `#` are comments.
 
