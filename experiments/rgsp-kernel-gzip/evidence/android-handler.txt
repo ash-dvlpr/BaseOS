@@ -1,0 +1,68 @@
+4a00f634: mov      r0, r6
+4a00f636: bl       #0x4a0122d0
+4a00f63a: cmp      r0, #1
+4a00f63c: beq      #0x4a00f646
+4a00f63e: cmp      r0, #3
+4a00f640: beq      #0x4a00f698
+4a00f642: ldr      r0, [pc, #0x15c] ; 4a07fabf 'ERROR: unknown image format type!\n'
+4a00f644: b        #0x4a00f5ac
+4a00f646: ldrb     r3, [r6, #0x1e]
+4a00f648: strb.w   r3, [r4, #0x5d]
+4a00f64c: ldrb     r3, [r6, #0x1f]
+4a00f64e: strb.w   r3, [r4, #0x5c]
+4a00f652: ldrb     r3, [r6, #0x1c]
+4a00f654: strb.w   r3, [r4, #0x5e]
+4a00f658: ldr      r3, [r6, #0xc]
+4a00f65a: rev      r2, r3
+4a00f65c: add.w    r3, r6, #0x40
+4a00f660: add      r3, r2
+4a00f662: str      r3, [r4, #0x4c]
+4a00f664: ldr      r3, [r6, #0x10]
+4a00f666: rev      r3, r3
+4a00f668: str      r3, [r4, #0x58]
+4a00f66a: ldrb     r3, [r6, #0x1d]
+4a00f66c: strb.w   r3, [r4, #0x5f]
+4a00f670: movs     r3, #0
+4a00f672: ldrb.w   r2, [r4, #0x5f]
+4a00f676: cmp      r2, #3
+4a00f678: beq      #0x4a00f67e
+4a00f67a: cmp      r2, #0x18
+4a00f67c: bne      #0x4a00f6bc
+4a00f67e: ldr      r2, [pc, #0x124] ; 4a0e73a8
+4a00f680: add      r3, sp, #0x3c
+4a00f682: movs     r1, #3
+4a00f684: sub.w    r0, r2, #0x60
+4a00f688: bl       #0x4a0123d4
+4a00f68c: cmp      r0, #0
+4a00f68e: bge      #0x4a00f6c8
+4a00f690: adds     r0, #2
+4a00f692: beq      #0x4a00f6c8
+4a00f694: ldr      r0, [pc, #0x110] ; 4a07fae2 'Could not find a valid setup.bin for x86\n'
+4a00f696: b        #0x4a00f5ac
+4a00f698: mov.w    r3, #0x200
+4a00f69c: mov      r0, r6
+4a00f69e: strh.w   r3, [r4, #0x5c]
+4a00f6a2: movs     r3, #5
+4a00f6a4: strb.w   r3, [r4, #0x5e]
+4a00f6a8: bl       #0x4a012500
+4a00f6ac: str      r0, [r4, #0x4c]
+4a00f6ae: mov      r0, r6
+4a00f6b0: bl       #0x4a0125c0
+4a00f6b4: movs     r3, #1
+4a00f6b6: str      r0, [r4, #0x58]
+4a00f6b8: str      r0, [r4, #0x60]
+4a00f6ba: b        #0x4a00f672
+4a00f6bc: ldr      r2, [r4, #0x44]
+4a00f6be: cmp      r2, #0
+4a00f6c0: beq      #0x4a00f7b8
+4a00f6c2: ldr      r3, [r4, #0x18]
+4a00f6c4: rev      r3, r3
+4a00f6c6: str      r3, [r4, #0x60]
+4a00f6c8: ldrb.w   r3, [r4, #0x5d]
+4a00f6cc: cmp      r3, #0xe
+4a00f6ce: bne      #0x4a00f6da
+4a00f6d0: ldr      r2, [r4, #0x50]
+4a00f6d2: ldr      r3, [r4, #0x60]
+4a00f6d4: str      r2, [r4, #0x58]
+4a00f6d6: add      r3, r2
+4a00f6d8: str      r3, [r4, #0x60]

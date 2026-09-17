@@ -1,0 +1,116 @@
+4a007e70: push.w   {r4, r5, r6, r7, r8, sl, lr}
+4a007e74: mov      r5, r3
+4a007e76: sub      sp, #0x1c
+4a007e78: mov      r6, r0
+4a007e7a: mov      r7, r1
+4a007e7c: mov      r8, r2
+4a007e7e: ldr      r0, [pc, #0x124] ; 4a07f8a1 'boot_from_partion'
+4a007e80: bl       #0x4a00e8f8
+4a007e84: movs     r2, #0x10
+4a007e86: mov      r4, r0
+4a007e88: movs     r1, #0
+4a007e8a: ldr      r0, [r5, #4]
+4a007e8c: bl       #0x4a06a8b8
+4a007e90: mov      r1, r0
+4a007e92: mov      r0, r4
+4a007e94: bl       #0x4a006a38
+4a007e98: mov      r1, r0
+4a007e9a: cmp      r0, #0
+4a007e9c: bne      #0x4a007f70
+4a007e9e: movs     r2, #0x10
+4a007ea0: ldr      r0, [r5, #4]
+4a007ea2: bl       #0x4a06a8b8
+4a007ea6: add      r2, sp, #0x14
+4a007ea8: mov      r4, r0
+4a007eaa: add      r1, sp, #0x10
+4a007eac: bl       #0x4a012600
+4a007eb0: ldrb     r3, [r4, #0x15]
+4a007eb2: ldrb     r0, [r4, #0x14]
+4a007eb4: ldrb.w   ip, [r4, #0x17]
+4a007eb8: ldrd     r1, r2, [sp, #0x10]
+4a007ebc: orr.w    r0, r0, r3, lsl #8
+4a007ec0: ldrb     r3, [r4, #0x16]
+4a007ec2: orr.w    r0, r0, r3, lsl #16
+4a007ec6: mov.w    r3, #0x10000
+4a007eca: orr.w    r0, r0, ip, lsl #24
+4a007ece: bl       #0x4a012104
+4a007ed2: ldr      r1, [sp, #0x10]
+4a007ed4: ldr      r0, [pc, #0xd0] ; 4a07f8b3 'initrd_start'
+4a007ed6: bl       #0x4a00e674
+4a007eda: ldrd     r1, r3, [sp, #0x10]
+4a007ede: ldr      r0, [pc, #0xcc] ; 4a07f8c0 'initrd_end'
+4a007ee0: add      r1, r3
+4a007ee2: bl       #0x4a00e674
+4a007ee6: ldrb     r3, [r4, #0x11]
+4a007ee8: ldrb     r2, [r4, #0x10]
+4a007eea: orr.w    r2, r2, r3, lsl #8
+4a007eee: ldrb     r3, [r4, #0x12]
+4a007ef0: orr.w    r2, r2, r3, lsl #16
+4a007ef4: ldrb     r3, [r4, #0x13]
+4a007ef6: orrs.w   r2, r2, r3, lsl #24
+4a007efa: beq      #0x4a007f1a
+4a007efc: ldrb     r3, [r4, #0x15]
+4a007efe: ldrb     r1, [r4, #0x14]
+4a007f00: orr.w    r1, r1, r3, lsl #8
+4a007f04: ldrb     r3, [r4, #0x16]
+4a007f06: orr.w    r1, r1, r3, lsl #16
+4a007f0a: ldrb     r3, [r4, #0x17]
+4a007f0c: orr.w    r1, r1, r3, lsl #24
+4a007f10: ldr      r3, [pc, #0x9c] ; 4a09d874
+4a007f12: add      r2, r1
+4a007f14: ldr      r0, [r3]
+4a007f16: bl       #0x4a00fda4
+4a007f1a: add.w    r4, r8, #-1
+4a007f1e: add.w    sl, r5, #4
+4a007f22: cmp      r4, #0
+4a007f24: ble      #0x4a007f8c
+4a007f26: movs     r2, #0x10
+4a007f28: add      r1, sp, #0x14
+4a007f2a: ldr      r0, [r5, #4]
+4a007f2c: bl       #0x4a06a8b8
+4a007f30: ldr      r3, [sp, #0x14]
+4a007f32: ldrb     r3, [r3]
+4a007f34: cbz      r3, #0x4a007f8c
+4a007f36: cmp      r3, #0x3a
+4a007f38: beq      #0x4a007f8c
+4a007f3a: cmp      r3, #0x23
+4a007f3c: beq      #0x4a007f8c
+4a007f3e: movs     r2, #9
+4a007f40: ldr      r1, [pc, #0x70] ; 4a09dc04
+4a007f42: ldr      r0, [r5, #4]
+4a007f44: bl       #0x4a012bce
+4a007f48: sub.w    r2, r8, #2
+4a007f4c: add.w    r3, r5, #8
+4a007f50: cbz      r0, #0x4a007f70
+4a007f52: ldr      r1, [r0, #0xc]
+4a007f54: ldr      r0, [pc, #0x60] ; 4a0e7348
+4a007f56: cmp      r1, #1
+4a007f58: it       eq
+4a007f5a: moveq    r1, #7
+4a007f5c: tst.w    r1, #1
+4a007f60: bne      #0x4a007f76
+4a007f62: ldr.w    r4, [r0, #0x8c]
+4a007f66: cmp      r1, r4
+4a007f68: bgt      #0x4a007f76
+4a007f6a: ldr      r0, [pc, #0x50] ; 4a07f8cb 'Trying to execute a command out of order\n'
+4a007f6c: bl       #0x4a06a7bc
+4a007f70: mov.w    r0, #-1
+4a007f74: b        #0x4a007f86
+4a007f76: movs     r4, #0
+4a007f78: str      r1, [sp]
+4a007f7a: strd     r0, r4, [sp, #4]
+4a007f7e: mov      r1, r7
+4a007f80: mov      r0, r6
+4a007f82: bl       #0x4a00f43c
+4a007f86: add      sp, #0x1c
+4a007f88: pop.w    {r4, r5, r6, r7, r8, sl, pc}
+4a007f8c: bl       #0x4a005734
+4a007f90: movs     r3, #1
+4a007f92: mov      r2, r4
+4a007f94: str      r3, [sp, #8]
+4a007f96: ldr      r3, [pc, #0x20] ; 4a0e7348
+4a007f98: str      r3, [sp, #4]
+4a007f9a: movw     r3, #0x70f
+4a007f9e: str      r3, [sp]
+4a007fa0: mov      r3, sl
+4a007fa2: b        #0x4a007f7e

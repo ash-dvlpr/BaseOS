@@ -1,0 +1,131 @@
+4a00c1e8: push.w   {r4, r5, r6, r7, r8, lr}
+4a00c1ec: sub      sp, #0x80
+4a00c1ee: mov      r6, r3
+4a00c1f0: mov      r5, r0
+4a00c1f2: mov      r4, r1
+4a00c1f4: mov      r7, r2
+4a00c1f6: movs     r1, #0
+4a00c1f8: movs     r2, #0x78
+4a00c1fa: add      r0, sp, #8
+4a00c1fc: bl       #0x4a000fe0
+4a00c200: ldr      r1, [r6, #4]
+4a00c202: ldr      r0, [pc, #0x100] ; 4a081854 'boot0'
+4a00c204: bl       #0x4a069882
+4a00c208: cbnz     r0, #0x4a00c21c
+4a00c20a: adds     r3, r6, #4
+4a00c20c: subs     r2, r7, #1
+4a00c20e: mov      r1, r4
+4a00c210: mov      r0, r5
+4a00c212: bl       #0x4a00c110
+4a00c216: add      sp, #0x80
+4a00c218: pop.w    {r4, r5, r6, r7, r8, pc}
+4a00c21c: cmp      r7, #3
+4a00c21e: ble      #0x4a00c2f8
+4a00c220: ldr      r4, [r6, #4]
+4a00c222: ldr      r0, [pc, #0xe4] ; 4a09381e 'read'
+4a00c224: ldr.w    r8, [r6, #0xc]
+4a00c228: bl       #0x4a0698d2
+4a00c22c: ldr      r1, [pc, #0xd8] ; 4a09381e 'read'
+4a00c22e: mov      r2, r0
+4a00c230: mov      r0, r4
+4a00c232: bl       #0x4a069898
+4a00c236: mov      r4, r0
+4a00c238: cmp      r0, #0
+4a00c23a: bne      #0x4a00c2f8
+4a00c23c: mov      r1, r0
+4a00c23e: movs     r2, #0x10
+4a00c240: ldr      r0, [r6, #8]
+4a00c242: bl       #0x4a06a8b8
+4a00c246: cmp      r7, #5
+4a00c248: mov      r5, r0
+4a00c24a: bne      #0x4a00c258
+4a00c24c: mov      r1, r4
+4a00c24e: movs     r2, #0x10
+4a00c250: ldr      r0, [r6, #0x10]
+4a00c252: bl       #0x4a06a8b8
+4a00c256: mov      r4, r0
+4a00c258: mov      r1, r8
+4a00c25a: ldr      r0, [pc, #0xb0] ; 4a07f8a1 'boot_from_partion'
+4a00c25c: bl       #0x4a00e620
+4a00c260: movs     r1, #0
+4a00c262: ldr      r0, [pc, #0xac] ; 4a09b113 'sunxi_flash'
+4a00c264: bl       #0x4a017734
+4a00c268: mov      r6, r0
+4a00c26a: cbnz     r0, #0x4a00c272
+4a00c26c: mvn      r0, #0x12
+4a00c270: b        #0x4a00c216
+4a00c272: add      r2, sp, #8
+4a00c274: mov      r1, r8
+4a00c276: bl       #0x4a00466c
+4a00c27a: cmp      r0, #0
+4a00c27c: blt      #0x4a00c26c
+4a00c27e: ldr      r3, [sp, #0xc]
+4a00c280: add      r2, sp, #0x14
+4a00c282: ldr      r1, [pc, #0x90] ; 4a0814a7 'partinfo: name %s, start 0x%lx, size 0x%lx\n'
+4a00c284: movs     r0, #6
+4a00c286: str      r3, [sp]
+4a00c288: ldr      r3, [sp, #8]
+4a00c28a: bl       #0x4a0111e8
+4a00c28e: ldr.w    r8, [sp, #8]
+4a00c292: mov      r3, r5
+4a00c294: ldr      r7, [r6, #0x78]
+4a00c296: movs     r2, #0x40
+4a00c298: mov      r0, r6
+4a00c29a: mov      r1, r8
+4a00c29c: blx      r7
+4a00c29e: cmp      r0, #0x40
+4a00c2a0: bne      #0x4a00c300
+4a00c2a2: cbnz     r4, #0x4a00c2c0
+4a00c2a4: movs     r2, #8
+4a00c2a6: ldr      r1, [pc, #0x70] ; 4a0814d3 'ANDROID!'
+4a00c2a8: mov      r0, r5
+4a00c2aa: bl       #0x4a069a10
+4a00c2ae: cbnz     r0, #0x4a00c2e2
+4a00c2b0: mov      r0, r5
+4a00c2b2: bl       #0x4a012500
+4a00c2b6: subs     r4, r0, r5
+4a00c2b8: mov      r0, r5
+4a00c2ba: bl       #0x4a002c88
+4a00c2be: add      r4, r0
+4a00c2c0: addw     r4, r4, #0x1ff
+4a00c2c4: ldr      r7, [r6, #0x78]
+4a00c2c6: lsrs     r0, r4, #9
+4a00c2c8: add.w    r3, r5, #0x8000
+4a00c2cc: add.w    r1, r8, #0x40
+4a00c2d0: sub.w    r4, r0, #0x40
+4a00c2d4: mov      r0, r6
+4a00c2d6: mov      r2, r4
+4a00c2d8: blx      r7
+4a00c2da: subs     r0, r4, r0
+4a00c2dc: it       ne
+4a00c2de: movne    r0, #1
+4a00c2e0: b        #0x4a00c216
+4a00c2e2: ldr      r2, [r5]
+4a00c2e4: ldr      r3, [pc, #0x34] ; 56190527
+4a00c2e6: cmp      r2, r3
+4a00c2e8: itett    eq
+4a00c2ea: ldreq    r4, [r5, #0xc]
+4a00c2ec: ldrne    r4, [sp, #0xc]
+4a00c2ee: reveq    r4, r4
+4a00c2f0: addeq    r4, #0x40
+4a00c2f2: it       ne
+4a00c2f4: lslne    r4, r4, #9
+4a00c2f6: b        #0x4a00c2c0
+4a00c2f8: mov      r0, r5
+4a00c2fa: bl       #0x4a012c4c
+4a00c2fe: b        #0x4a00c216
+4a00c300: movs     r0, #1
+4a00c302: b        #0x4a00c216
+4a00c304: adds     r4, r2, r1
+4a00c306: ldr      r2, [pc, #0x20] ; fc77f7f6
+4a00c308: subs     r0, #0x1e
+4a00c30a: ldr      r2, [pc, #0x24] ; 4a07fda9 '## jump to efex ...\n'
+4a00c30c: strh.w   r4, [r1, #0xa07]
+4a00c310: cbz      r3, #0x4a00c318
+4a00c312: ldr      r2, [pc, #0x24] ; 4f23460e
+4a00c314: asrs     r7, r4, #0x12
+4a00c316: ldr      r2, [pc, #0x20] ; 4f23460e
+4a00c318: asrs     r3, r2, #0x13
+4a00c31a: ldr      r2, [pc, #0x20] ; 4604b08e
+4a00c31c: lsls     r7, r4, #0x14
+4a00c31e: ldrsb    r1, [r3, r0]

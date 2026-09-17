@@ -1,0 +1,26 @@
+{
+  "installed_at_utc": "2026-09-17T18:41:30.348611+00:00",
+  "serial": "ac001089c89588720d2",
+  "installation": "success",
+  "direct_readback_verification": "full 36 MiB boot region and full 64 MiB boot partition matched expected SHA-256; environment unchanged",
+  "boot_id_unchanged": true,
+  "hardware_boot_test": "User confirmed successful boot and approximately 60 frames faster LED-on to first UI frame at 240 fps (0.250 seconds).",
+  "device_recovery_directory": "/mnt/sdcard/.baseos-boot-gzip-20260917",
+  "validation": [
+    "final binary boot-path emulation: pass",
+    "raw and unpatched-gzip controls: pass",
+    "size-aware loader emulation: pass",
+    "file-based installer success: pass",
+    "explicit rollback: pass",
+    "injected verification failure automatic rollback: pass"
+  ],
+  "external_timing": {
+    "source": "user video comparison",
+    "start": "LED on",
+    "end": "first UI frame",
+    "capture_fps": 240,
+    "approximate_frames_saved": 60,
+    "approximate_seconds_saved": 0.25,
+    "repeat_count": "not specified"
+  }
+}

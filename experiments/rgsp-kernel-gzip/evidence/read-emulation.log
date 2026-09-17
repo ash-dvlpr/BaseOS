@@ -1,0 +1,2 @@
+boot-original.img return 0 reads [{'sector': 303104, 'sectors': 64, 'bytes': 32768}, {'sector': 303168, 'sectors': 39852, 'bytes': 20404224}] total 20436992
+boot-gzip-analysis.img return 0 reads [{'sector': 303104, 'sectors': 64, 'bytes': 32768}, {'sector': 303168, 'sectors': 19160, 'bytes': 9809920}] total 9842688

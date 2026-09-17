@@ -1,0 +1,48 @@
+{
+  "device_serial": "ac001089c89588720d2",
+  "device_target": "rgsp",
+  "original_boot_id": "59de6727-9b8b-4fb8-862b-8cbd20754161",
+  "experiment": "Single-core gzip; Android handler forced to gzip. Restore both components together.",
+  "package_disk_offset": 16793600,
+  "package_bytes": 1310720,
+  "boot_partition_start_lba": 303104,
+  "boot_partition_sectors": 131072,
+  "boot_bytes_written": 9842688,
+  "changed_package_byte_offsets": [
+    "0x14",
+    "0x15",
+    "0x16",
+    "0x17",
+    "0x80c",
+    "0x80d",
+    "0x80e",
+    "0x80f",
+    "0xfe98",
+    "0xfe99",
+    "0xfe9a",
+    "0xfe9b"
+  ],
+  "original_region_sha256": "2507d7955824cb56dfead33ea916b850983cdb130f9ddd47974002fe00f1e795",
+  "expected_region_sha256": "39aecbbe3d7b6f6b90549930d2a25463a020a853d46cec3a8b560d49f220f697",
+  "original_boot_partition_sha256": "d42252f30730d35ca7759a651da7260ba482144130e58f05f23ea5e33270a6f5",
+  "expected_boot_partition_sha256": "83b6e8a62cf1d0479dd8a9132d2656af00c8aa15c27cdd583d29da6509071233",
+  "unchanged_env_sha256": "8dd964ef0d525071626040d7cdce6c16925aaa6108d35558a0a5f032592b78a2",
+  "outputs": {
+    "boot-package-original.bin": {
+      "bytes": 1310720,
+      "sha256": "957929afa2879e18ff758d93eafa98879b21aec70dedcb731d7862a2c20f075c"
+    },
+    "boot-package-gzip.bin": {
+      "bytes": 1310720,
+      "sha256": "fa745599c9eb95110f03c6c426e6d08e0317146d51059c6a790e25f604ea0942"
+    },
+    "u-boot-gzip.bin": {
+      "bytes": 1048576,
+      "sha256": "b33ecbf8f9be8acb50ba87e99357e93450c4825e02d15d1f359beda4a3233d26"
+    },
+    "boot-gzip.img": {
+      "bytes": 9842688,
+      "sha256": "2b9aeb76ace6c781e21aec1edc200cab967b0bf0d162c54588a9c339caf7490c"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+4a00f348: push     {r3, lr}
+4a00f34a: ldr.w    r0, [sb, #0x5c]
+4a00f34e: ldr      r3, [pc, #0x18] ; 4a0e7348
+4a00f350: ldr.w    r2, [sb, #0x68]
+4a00f354: str      r0, [r3, #0x6c]
+4a00f356: str      r2, [r3, #0x70]
+4a00f358: bl       #0x4a008680
+4a00f35c: ldr      r1, [pc, #0xc] ; 4a07d1b2 '0xffffffff'
+4a00f35e: ldr      r0, [pc, #0x10] ; 4a07d1bd 'fdt_high'
+4a00f360: bl       #0x4a00e620
+4a00f364: movs     r0, #0
+4a00f366: pop      {r3, pc}
+4a00f368: strb     r0, [r1, #0xd]
+4a00f36a: ldr      r2, [pc, #0x38] ; e9dd3380
+4a00f36c: bne      #0x4a00f2d4
+4a00f36e: ldr      r2, [pc, #0x1c] ; d0142c01
+4a00f370: bne      #0x4a00f2ee
+4a00f372: ldr      r2, [pc, #0x1c] ; d02f2c03

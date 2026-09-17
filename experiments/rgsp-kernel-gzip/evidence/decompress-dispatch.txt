@@ -1,0 +1,78 @@
+4a00f374: push.w   {r0, r1, r4, r5, r6, r7, r8, lr}
+4a00f378: mov      r4, r0
+4a00f37a: ldrd     r6, r8, [sp, #0x2c]
+4a00f37e: uxtb     r0, r3
+4a00f380: mov      r7, r1
+4a00f382: mov      r5, r2
+4a00f384: str.w    r1, [r8]
+4a00f388: bl       #0x4a012180
+4a00f38c: cmp      r4, #1
+4a00f38e: beq      #0x4a00f3ba
+4a00f390: cmp      r4, #3
+4a00f392: beq      #0x4a00f3f4
+4a00f394: cmp      r4, #0
+4a00f396: bne      #0x4a00f40c
+4a00f398: cmp      r7, r5
+4a00f39a: beq      #0x4a00f3ae
+4a00f39c: ldr      r2, [sp, #0x28]
+4a00f39e: cmp      r6, r2
+4a00f3a0: blo      #0x4a00f41e
+4a00f3a2: mov.w    r3, #0x10000
+4a00f3a6: ldrd     r0, r1, [sp, #0x20]
+4a00f3aa: bl       #0x4a012104
+4a00f3ae: ldr      r1, [sp, #0x28]
+4a00f3b0: movs     r0, #0
+4a00f3b2: add      r1, r7
+4a00f3b4: str.w    r1, [r8]
+4a00f3b8: b        #0x4a00f418
+4a00f3ba: add      r3, sp, #0x28
+4a00f3bc: ldr      r2, [sp, #0x24]
+4a00f3be: mov      r1, r6
+4a00f3c0: ldr      r0, [sp, #0x20]
+4a00f3c2: bl       #0x4a066710
+4a00f3c6: mov      r5, r0
+4a00f3c8: cmp      r5, #0
+4a00f3ca: beq      #0x4a00f3ae
+4a00f3cc: ldr      r7, [sp, #0x28]
+4a00f3ce: uxtb     r0, r4
+4a00f3d0: bl       #0x4a012194
+4a00f3d4: cmp      r7, r6
+4a00f3d6: mov      r1, r0
+4a00f3d8: blo      #0x4a00f422
+4a00f3da: ldr      r0, [pc, #0x50] ; 4a07d14c 'Image too large: increase CONFIG_SYS_BOOTM_LEN\n'
+4a00f3dc: bl       #0x4a06a7bc
+4a00f3e0: ldr      r0, [pc, #0x4c] ; 4a07d195 'Must RESET board to recover\n'
+4a00f3e2: bl       #0x4a06a7bc
+4a00f3e6: mvn      r0, #5
+4a00f3ea: bl       #0x4a00ea8c
+4a00f3ee: mov.w    r0, #-1
+4a00f3f2: b        #0x4a00f418
+4a00f3f4: add      r1, sp, #8
+4a00f3f6: ldrd     r2, r3, [sp, #0x24]
+4a00f3fa: str      r6, [r1, #-0x4]!
+4a00f3fe: ldr      r0, [sp, #0x20]
+4a00f400: bl       #0x4a061708
+4a00f404: ldr      r3, [sp, #4]
+4a00f406: mov      r5, r0
+4a00f408: str      r3, [sp, #0x28]
+4a00f40a: b        #0x4a00f3c8
+4a00f40c: mov      r1, r4
+4a00f40e: ldr      r0, [pc, #0x24] ; 4a07d129 'Unimplemented compression type %d\n'
+4a00f410: bl       #0x4a06a7bc
+4a00f414: mvn      r0, #2
+4a00f418: add      sp, #8
+4a00f41a: pop.w    {r4, r5, r6, r7, r8, pc}
+4a00f41e: movs     r5, #1
+4a00f420: b        #0x4a00f3cc
+4a00f422: mov      r2, r5
+4a00f424: ldr      r0, [pc, #0x10] ; 4a07d17c '%s: uncompress error %d\n'
+4a00f426: bl       #0x4a06a7bc
+4a00f42a: b        #0x4a00f3e0
+4a00f42c: bne      #0x4a00f4c8
+4a00f42e: ldr      r2, [pc, #0x1c] ; 07fe308c
+4a00f430: bne      #0x4a00f35e
+4a00f432: ldr      r2, [pc, #0x1c] ; 910b9009
+4a00f434: bne      #0x4a00f48a
+4a00f436: ldr      r2, [pc, #0x1c] ; 0307ea43
+4a00f438: bne      #0x4a00f534
+4a00f43a: ldr      r2, [pc, #0x1c] ; 308cf8c5

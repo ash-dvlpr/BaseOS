@@ -257,6 +257,11 @@ measurement scope, comparison procedure and GPU module optimization.
 
 ## Technical documentation
 
+The post-v1.3.0 [RG SP gzip-kernel experiment](experiments/rgsp-kernel-gzip/README.md)
+contains its source, validation evidence and recovery procedure. It is separate
+from the release build and update paths; its measured gain is power-on-relative,
+not part of the kernel-to-frontend handoff budget.
+
 - [Boot chain and partitions](docs/00-boot-chain-and-partitions.md)
 - [Root filesystem and init](docs/01-rootfs-and-init.md)
 - [Image build and flashing](docs/02-image-build-and-flash.md)

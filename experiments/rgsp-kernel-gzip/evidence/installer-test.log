@@ -1,0 +1,3 @@
+Successful installation: PASS
+Explicit paired rollback: PASS
+Injected verification failure and automatic rollback: PASS

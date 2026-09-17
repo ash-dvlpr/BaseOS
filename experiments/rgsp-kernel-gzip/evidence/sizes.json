@@ -1,0 +1,12 @@
+{
+  "uboot_sha256": "a11271e1276173cee48bd5705d068fd8446cfc0ffb43fca70b3b6808c2e9d0db",
+  "kernel_sha256": "3328c2fab9f19f7ea6a80e34b0a76238cf594bc631f77e05fec32f8adabad042",
+  "kernel_bytes": 17686536,
+  "ramdisk_bytes": 2606312,
+  "formats": {
+    "gzip-1": 7593929,
+    "gzip-6": 7097454,
+    "gzip-9": 7092638,
+    "lzma": 5156192
+  }
+}

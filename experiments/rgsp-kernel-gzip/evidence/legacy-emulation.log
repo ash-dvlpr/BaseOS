@@ -1,0 +1,9 @@
+RuntimeError Invalid copy: {'copy_dst': '0x840', 'src': '0xb8657420', 'bytes': 2112}
+[
+  {
+    "copy_dst": "0x840",
+    "src": "0xb8657420",
+    "bytes": 2112
+  }
+]
+{'boot_from_partion': 'boot', 'bootargs': 'root=/dev/mmcblk0p5 rootwait quiet splash init=/init', 'verify': 'yes', 'bootm_low': '40000000', 'bootm_size': '10000000'}

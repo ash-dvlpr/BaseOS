@@ -1,0 +1,21 @@
+original preamble [{'copy_dst': '0x42000000', 'src': '0x460df000', 'bytes': 2606312}] environment {'boot_from_partion': 'boot', 'bootargs': 'root=/dev/mmcblk0p5 rootwait quiet splash init=/init', 'verify': 'yes', 'bootm_low': '40000000', 'bootm_size': '10000000', 'initrd_start': '460df000', 'initrd_end': '4635b4e8'}
+state 1 result 0x0
+state 2 result 0x0
+state 4 result 0x0
+state 8 result 0x0
+comp 00 kernel_sha256 3328c2fab9f19f7ea6a80e34b0a76238cf594bc631f77e05fec32f8adabad042
+ramdisk_equals_original True
+gzip-without-patch preamble [{'copy_dst': '0x42000000', 'src': '0x456c4800', 'bytes': 2606312}] environment {'boot_from_partion': 'boot', 'bootargs': 'root=/dev/mmcblk0p5 rootwait quiet splash init=/init', 'verify': 'yes', 'bootm_low': '40000000', 'bootm_size': '10000000', 'initrd_start': '456c4800', 'initrd_end': '45940ce8'}
+state 1 result 0x0
+state 2 result 0x0
+state 4 result 0x0
+state 8 result 0x0
+comp 00 kernel_sha256 0c4d36c1326e7437e8f800b3115374a33f337c3033d88a2ab3c9a4ad9037ade2
+ramdisk_equals_original True
+gzip-with-patch preamble [{'copy_dst': '0x42000000', 'src': '0x456c4800', 'bytes': 2606312}] environment {'boot_from_partion': 'boot', 'bootargs': 'root=/dev/mmcblk0p5 rootwait quiet splash init=/init', 'verify': 'yes', 'bootm_low': '40000000', 'bootm_size': '10000000', 'initrd_start': '456c4800', 'initrd_end': '45940ce8'}
+state 1 result 0x0
+state 2 result 0x0
+state 4 result 0x0
+state 8 result 0x0
+comp 01 kernel_sha256 3328c2fab9f19f7ea6a80e34b0a76238cf594bc631f77e05fec32f8adabad042
+ramdisk_equals_original True

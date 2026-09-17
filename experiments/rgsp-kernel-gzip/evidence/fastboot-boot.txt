@@ -1,0 +1,72 @@
+4a05d5b0: movs     r2, #4
+4a05d5b2: ldr      r1, [pc, #0x224] ; 4a093865 'boot'
+4a05d5b4: ldr      r0, [r4, #4]
+4a05d5b6: bl       #0x4a069a10
+4a05d5ba: mov      r5, r0
+4a05d5bc: cmp      r0, #0
+4a05d5be: bne      #0x4a05d66a
+4a05d5c0: ldr      r0, [pc, #0x218] ; 4a07fd2f 'boot\n'
+4a05d5c2: bl       #0x4a06a7bc
+4a05d5c6: ldr      r3, [pc, #0x218] ; 4a0fdc38
+4a05d5c8: ldr      r3, [r3]
+4a05d5ca: cmp.w    r3, #0x800
+4a05d5ce: bls      #0x4a05d660
+4a05d5d0: ldr      r3, [pc, #0x210] ; 4a091500 'bootm'
+4a05d5d2: str      r5, [sp, #8]
+4a05d5d4: add      r5, sp, #0xc
+4a05d5d6: ldr      r1, [pc, #0x210] ; 4a080cde '0x%lx'
+4a05d5d8: mov      r0, r5
+4a05d5da: str      r3, [sp]
+4a05d5dc: ldr      r3, [pc, #0x20c] ; 4a0fdbd4
+4a05d5de: str      r5, [sp, #4]
+4a05d5e0: ldr      r4, [r3]
+4a05d5e2: add.w    r2, r4, #0x800
+4a05d5e6: bl       #0x4a06a734
+4a05d5ea: mov      r1, r5
+4a05d5ec: ldr      r0, [pc, #0x200] ; 4a097de2 'start addr %s\n'
+4a05d5ee: movw     r5, #0x3e9
+4a05d5f2: bl       #0x4a06a7bc
+4a05d5f6: ldr      r1, [pc, #0x1fc] ; 4a078ab1 'OKAY'
+4a05d5f8: add      r0, sp, #0x50
+4a05d5fa: bl       #0x4a06a734
+4a05d5fe: subs     r5, #1
+4a05d600: bne      #0x4a05d64c
+4a05d602: ldr.w    r2, [r4, #0x800]
+4a05d606: ldr      r3, [pc, #0x1f0] ; 56190527
+4a05d608: cmp      r2, r3
+4a05d60a: bne      #0x4a05d656
+4a05d60c: ldr      r0, [pc, #0x1ec] ; 4a097df1 'Booting kernel..\n'
+4a05d60e: adds     r4, #0x40
+4a05d610: bl       #0x4a06a7bc
+4a05d614: mov      r0, r4
+4a05d616: bl       #0x4a0698d2
+4a05d61a: cbz      r0, #0x4a05d632
+4a05d61c: ldr      r0, [pc, #0x1e0] ; 4a097e03 'Image has cmdline:'
+4a05d61e: bl       #0x4a06a7bc
+4a05d622: mov      r1, r4
+4a05d624: ldr      r0, [pc, #0x1dc] ; 4a08b23f '%s\n'
+4a05d626: bl       #0x4a06a7bc
+4a05d62a: mov      r1, r4
+4a05d62c: ldr      r0, [pc, #0x1d8] ; 4a07cf51 'bootargs'
+4a05d62e: bl       #0x4a00e620
+4a05d632: movs     r1, #0
+4a05d634: mov      r3, sp
+4a05d636: movs     r2, #2
+4a05d638: mov      r0, r1
+4a05d63a: bl       #0x4a007e70
+4a05d63e: ldr      r0, [pc, #0x1cc] ; 4a097e16 'ERROR : bootting failed\n'
+4a05d640: bl       #0x4a06a7bc
+4a05d644: ldr      r0, [pc, #0x1c8] ; 4a097e2f 'You should reset the board\n'
+4a05d646: bl       #0x4a06a7bc
+4a05d64a: b        #0x4a05cf94
+4a05d64c: mov.w    r0, #0x3e8
+4a05d650: bl       #0x4a069a88
+4a05d654: b        #0x4a05d5fe
+4a05d656: ldr      r0, [pc, #0x1bc] ; 4a097e4b 'Booting raw image..\n'
+4a05d658: bl       #0x4a06a7bc
+4a05d65c: ldr      r0, [pc, #0x1b8] ; 4a097e60 'do_go fail\n'
+4a05d65e: b        #0x4a05d646
+4a05d660: ldr      r1, [pc, #0x1b8] ; 4a097e6c 'FAILinvalid boot image'
+4a05d662: add      r0, sp, #0x50
+4a05d664: bl       #0x4a06a734
+4a05d668: b        #0x4a05cf94
