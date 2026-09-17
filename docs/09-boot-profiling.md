@@ -41,8 +41,8 @@ For performance comparisons:
 - Keep cold starts and warm reboots separate. Exclude filesystem-recovery boots.
 - Use the normal shutdown path so persistent filesystems are clean.
 
-`validate-on-device.sh` enforces a 3.00-second kernel-to-frontend handoff ceiling
-on RG40XX V. See [runtime power handling](05-runtime-power-network.md) for
+`validate-on-device.sh` enforces a 2.50-second kernel-to-frontend handoff ceiling
+on RG40XX V and RG SP. See [runtime power handling](05-runtime-power-network.md) for
 shutdown integration and [boot I/O](10-boot-io-audit.md) for persistence policy.
 
 ## Stock-style radio initialization experiments (RG SP, 2026-09-15)

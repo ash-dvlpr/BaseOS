@@ -43,9 +43,9 @@ if [ -f /run/boot-frontend-exec ]; then
 	echo "  boot-frontend-exec: $(cat /run/boot-frontend-exec)s"
 fi
 chk "frontend exec marker exists" "test -f /run/boot-frontend-exec"
-if [ "$BASEOS_EXPECTED_TARGET" = rg40xxv ]; then
-	chk "regular boot stays within the measured 3.00s frontend-exec budget" \
-		"awk 'NR == 1 { exit !(\$1 <= 3.00) }' /run/boot-frontend-exec"
+if [ "$BASEOS_EXPECTED_TARGET" = rg40xxv ] || [ "$BASEOS_EXPECTED_TARGET" = rgsp ]; then
+	chk "regular boot stays within the 2.50s frontend-exec budget" \
+		"awk 'NR == 1 { exit !(\$1 <= 2.50) }' /run/boot-frontend-exec"
 fi
 
 echo "=== hardware ==="

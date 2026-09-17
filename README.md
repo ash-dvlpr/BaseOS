@@ -18,7 +18,7 @@ BaseOS can auto-detect and start [NextUI](https://nextui.loveretro.games),
 ## Boot duration
 
 BaseOS currently boots in **2.25 seconds** as of v1.2.0, down from **2.99
-seconds** in v1.1.0. We have a hard limit of 3.0 sec, and every change is
+seconds** in v1.1.0. We have a hard limit of 2.5 sec, and every change is
 regression tested against this.
 
 Your frontend adds its own startup time. For example, NextUI adds about **4.5

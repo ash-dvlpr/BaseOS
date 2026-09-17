@@ -234,7 +234,7 @@ label kernel-relative timings separately from power-on measurements. Developer
 docs should describe current behavior, interfaces and validation requirements;
 keep experiment logs, old/new results and debugging history out of them.
 
-The RG40XX V kernel-to-frontend handoff ceiling is 3.00 seconds, enforced by
+The RG40XX V and RG SP kernel-to-frontend handoff ceiling is 2.50 seconds, enforced by
 `validate-on-device.sh`. See [boot performance](docs/09-boot-profiling.md) for
 measurement scope, comparison procedure and GPU module optimization.
 
