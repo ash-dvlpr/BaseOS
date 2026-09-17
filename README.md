@@ -1,105 +1,105 @@
-# What is BaseOS?
+# BaseOS
 
-BaseOS is a minimal but feature-complete operating system for Anbernic RG XX
-handhelds.
+BaseOS is a small, fast operating system for Anbernic RG XX handhelds. It
+handles the hardware and starts your choice of frontend:
+[NextUI](https://nextui.loveretro.games), [Slot](https://slot.kowalski.io),
+[spruceOS](https://spruceui.github.io), or your own. It has no menu of its own.
 
-If you're tired of slow boot times, high battery consumption, or less than ideal
-support for hardware features on other custom firmwares, BaseOS is for you.
+**[Installation guide](https://github.com/pvaibhav/BaseOS/wiki/BaseOS-Install-Guide)**
 
-It is designed as a drop-in replacement for the stock OS. However, BaseOS does
-not have a user interface of its own. It will boot up as fast as possible, then
-hand off to your frontend of choice.
+## Startup time
 
-BaseOS can auto-detect and start [NextUI](https://nextui.loveretro.games),
-[Slot](https://slot.kowalski.io) and [spruceOS](https://spruceui.github.io).
+BaseOS takes about **2.2 seconds after Linux starts** to hand over to your
+frontend on RG SP. We check this against a **2.50-second** limit. Your frontend
+then takes additional time to display its menu.
 
-[Install BaseOS](https://github.com/pvaibhav/BaseOS/wiki/BaseOS-Install-Guide)
+BaseOS 1.3.0 also measures startup more accurately using the hardware timer and
+a clock unaffected by network time corrections. The boot log now separates
+**pre-kernel** time (loading the kernel and its earliest startup work) from
+**post-kernel** time (the rest of startup up to frontend handoff).
 
-## Boot duration
+In the latest three RG SP restart tests, the medians were **3.42 seconds
+pre-kernel**, **2.17 seconds post-kernel**, and **5.62 seconds combined**. These
+measurements end when BaseOS starts the frontend; they are not a power-button
+to visible-menu measurement. Times vary with the device and SD card.
+See the [measurements](experiments/h700-kernel-gzip/README.md#steady-state-measurements)
+and [timing details](docs/09-boot-profiling.md#measuring-startup).
 
-BaseOS currently boots in **2.25 seconds** as of v1.2.0, down from **2.99
-seconds** in v1.1.0. We have a hard limit of 2.5 sec, and every change is
-regression tested against this.
+## Features
 
-Your frontend adds its own startup time. For example, NextUI adds about **4.5
-seconds**, bringing the total to approximately **6.75 seconds**.
+- Display, sound, controls, Wi-Fi, HDMI, LEDs and deep sleep support.
+- A small system with minimal background activity.
+- Automatic expansion to use the full SD card on first boot.
+- Updates by copying one file to your card. Games, saves and settings stay put.
+- SSH/SFTP over Wi-Fi and adb over USB, enabled by default.
+- USB storage mode to access your card from a computer.
 
-BaseOS timing is measured from kernel start to frontend handoff, excluding
-bootloader time.
+## Installation and updates
 
-## What BaseOS provides
+For a fresh install, download your model's `.img.zip`, unzip it and flash the
+`.img` to TF1. Flashing erases the card. Follow the
+[installation guide](https://github.com/pvaibhav/BaseOS/wiki/BaseOS-Install-Guide)
+for first boot and NextUI setup with one or two cards.
 
-- The fastest possible boot time for Anbernic RG XX devices.
-- Lowest possible resource and battery usage.
-- Takes 5 sec to install.
-- Full support for the handheld's display, sound, controls, networking, HDMI,
-  LEDs, deep sleep and other features. No compromise on that front.
-- First-boot expansion of the data partition to fill the SD card.
-- Easy updates: copy one file onto the card and reboot. No reflashing, and your
-  ROMs, saves and settings are untouched.
-- SSH/SFTP over Wi-Fi and adb over USB active by default.
-- USB storage mode (hold MENU when powering on).
+To update, copy your model's `.bosupd` to the root of your frontend card and
+restart. Keep power connected during the v1.3.0 update: it may show a one-time
+“optimising startup” message. Let it finish without switching off.
 
-## Installation
+### Other frontends
 
-Follow
-**[installation guide](https://github.com/pvaibhav/BaseOS/wiki/BaseOS-Install-Guide)**
-for flashing, first boot, and NextUI setup on one-card or two-card
-configurations.
+Use TF1's visible data partition or a FAT32/exFAT card in TF2. A usable TF2 card
+takes priority.
 
-To boot Slot, extract its H700 release on your computer and copy the contents of
-the extracted `slot-<version>` folder to the card root. Use either BaseOS's
-visible data partition on TF1 or a FAT32/exFAT card in TF2; a usable TF2 card
-takes priority. The card must contain `System/slot`, `System/mgba_libretro.so`
-and `System/gpsp_libretro.so`, alongside the release's other folders. Put GBA
-games in `Games/` and the optional BIOS in `BIOS/`. BaseOS boots Slot directly;
-it does not install a Slot zip or require a `launch.sh`.
+- **Slot:** extract its H700 release and copy the contents of `slot-<version>`
+  to the card root, including `System/slot`, `System/mgba_libretro.so` and
+  `System/gpsp_libretro.so`. Put games in `Games/` and optional BIOS files in
+  `BIOS/`. Update by replacing `System` with the folder from the new release.
+- **spruceOS:** copy its extracted H700 release to the card root, including
+  `spruce/scripts/runtime.sh`.
+- **Your own frontend:** add `System/launch_frontend.sh` or a glibc AArch64
+  binary at `System/frontend`. The binary takes priority; scripts run through
+  `/bin/sh`. Both run from the card root and need no executable bit.
 
-To boot spruceOS, copy its extracted H700 release onto the card root so it
-contains `spruce/scripts/runtime.sh` alongside the rest of the release.
-BaseOS launches that script through `/bin/sh`; `/mnt/SDCARD` points to the
-selected TF2 or TF1 data card. No NextUI-compatible launcher is required.
-
-For a generic frontend, provide `System/launch_frontend.sh` or a glibc AArch64
-binary at `System/frontend`. The binary takes priority and uses BaseOS's
-system loader; the script runs through `/bin/sh`. Both run from the
-card root, need no executable bit, and log output to `/tmp/generic.log`.
-
-When multiple frontends are installed, the priority is Generic, Slot, NextUI,
-then spruceOS. NextUI's pending `MinUI.zip` and `*.pakz` installers run before
-frontend selection. To select a lower-priority frontend, remove the launcher
-files for higher-priority frontends from the card. Update Slot by replacing
-its `System` folder with the one from a new release.
+If several are installed, BaseOS chooses your custom frontend first, then
+Slot, NextUI, and spruceOS. Remove higher-priority launchers to select another.
+NextUI's pending `MinUI.zip` and `*.pakz` installers run before this selection.
 
 ## Settings
 
-Edit `baseos.conf` at the root of TF1's visible partition, then restart normally
-to apply changes. TF1 supplies these settings even when your frontend is on TF2.
+Edit `baseos.conf` at the root of TF1's visible partition, then restart.
+Settings stay on TF1 even when your frontend is on TF2, and survive OS updates.
 
 ```ini
 hostname=my-handheld
 mdns=true
 ```
 
-- `hostname`: the device's network name. Defaults to its model ID, such as
+- **`hostname`**: your device's network name. Defaults to its model ID, such as
   `rg34xxsp`. Use 1–63 letters, digits or hyphens, with no hyphen at either end.
-- `mdns`: enables `<hostname>.local` access over Wi-Fi (for example,
-  `my-handheld.local`). Defaults to `true`; set `false` to disable it.
+- **`mdns`**: connect using `<hostname>.local` over Wi-Fi. Enabled by default;
+  set `false` to disable it.
+- **`ssh_password`**: set your SSH password. Defaults to `root` if omitted or
+  empty. It is stored as plain text on the card, so don't reuse an important
+  password. Write it without quotes; surrounding spaces are trimmed.
+- **`headphone_pop_fix`**: set `true` to try the headphone exit-pop fix. Off by
+  default because it can use more battery while awake. The speaker pop fix is
+  always enabled. See [audio support](docs/05-runtime-power-network.md#speaker-and-headphone-pop-repair).
 
-- `headphone_pop_fix`: headphone exit-pop workaround on supported kernels.
-  Defaults to `false`; set `headphone_pop_fix=true` to enable it and restart.
-  Keeps analogue output buffers powered between streams, which may increase
-  awake/screen-off idle consumption. Buffers are disabled before deep sleep.
-  The speaker fix remains enabled independently. Each image includes its
-  matching audio module; see [runtime audio support](docs/05-runtime-power-network.md#speaker-and-headphone-pop-repair).
+Omitted settings use their defaults. Lines starting with `#` are comments;
+`#` within an SSH password is part of the password.
 
-Omitted settings use their defaults. Lines starting with `#` are comments.
+## USB access
 
-SSH password: set `ssh_password=your-password` in baseos.conf and reboot.
-It defaults to `root` when omitted or empty. The setting survives OS updates
-because it stays on TF1. The password is plain text on the card; do not reuse
-an important password. Values are unquoted, surrounding whitespace is trimmed,
-and `#` is literal in passwords (no inline comments on this key).
+For adb, connect a data-capable USB-C cable before powering on. If adb stops
+working after unplugging it, restart with the cable connected.
+
+For USB storage, hold **MENU** while connecting the cable. If the handheld
+doesn't start automatically, hold Power for 3–4 seconds. Release Power when it
+starts, but keep holding MENU until you see **“USB STORAGE: EJECT BEFORE
+RESTART”**.
+
+Eject the drive on your computer before restarting the handheld. Restart
+without holding MENU to return to normal.
 
 ## Supported devices
 
@@ -115,28 +115,12 @@ and `#` is literal in passwords (no inline comments on this key).
 - Anbernic RG CubeXX
 - Anbernic RG SP
 
-Development setup, build instructions, testing, and technical documentation are
-in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
+## How it works
 
-## USB access
+BaseOS uses Anbernic's bootloader, kernel and hardware drivers for H700
+handhelds, with a minimal BusyBox-based system in place of the stock Ubuntu
+userland. Version 1.3.0 stores the kernel in compressed form to reduce loading
+work, while keeping the kernel itself unchanged.
 
-For reliable adb, connect a data-capable USB-C cable before powering on. If it
-is disconnected, restart with the cable connected.
-
-For USB mass storage, press and hold the MENU key while plugging in the USB
-cable. If your computer provides power, your handheld will start in mass storage
-mode. If it doesn't start, press and hold power for 3-4 sec. Let go when it
-start, but *keep pressing the MENU button* till you finally see "USB STORAGE:
-EJECT BEFORE RESTART" on the screen. Then you can let go.
-
-NOTE: Eject the drive on the computer before restarting the handheld. Restart
-without holding MENU to return to normal.
-
-## How does it work?
-
-BaseOS uses the stock Anbernic bootloader, kernel and hardware drivers for
-H700-based handhelds, with a minimal BusyBox-based system in place of the stock
-Ubuntu userland. It provides the hardware support and services your frontend
-needs with minimal background activity.
-
-The current version is generally based on the latest stock/stockmod OS release.
+Build instructions and technical documentation are in
+[CONTRIBUTING.md](CONTRIBUTING.md).
