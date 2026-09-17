@@ -25,6 +25,13 @@ to visible-menu measurement. Times vary with the device and SD card.
 See the [measurements](experiments/h700-kernel-gzip/README.md#steady-state-measurements)
 and [timing details](docs/09-boot-profiling.md#measuring-startup).
 
+For comparison, v1.2.0 reported **2.25 seconds after kernel start**, versus
+about **2.17 seconds** now. Its uncompressed boot path also took longer before
+the kernel: earlier RG SP tests measured about **3.72 seconds**, versus
+**3.42 seconds** now. That pre-kernel baseline was measured on a later
+development build using the old boot path, so it is an approximate comparison.
+See the [earlier results](experiments/rgsp-boot-timing/RESULTS.md).
+
 ## Features
 
 - Display, sound, controls, Wi-Fi, HDMI, LEDs and deep sleep support.
