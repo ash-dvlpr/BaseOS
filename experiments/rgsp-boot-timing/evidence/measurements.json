@@ -1,0 +1,3595 @@
+{
+  "recorded_at": "2026-09-17",
+  "device_target": "rgsp",
+  "serial": "ac001089c89588720d2",
+  "frequency_hz": 24000000,
+  "counter": "CNTVCT_EL0",
+  "clocksource": "arch_sys_counter",
+  "note": "The historical pre_kernel_estimate_s field subtracted CLOCK_BOOTTIME at probe time; it is NTP-biased on initial-existing-boot and is not used for the primary comparison. handoff_stages_s uses MONOTONIC_RAW. New harness versions use the raw offset for retrospective estimates too. The initial existing boot and accidental ES boot are excluded from comparison.",
+  "records": [
+    {
+      "label": "gzip-logged-1",
+      "boot_id": "18431cdd-f1f0-4cdd-8824-b704141965da",
+      "handoff_s": 2.34,
+      "observed_uptime_s": 6.25,
+      "nextui_pid": "1563",
+      "early": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=9.695731875 monotonic_raw=6.323983169 raw_origin_offset=[3.371746081,3.371748706] boottime=6.323984959 boot_origin_offset=[3.371746957,3.371748374]\nsample=1 counter_seconds=9.795837625 monotonic_raw=6.424088544 raw_origin_offset=[3.371746081,3.371749081] boottime=6.424090459 boot_origin_offset=[3.371747166,3.371748374]\nsample=2 counter_seconds=9.895973083 monotonic_raw=6.524223544 raw_origin_offset=[3.371746247,3.371749539] boottime=6.524226209 boot_origin_offset=[3.371746916,3.371748916]\nsample=3 counter_seconds=9.996170208 monotonic_raw=6.624421294 raw_origin_offset=[3.371746622,3.371748914] boottime=6.624422876 boot_origin_offset=[3.371747332,3.371748374]\nsample=4 counter_seconds=10.096384208 monotonic_raw=6.724634336 raw_origin_offset=[3.371745664,3.371749872] boottime=6.724637376 boot_origin_offset=[3.371746874,3.371748832]\nsample=5 counter_seconds=10.196628458 monotonic_raw=6.824878752 raw_origin_offset=[3.371746248,3.371749706] boottime=6.824881626 boot_origin_offset=[3.371746832,3.371748832]\nsample=6 counter_seconds=10.296811875 monotonic_raw=6.925062711 raw_origin_offset=[3.371746330,3.371749164] boottime=6.925064501 boot_origin_offset=[3.371747415,3.371748207]\nsample=7 counter_seconds=10.396933333 monotonic_raw=7.025184002 raw_origin_offset=[3.371746164,3.371749331] boottime=7.025186543 boot_origin_offset=[3.371746790,3.371748332]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 9.695731875,
+            "raw_s": 6.323983169,
+            "raw_offset_bounds": [
+              3.371746081,
+              3.371748706
+            ],
+            "boot_s": 6.323984959,
+            "boot_offset_bounds": [
+              3.371746957,
+              3.371748374
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 9.795837625,
+            "raw_s": 6.424088544,
+            "raw_offset_bounds": [
+              3.371746081,
+              3.371749081
+            ],
+            "boot_s": 6.424090459,
+            "boot_offset_bounds": [
+              3.371747166,
+              3.371748374
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 9.895973083,
+            "raw_s": 6.524223544,
+            "raw_offset_bounds": [
+              3.371746247,
+              3.371749539
+            ],
+            "boot_s": 6.524226209,
+            "boot_offset_bounds": [
+              3.371746916,
+              3.371748916
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 9.996170208,
+            "raw_s": 6.624421294,
+            "raw_offset_bounds": [
+              3.371746622,
+              3.371748914
+            ],
+            "boot_s": 6.624422876,
+            "boot_offset_bounds": [
+              3.371747332,
+              3.371748374
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 10.096384208,
+            "raw_s": 6.724634336,
+            "raw_offset_bounds": [
+              3.371745664,
+              3.371749872
+            ],
+            "boot_s": 6.724637376,
+            "boot_offset_bounds": [
+              3.371746874,
+              3.371748832
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 10.196628458,
+            "raw_s": 6.824878752,
+            "raw_offset_bounds": [
+              3.371746248,
+              3.371749706
+            ],
+            "boot_s": 6.824881626,
+            "boot_offset_bounds": [
+              3.371746832,
+              3.371748832
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 10.296811875,
+            "raw_s": 6.925062711,
+            "raw_offset_bounds": [
+              3.37174633,
+              3.371749164
+            ],
+            "boot_s": 6.925064501,
+            "boot_offset_bounds": [
+              3.371747415,
+              3.371748207
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 10.396933333,
+            "raw_s": 7.025184002,
+            "raw_offset_bounds": [
+              3.371746164,
+              3.371749331
+            ],
+            "boot_s": 7.025186543,
+            "boot_offset_bounds": [
+              3.37174679,
+              3.371748332
+            ]
+          }
+        ]
+      },
+      "late": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=18.544007416 monotonic_raw=15.172259090 raw_origin_offset=[3.371746326,3.371748326] boottime=15.172260213 boot_origin_offset=[3.371747203,3.371748120]\nsample=1 counter_seconds=18.644117625 monotonic_raw=15.272368048 raw_origin_offset=[3.371745785,3.371749577] boottime=15.272370797 boot_origin_offset=[3.371746869,3.371748828]\nsample=2 counter_seconds=18.744262708 monotonic_raw=15.372513298 raw_origin_offset=[3.371745952,3.371749410] boottime=15.372515880 boot_origin_offset=[3.371746870,3.371748953]\nsample=3 counter_seconds=18.844490583 monotonic_raw=15.472740965 raw_origin_offset=[3.371746160,3.371749618] boottime=15.472743672 boot_origin_offset=[3.371746953,3.371748786]\nsample=4 counter_seconds=18.944659333 monotonic_raw=15.572909882 raw_origin_offset=[3.371746118,3.371749451] boottime=15.572912547 boot_origin_offset=[3.371746869,3.371748828]\nsample=5 counter_seconds=19.044820291 monotonic_raw=15.673070548 raw_origin_offset=[3.371746410,3.371749743] boottime=15.673073380 boot_origin_offset=[3.371746911,3.371748828]\nsample=6 counter_seconds=19.144948541 monotonic_raw=15.773199882 raw_origin_offset=[3.371745701,3.371748659] boottime=15.773201880 boot_origin_offset=[3.371746870,3.371748328]\nsample=7 counter_seconds=19.245082416 monotonic_raw=15.873332715 raw_origin_offset=[3.371745160,3.371749701] boottime=15.873336339 boot_origin_offset=[3.371746327,3.371748952]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 18.544007416,
+            "raw_s": 15.17225909,
+            "raw_offset_bounds": [
+              3.371746326,
+              3.371748326
+            ],
+            "boot_s": 15.172260213,
+            "boot_offset_bounds": [
+              3.371747203,
+              3.37174812
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 18.644117625,
+            "raw_s": 15.272368048,
+            "raw_offset_bounds": [
+              3.371745785,
+              3.371749577
+            ],
+            "boot_s": 15.272370797,
+            "boot_offset_bounds": [
+              3.371746869,
+              3.371748828
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 18.744262708,
+            "raw_s": 15.372513298,
+            "raw_offset_bounds": [
+              3.371745952,
+              3.37174941
+            ],
+            "boot_s": 15.37251588,
+            "boot_offset_bounds": [
+              3.37174687,
+              3.371748953
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 18.844490583,
+            "raw_s": 15.472740965,
+            "raw_offset_bounds": [
+              3.37174616,
+              3.371749618
+            ],
+            "boot_s": 15.472743672,
+            "boot_offset_bounds": [
+              3.371746953,
+              3.371748786
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 18.944659333,
+            "raw_s": 15.572909882,
+            "raw_offset_bounds": [
+              3.371746118,
+              3.371749451
+            ],
+            "boot_s": 15.572912547,
+            "boot_offset_bounds": [
+              3.371746869,
+              3.371748828
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 19.044820291,
+            "raw_s": 15.673070548,
+            "raw_offset_bounds": [
+              3.37174641,
+              3.371749743
+            ],
+            "boot_s": 15.67307338,
+            "boot_offset_bounds": [
+              3.371746911,
+              3.371748828
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 19.144948541,
+            "raw_s": 15.773199882,
+            "raw_offset_bounds": [
+              3.371745701,
+              3.371748659
+            ],
+            "boot_s": 15.77320188,
+            "boot_offset_bounds": [
+              3.37174687,
+              3.371748328
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 19.245082416,
+            "raw_s": 15.873332715,
+            "raw_offset_bounds": [
+              3.37174516,
+              3.371749701
+            ],
+            "boot_s": 15.873336339,
+            "boot_offset_bounds": [
+              3.371746327,
+              3.371748952
+            ]
+          }
+        ]
+      },
+      "raw_offset_intersection_s": [
+        3.371746622,
+        3.371748326
+      ],
+      "pre_kernel_estimate_s": 3.3717478215,
+      "combined_handoff_estimate_s": 5.7117478214999995,
+      "health": "GPU_OK\nWIFI_OK\narch_sys_counter\n100\n51740",
+      "recovery_warnings": [
+        "[    2.133760] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+      ],
+      "method": "24 MHz CNTVCT_EL0 bracketed around CLOCK_MONOTONIC_RAW and CLOCK_BOOTTIME; first /proc/uptime handoff marker. Warm NextUI reboot_next; clean remounts. Counter origin is not calibrated to power LED.",
+      "handoff_stages_s": {
+        "legacy": 2.34,
+        "pre_kernel": 3.372,
+        "post_kernel_raw": 2.347,
+        "combined": 5.719
+      },
+      "installed_timing_sha256": "39506a256c52690623b94631d02f997685b6efe9eed12e195116455353f76e2e  /usr/sbin/boot-clock\ne862a01c0cd21f3ee98b9fede590457c7a2764cac9fd546f8f30db9ce959d728  /usr/sbin/frontend-session"
+    },
+    {
+      "label": "gzip-logged-2",
+      "boot_id": "a692fb74-ea9a-4106-82c2-d94fbdc41cba",
+      "handoff_s": 2.31,
+      "observed_uptime_s": 6.39,
+      "nextui_pid": "1562",
+      "early": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=9.883511458 monotonic_raw=6.467471877 raw_origin_offset=[3.416037206,3.416039581] boottime=6.467473710 boot_origin_offset=[3.416037790,3.416039331]\nsample=1 counter_seconds=9.983642375 monotonic_raw=6.567601794 raw_origin_offset=[3.416036747,3.416040581] boottime=6.567604793 boot_origin_offset=[3.416037623,3.416039748]\nsample=2 counter_seconds=10.083853541 monotonic_raw=6.667813211 raw_origin_offset=[3.416036580,3.416040330] boottime=6.667815668 boot_origin_offset=[3.416037915,3.416039415]\nsample=3 counter_seconds=10.184080875 monotonic_raw=6.768040211 raw_origin_offset=[3.416036872,3.416040664] boottime=6.768043126 boot_origin_offset=[3.416037790,3.416039707]\nsample=4 counter_seconds=10.284273500 monotonic_raw=6.868233419 raw_origin_offset=[3.416036914,3.416040081] boottime=6.868235460 boot_origin_offset=[3.416038081,3.416039165]\nsample=5 counter_seconds=10.384450375 monotonic_raw=6.968409877 raw_origin_offset=[3.416036873,3.416040498] boottime=6.968412876 boot_origin_offset=[3.416037540,3.416039374]\nsample=6 counter_seconds=10.484582458 monotonic_raw=7.068542794 raw_origin_offset=[3.416037081,3.416039664] boottime=7.068544918 boot_origin_offset=[3.416037582,3.416039248]\nsample=7 counter_seconds=10.584714041 monotonic_raw=7.168674253 raw_origin_offset=[3.416037163,3.416039788] boottime=7.168676002 boot_origin_offset=[3.416038039,3.416039123]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 9.883511458,
+            "raw_s": 6.467471877,
+            "raw_offset_bounds": [
+              3.416037206,
+              3.416039581
+            ],
+            "boot_s": 6.46747371,
+            "boot_offset_bounds": [
+              3.41603779,
+              3.416039331
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 9.983642375,
+            "raw_s": 6.567601794,
+            "raw_offset_bounds": [
+              3.416036747,
+              3.416040581
+            ],
+            "boot_s": 6.567604793,
+            "boot_offset_bounds": [
+              3.416037623,
+              3.416039748
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 10.083853541,
+            "raw_s": 6.667813211,
+            "raw_offset_bounds": [
+              3.41603658,
+              3.41604033
+            ],
+            "boot_s": 6.667815668,
+            "boot_offset_bounds": [
+              3.416037915,
+              3.416039415
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 10.184080875,
+            "raw_s": 6.768040211,
+            "raw_offset_bounds": [
+              3.416036872,
+              3.416040664
+            ],
+            "boot_s": 6.768043126,
+            "boot_offset_bounds": [
+              3.41603779,
+              3.416039707
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 10.2842735,
+            "raw_s": 6.868233419,
+            "raw_offset_bounds": [
+              3.416036914,
+              3.416040081
+            ],
+            "boot_s": 6.86823546,
+            "boot_offset_bounds": [
+              3.416038081,
+              3.416039165
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 10.384450375,
+            "raw_s": 6.968409877,
+            "raw_offset_bounds": [
+              3.416036873,
+              3.416040498
+            ],
+            "boot_s": 6.968412876,
+            "boot_offset_bounds": [
+              3.41603754,
+              3.416039374
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 10.484582458,
+            "raw_s": 7.068542794,
+            "raw_offset_bounds": [
+              3.416037081,
+              3.416039664
+            ],
+            "boot_s": 7.068544918,
+            "boot_offset_bounds": [
+              3.416037582,
+              3.416039248
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 10.584714041,
+            "raw_s": 7.168674253,
+            "raw_offset_bounds": [
+              3.416037163,
+              3.416039788
+            ],
+            "boot_s": 7.168676002,
+            "boot_offset_bounds": [
+              3.416038039,
+              3.416039123
+            ]
+          }
+        ]
+      },
+      "late": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=18.737994125 monotonic_raw=15.321954548 raw_origin_offset=[3.416036868,3.416039577] boottime=15.321956422 boot_origin_offset=[3.416037703,3.416039369]\nsample=1 counter_seconds=18.838191833 monotonic_raw=15.422151548 raw_origin_offset=[3.416036743,3.416040285] boottime=15.422154089 boot_origin_offset=[3.416037744,3.416039702]\nsample=2 counter_seconds=18.938344333 monotonic_raw=15.522303965 raw_origin_offset=[3.416036951,3.416040368] boottime=15.522306631 boot_origin_offset=[3.416037702,3.416039744]\nsample=3 counter_seconds=19.038576958 monotonic_raw=15.622536673 raw_origin_offset=[3.416036660,3.416040285] boottime=15.622539381 boot_origin_offset=[3.416037577,3.416039702]\nsample=4 counter_seconds=19.138720875 monotonic_raw=15.722680715 raw_origin_offset=[3.416036868,3.416040160] boottime=15.722683131 boot_origin_offset=[3.416037744,3.416039827]\nsample=5 counter_seconds=19.238872541 monotonic_raw=15.822832298 raw_origin_offset=[3.416036785,3.416040243] boottime=15.822834839 boot_origin_offset=[3.416037702,3.416039744]\nsample=6 counter_seconds=19.339104375 monotonic_raw=15.923064132 raw_origin_offset=[3.416037118,3.416040243] boottime=15.923066631 boot_origin_offset=[3.416037785,3.416039702]\nsample=7 counter_seconds=19.439335000 monotonic_raw=16.023294590 raw_origin_offset=[3.416037035,3.416040410] boottime=16.023297214 boot_origin_offset=[3.416037786,3.416039702]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 18.737994125,
+            "raw_s": 15.321954548,
+            "raw_offset_bounds": [
+              3.416036868,
+              3.416039577
+            ],
+            "boot_s": 15.321956422,
+            "boot_offset_bounds": [
+              3.416037703,
+              3.416039369
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 18.838191833,
+            "raw_s": 15.422151548,
+            "raw_offset_bounds": [
+              3.416036743,
+              3.416040285
+            ],
+            "boot_s": 15.422154089,
+            "boot_offset_bounds": [
+              3.416037744,
+              3.416039702
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 18.938344333,
+            "raw_s": 15.522303965,
+            "raw_offset_bounds": [
+              3.416036951,
+              3.416040368
+            ],
+            "boot_s": 15.522306631,
+            "boot_offset_bounds": [
+              3.416037702,
+              3.416039744
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 19.038576958,
+            "raw_s": 15.622536673,
+            "raw_offset_bounds": [
+              3.41603666,
+              3.416040285
+            ],
+            "boot_s": 15.622539381,
+            "boot_offset_bounds": [
+              3.416037577,
+              3.416039702
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 19.138720875,
+            "raw_s": 15.722680715,
+            "raw_offset_bounds": [
+              3.416036868,
+              3.41604016
+            ],
+            "boot_s": 15.722683131,
+            "boot_offset_bounds": [
+              3.416037744,
+              3.416039827
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 19.238872541,
+            "raw_s": 15.822832298,
+            "raw_offset_bounds": [
+              3.416036785,
+              3.416040243
+            ],
+            "boot_s": 15.822834839,
+            "boot_offset_bounds": [
+              3.416037702,
+              3.416039744
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 19.339104375,
+            "raw_s": 15.923064132,
+            "raw_offset_bounds": [
+              3.416037118,
+              3.416040243
+            ],
+            "boot_s": 15.923066631,
+            "boot_offset_bounds": [
+              3.416037785,
+              3.416039702
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 19.439335,
+            "raw_s": 16.02329459,
+            "raw_offset_bounds": [
+              3.416037035,
+              3.41604041
+            ],
+            "boot_s": 16.023297214,
+            "boot_offset_bounds": [
+              3.416037786,
+              3.416039702
+            ]
+          }
+        ]
+      },
+      "raw_offset_intersection_s": [
+        3.416037206,
+        3.416039577
+      ],
+      "pre_kernel_estimate_s": 3.416038602,
+      "combined_handoff_estimate_s": 5.726038602,
+      "health": "GPU_OK\nWIFI_OK\narch_sys_counter\n100\n51578",
+      "recovery_warnings": [
+        "[    2.093952] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+      ],
+      "method": "24 MHz CNTVCT_EL0 bracketed around CLOCK_MONOTONIC_RAW and CLOCK_BOOTTIME; first /proc/uptime handoff marker. Warm NextUI reboot_next; clean remounts. Counter origin is not calibrated to power LED.",
+      "handoff_stages_s": {
+        "legacy": 2.31,
+        "pre_kernel": 3.416,
+        "post_kernel_raw": 2.319,
+        "combined": 5.735
+      },
+      "installed_timing_sha256": "39506a256c52690623b94631d02f997685b6efe9eed12e195116455353f76e2e  /usr/sbin/boot-clock\ne862a01c0cd21f3ee98b9fede590457c7a2764cac9fd546f8f30db9ce959d728  /usr/sbin/frontend-session"
+    },
+    {
+      "label": "gzip-logged-3",
+      "boot_id": "f47db42e-236f-48be-b3a9-986b014e177e",
+      "handoff_s": 2.33,
+      "observed_uptime_s": 6.38,
+      "nextui_pid": "1560",
+      "early": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=9.876087375 monotonic_raw=6.453415086 raw_origin_offset=[3.422670414,3.422672289] boottime=6.453416418 boot_origin_offset=[3.422670998,3.422672207]\nsample=1 counter_seconds=9.976179208 monotonic_raw=6.553506586 raw_origin_offset=[3.422669997,3.422672622] boottime=6.553508126 boot_origin_offset=[3.422671082,3.422672374]\nsample=2 counter_seconds=10.076315208 monotonic_raw=6.653641502 raw_origin_offset=[3.422669581,3.422673706] boottime=6.653644626 boot_origin_offset=[3.422670624,3.422672749]\nsample=3 counter_seconds=10.176473125 monotonic_raw=6.753799794 raw_origin_offset=[3.422669581,3.422673331] boottime=6.753802543 boot_origin_offset=[3.422670623,3.422672748]\nsample=4 counter_seconds=10.276617166 monotonic_raw=6.853943586 raw_origin_offset=[3.422669539,3.422673580] boottime=6.853946709 boot_origin_offset=[3.422670499,3.422672791]\nsample=5 counter_seconds=10.376751166 monotonic_raw=6.954078127 raw_origin_offset=[3.422669998,3.422673039] boottime=6.954080209 boot_origin_offset=[3.422670957,3.422672374]\nsample=6 counter_seconds=10.476869750 monotonic_raw=7.054196628 raw_origin_offset=[3.422669955,3.422673122] boottime=7.054199210 boot_origin_offset=[3.422670748,3.422672581]\nsample=7 counter_seconds=10.576988958 monotonic_raw=7.154315836 raw_origin_offset=[3.422669955,3.422673122] boottime=7.154318210 boot_origin_offset=[3.422670748,3.422672248]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 9.876087375,
+            "raw_s": 6.453415086,
+            "raw_offset_bounds": [
+              3.422670414,
+              3.422672289
+            ],
+            "boot_s": 6.453416418,
+            "boot_offset_bounds": [
+              3.422670998,
+              3.422672207
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 9.976179208,
+            "raw_s": 6.553506586,
+            "raw_offset_bounds": [
+              3.422669997,
+              3.422672622
+            ],
+            "boot_s": 6.553508126,
+            "boot_offset_bounds": [
+              3.422671082,
+              3.422672374
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 10.076315208,
+            "raw_s": 6.653641502,
+            "raw_offset_bounds": [
+              3.422669581,
+              3.422673706
+            ],
+            "boot_s": 6.653644626,
+            "boot_offset_bounds": [
+              3.422670624,
+              3.422672749
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 10.176473125,
+            "raw_s": 6.753799794,
+            "raw_offset_bounds": [
+              3.422669581,
+              3.422673331
+            ],
+            "boot_s": 6.753802543,
+            "boot_offset_bounds": [
+              3.422670623,
+              3.422672748
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 10.276617166,
+            "raw_s": 6.853943586,
+            "raw_offset_bounds": [
+              3.422669539,
+              3.42267358
+            ],
+            "boot_s": 6.853946709,
+            "boot_offset_bounds": [
+              3.422670499,
+              3.422672791
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 10.376751166,
+            "raw_s": 6.954078127,
+            "raw_offset_bounds": [
+              3.422669998,
+              3.422673039
+            ],
+            "boot_s": 6.954080209,
+            "boot_offset_bounds": [
+              3.422670957,
+              3.422672374
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 10.47686975,
+            "raw_s": 7.054196628,
+            "raw_offset_bounds": [
+              3.422669955,
+              3.422673122
+            ],
+            "boot_s": 7.05419921,
+            "boot_offset_bounds": [
+              3.422670748,
+              3.422672581
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 10.576988958,
+            "raw_s": 7.154315836,
+            "raw_offset_bounds": [
+              3.422669955,
+              3.422673122
+            ],
+            "boot_s": 7.15431821,
+            "boot_offset_bounds": [
+              3.422670748,
+              3.422672248
+            ]
+          }
+        ]
+      },
+      "late": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=18.724329125 monotonic_raw=15.301656548 raw_origin_offset=[3.422669868,3.422672577] boottime=15.301658255 boot_origin_offset=[3.422670870,3.422672411]\nsample=1 counter_seconds=18.824456041 monotonic_raw=15.401782715 raw_origin_offset=[3.422668743,3.422673326] boottime=15.401785464 boot_origin_offset=[3.422670619,3.422672827]\nsample=2 counter_seconds=18.924604500 monotonic_raw=15.501931173 raw_origin_offset=[3.422669660,3.422673327] boottime=15.501933755 boot_origin_offset=[3.422670786,3.422672745]\nsample=3 counter_seconds=19.024767291 monotonic_raw=15.602093882 raw_origin_offset=[3.422669659,3.422673409] boottime=15.602096589 boot_origin_offset=[3.422670786,3.422672786]\nsample=4 counter_seconds=19.124918750 monotonic_raw=15.702245132 raw_origin_offset=[3.422669951,3.422673618] boottime=15.702248005 boot_origin_offset=[3.422670786,3.422672786]\nsample=5 counter_seconds=19.225067250 monotonic_raw=15.802393673 raw_origin_offset=[3.422669702,3.422673577] boottime=15.802396672 boot_origin_offset=[3.422670661,3.422672744]\nsample=6 counter_seconds=19.325220583 monotonic_raw=15.902547173 raw_origin_offset=[3.422670118,3.422673410] boottime=15.902549922 boot_origin_offset=[3.422670661,3.422672828]\nsample=7 counter_seconds=19.425363458 monotonic_raw=16.002690048 raw_origin_offset=[3.422670118,3.422673410] boottime=16.002692755 boot_origin_offset=[3.422670745,3.422672870]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 18.724329125,
+            "raw_s": 15.301656548,
+            "raw_offset_bounds": [
+              3.422669868,
+              3.422672577
+            ],
+            "boot_s": 15.301658255,
+            "boot_offset_bounds": [
+              3.42267087,
+              3.422672411
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 18.824456041,
+            "raw_s": 15.401782715,
+            "raw_offset_bounds": [
+              3.422668743,
+              3.422673326
+            ],
+            "boot_s": 15.401785464,
+            "boot_offset_bounds": [
+              3.422670619,
+              3.422672827
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 18.9246045,
+            "raw_s": 15.501931173,
+            "raw_offset_bounds": [
+              3.42266966,
+              3.422673327
+            ],
+            "boot_s": 15.501933755,
+            "boot_offset_bounds": [
+              3.422670786,
+              3.422672745
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 19.024767291,
+            "raw_s": 15.602093882,
+            "raw_offset_bounds": [
+              3.422669659,
+              3.422673409
+            ],
+            "boot_s": 15.602096589,
+            "boot_offset_bounds": [
+              3.422670786,
+              3.422672786
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 19.12491875,
+            "raw_s": 15.702245132,
+            "raw_offset_bounds": [
+              3.422669951,
+              3.422673618
+            ],
+            "boot_s": 15.702248005,
+            "boot_offset_bounds": [
+              3.422670786,
+              3.422672786
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 19.22506725,
+            "raw_s": 15.802393673,
+            "raw_offset_bounds": [
+              3.422669702,
+              3.422673577
+            ],
+            "boot_s": 15.802396672,
+            "boot_offset_bounds": [
+              3.422670661,
+              3.422672744
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 19.325220583,
+            "raw_s": 15.902547173,
+            "raw_offset_bounds": [
+              3.422670118,
+              3.42267341
+            ],
+            "boot_s": 15.902549922,
+            "boot_offset_bounds": [
+              3.422670661,
+              3.422672828
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 19.425363458,
+            "raw_s": 16.002690048,
+            "raw_offset_bounds": [
+              3.422670118,
+              3.42267341
+            ],
+            "boot_s": 16.002692755,
+            "boot_offset_bounds": [
+              3.422670745,
+              3.42267287
+            ]
+          }
+        ]
+      },
+      "raw_offset_intersection_s": [
+        3.422670414,
+        3.422672289
+      ],
+      "pre_kernel_estimate_s": 3.422671665,
+      "combined_handoff_estimate_s": 5.752671665,
+      "health": "GPU_OK\nWIFI_OK\narch_sys_counter\n100\n52307",
+      "recovery_warnings": [
+        "[    2.131600] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+      ],
+      "method": "24 MHz CNTVCT_EL0 bracketed around CLOCK_MONOTONIC_RAW and CLOCK_BOOTTIME; first /proc/uptime handoff marker. Warm NextUI reboot_next; clean remounts. Counter origin is not calibrated to power LED.",
+      "handoff_stages_s": {
+        "legacy": 2.33,
+        "pre_kernel": 3.423,
+        "post_kernel_raw": 2.334,
+        "combined": 5.757
+      },
+      "installed_timing_sha256": "39506a256c52690623b94631d02f997685b6efe9eed12e195116455353f76e2e  /usr/sbin/boot-clock\ne862a01c0cd21f3ee98b9fede590457c7a2764cac9fd546f8f30db9ce959d728  /usr/sbin/frontend-session"
+    },
+    {
+      "label": "initial-existing-boot",
+      "boot_id": "5a8cc99b-8bd5-4a9e-889b-d2a904a8f7b9",
+      "handoff_s": 2.27,
+      "observed_uptime_s": 763.54,
+      "nextui_pid": "1964",
+      "early": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=767.549994958 monotonic_raw=763.928493447 raw_origin_offset=[3.621499011,3.621501511] boottime=763.602700265 boot_origin_offset=[3.947294735,3.947296235]\nsample=1 counter_seconds=767.650111625 monotonic_raw=764.028609405 raw_origin_offset=[3.621498345,3.621502220] boottime=763.702812818 boot_origin_offset=[3.947298890,3.947301057]\nsample=2 counter_seconds=767.750349458 monotonic_raw=764.128847405 raw_origin_offset=[3.621499011,3.621502053] boottime=763.803046073 boot_origin_offset=[3.947303427,3.947305510]\nsample=3 counter_seconds=767.850583875 monotonic_raw=764.229081780 raw_origin_offset=[3.621499011,3.621502095] boottime=763.903275995 boot_origin_offset=[3.947307880,3.947309838]\nsample=4 counter_seconds=767.950818458 monotonic_raw=764.329316405 raw_origin_offset=[3.621499011,3.621502053] boottime=764.003506167 boot_origin_offset=[3.947312333,3.947314249]\nsample=5 counter_seconds=768.051055666 monotonic_raw=764.429553614 raw_origin_offset=[3.621499052,3.621502052] boottime=764.103738970 boot_origin_offset=[3.947316738,3.947318655]\nsample=6 counter_seconds=768.151205041 monotonic_raw=764.529702989 raw_origin_offset=[3.621499177,3.621502052] boottime=764.203883996 boot_origin_offset=[3.947321129,3.947323045]\nsample=7 counter_seconds=768.251439958 monotonic_raw=764.629937947 raw_origin_offset=[3.621498844,3.621502011] boottime=764.304114478 boot_origin_offset=[3.947325480,3.947327438]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 767.549994958,
+            "raw_s": 763.928493447,
+            "raw_offset_bounds": [
+              3.621499011,
+              3.621501511
+            ],
+            "boot_s": 763.602700265,
+            "boot_offset_bounds": [
+              3.947294735,
+              3.947296235
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 767.650111625,
+            "raw_s": 764.028609405,
+            "raw_offset_bounds": [
+              3.621498345,
+              3.62150222
+            ],
+            "boot_s": 763.702812818,
+            "boot_offset_bounds": [
+              3.94729889,
+              3.947301057
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 767.750349458,
+            "raw_s": 764.128847405,
+            "raw_offset_bounds": [
+              3.621499011,
+              3.621502053
+            ],
+            "boot_s": 763.803046073,
+            "boot_offset_bounds": [
+              3.947303427,
+              3.94730551
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 767.850583875,
+            "raw_s": 764.22908178,
+            "raw_offset_bounds": [
+              3.621499011,
+              3.621502095
+            ],
+            "boot_s": 763.903275995,
+            "boot_offset_bounds": [
+              3.94730788,
+              3.947309838
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 767.950818458,
+            "raw_s": 764.329316405,
+            "raw_offset_bounds": [
+              3.621499011,
+              3.621502053
+            ],
+            "boot_s": 764.003506167,
+            "boot_offset_bounds": [
+              3.947312333,
+              3.947314249
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 768.051055666,
+            "raw_s": 764.429553614,
+            "raw_offset_bounds": [
+              3.621499052,
+              3.621502052
+            ],
+            "boot_s": 764.10373897,
+            "boot_offset_bounds": [
+              3.947316738,
+              3.947318655
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 768.151205041,
+            "raw_s": 764.529702989,
+            "raw_offset_bounds": [
+              3.621499177,
+              3.621502052
+            ],
+            "boot_s": 764.203883996,
+            "boot_offset_bounds": [
+              3.947321129,
+              3.947323045
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 768.251439958,
+            "raw_s": 764.629937947,
+            "raw_offset_bounds": [
+              3.621498844,
+              3.621502011
+            ],
+            "boot_s": 764.304114478,
+            "boot_offset_bounds": [
+              3.94732548,
+              3.947327438
+            ]
+          }
+        ]
+      },
+      "late": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=776.412208666 monotonic_raw=772.790707409 raw_origin_offset=[3.621498757,3.621501257] boottime=772.464530527 boot_origin_offset=[3.947678139,3.947679473]\nsample=1 counter_seconds=776.512419791 monotonic_raw=772.890917243 raw_origin_offset=[3.621498423,3.621502548] boottime=772.564738103 boot_origin_offset=[3.947681730,3.947684188]\nsample=2 counter_seconds=776.612659083 monotonic_raw=772.991157034 raw_origin_offset=[3.621499132,3.621502049] boottime=772.664972886 boot_origin_offset=[3.947686239,3.947688405]\nsample=3 counter_seconds=776.712891708 monotonic_raw=773.091389701 raw_origin_offset=[3.621499132,3.621502007] boottime=772.765201044 boot_origin_offset=[3.947690706,3.947692706]\nsample=4 counter_seconds=776.813121166 monotonic_raw=773.191619076 raw_origin_offset=[3.621499090,3.621502090] boottime=772.865426285 boot_origin_offset=[3.947694923,3.947696965]\nsample=5 counter_seconds=776.913355750 monotonic_raw=773.291853701 raw_origin_offset=[3.621499132,3.621502049] boottime=772.965656485 boot_origin_offset=[3.947699265,3.947701223]\nsample=6 counter_seconds=777.013590916 monotonic_raw=773.392088868 raw_origin_offset=[3.621499132,3.621502048] boottime=773.065887435 boot_origin_offset=[3.947703523,3.947705440]\nsample=7 counter_seconds=777.113825166 monotonic_raw=773.492323118 raw_origin_offset=[3.621499090,3.621502048] boottime=773.166117484 boot_origin_offset=[3.947707682,3.947709682]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 776.412208666,
+            "raw_s": 772.790707409,
+            "raw_offset_bounds": [
+              3.621498757,
+              3.621501257
+            ],
+            "boot_s": 772.464530527,
+            "boot_offset_bounds": [
+              3.947678139,
+              3.947679473
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 776.512419791,
+            "raw_s": 772.890917243,
+            "raw_offset_bounds": [
+              3.621498423,
+              3.621502548
+            ],
+            "boot_s": 772.564738103,
+            "boot_offset_bounds": [
+              3.94768173,
+              3.947684188
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 776.612659083,
+            "raw_s": 772.991157034,
+            "raw_offset_bounds": [
+              3.621499132,
+              3.621502049
+            ],
+            "boot_s": 772.664972886,
+            "boot_offset_bounds": [
+              3.947686239,
+              3.947688405
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 776.712891708,
+            "raw_s": 773.091389701,
+            "raw_offset_bounds": [
+              3.621499132,
+              3.621502007
+            ],
+            "boot_s": 772.765201044,
+            "boot_offset_bounds": [
+              3.947690706,
+              3.947692706
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 776.813121166,
+            "raw_s": 773.191619076,
+            "raw_offset_bounds": [
+              3.62149909,
+              3.62150209
+            ],
+            "boot_s": 772.865426285,
+            "boot_offset_bounds": [
+              3.947694923,
+              3.947696965
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 776.91335575,
+            "raw_s": 773.291853701,
+            "raw_offset_bounds": [
+              3.621499132,
+              3.621502049
+            ],
+            "boot_s": 772.965656485,
+            "boot_offset_bounds": [
+              3.947699265,
+              3.947701223
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 777.013590916,
+            "raw_s": 773.392088868,
+            "raw_offset_bounds": [
+              3.621499132,
+              3.621502048
+            ],
+            "boot_s": 773.065887435,
+            "boot_offset_bounds": [
+              3.947703523,
+              3.94770544
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 777.113825166,
+            "raw_s": 773.492323118,
+            "raw_offset_bounds": [
+              3.62149909,
+              3.621502048
+            ],
+            "boot_s": 773.166117484,
+            "boot_offset_bounds": [
+              3.947707682,
+              3.947709682
+            ]
+          }
+        ]
+      },
+      "raw_offset_intersection_s": [
+        3.621499177,
+        3.621501257
+      ],
+      "pre_kernel_estimate_s": 3.947311075,
+      "combined_handoff_estimate_s": 6.217311075,
+      "health": "GPU_OK\nWIFI_OK\narch_sys_counter\n100\n50606\n1787",
+      "recovery_warnings": [
+        "[    2.084560] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+      ],
+      "method": "24 MHz CNTVCT_EL0 bracketed around CLOCK_MONOTONIC_RAW and CLOCK_BOOTTIME; first /proc/uptime handoff marker. Warm NextUI reboot_next; clean remounts. Counter origin is not calibrated to power LED."
+    },
+    {
+      "label": "nextui-1",
+      "boot_id": "50be50b9-0f91-4d51-bf65-e23bca6a3df2",
+      "handoff_s": 2.31,
+      "observed_uptime_s": 6.22,
+      "nextui_pid": "1565",
+      "early": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=9.710392833 monotonic_raw=6.296329294 raw_origin_offset=[3.414061039,3.414063539] boottime=6.296330793 boot_origin_offset=[3.414062040,3.414063373]\nsample=1 counter_seconds=9.810543458 monotonic_raw=6.396479044 raw_origin_offset=[3.414060997,3.414064414] boottime=6.396481460 boot_origin_offset=[3.414061998,3.414063206]\nsample=2 counter_seconds=9.910762208 monotonic_raw=6.496697711 raw_origin_offset=[3.414060747,3.414064497] boottime=6.496700585 boot_origin_offset=[3.414061665,3.414063748]\nsample=3 counter_seconds=10.010955708 monotonic_raw=6.596891836 raw_origin_offset=[3.414061580,3.414063872] boottime=6.596893626 boot_origin_offset=[3.414062082,3.414063249]\nsample=4 counter_seconds=10.111172416 monotonic_raw=6.697107502 raw_origin_offset=[3.414060789,3.414064914] boottime=6.697110835 boot_origin_offset=[3.414061581,3.414063706]\nsample=5 counter_seconds=10.211413416 monotonic_raw=6.797349002 raw_origin_offset=[3.414060873,3.414064414] boottime=6.797351543 boot_origin_offset=[3.414061873,3.414063790]\nsample=6 counter_seconds=10.311553375 monotonic_raw=6.897489002 raw_origin_offset=[3.414061123,3.414064373] boottime=6.897491501 boot_origin_offset=[3.414061874,3.414063374]\nsample=7 counter_seconds=10.411670500 monotonic_raw=6.997606627 raw_origin_offset=[3.414061081,3.414063873] boottime=6.997608960 boot_origin_offset=[3.414061748,3.414063373]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 9.710392833,
+            "raw_s": 6.296329294,
+            "raw_offset_bounds": [
+              3.414061039,
+              3.414063539
+            ],
+            "boot_s": 6.296330793,
+            "boot_offset_bounds": [
+              3.41406204,
+              3.414063373
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 9.810543458,
+            "raw_s": 6.396479044,
+            "raw_offset_bounds": [
+              3.414060997,
+              3.414064414
+            ],
+            "boot_s": 6.39648146,
+            "boot_offset_bounds": [
+              3.414061998,
+              3.414063206
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 9.910762208,
+            "raw_s": 6.496697711,
+            "raw_offset_bounds": [
+              3.414060747,
+              3.414064497
+            ],
+            "boot_s": 6.496700585,
+            "boot_offset_bounds": [
+              3.414061665,
+              3.414063748
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 10.010955708,
+            "raw_s": 6.596891836,
+            "raw_offset_bounds": [
+              3.41406158,
+              3.414063872
+            ],
+            "boot_s": 6.596893626,
+            "boot_offset_bounds": [
+              3.414062082,
+              3.414063249
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 10.111172416,
+            "raw_s": 6.697107502,
+            "raw_offset_bounds": [
+              3.414060789,
+              3.414064914
+            ],
+            "boot_s": 6.697110835,
+            "boot_offset_bounds": [
+              3.414061581,
+              3.414063706
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 10.211413416,
+            "raw_s": 6.797349002,
+            "raw_offset_bounds": [
+              3.414060873,
+              3.414064414
+            ],
+            "boot_s": 6.797351543,
+            "boot_offset_bounds": [
+              3.414061873,
+              3.41406379
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 10.311553375,
+            "raw_s": 6.897489002,
+            "raw_offset_bounds": [
+              3.414061123,
+              3.414064373
+            ],
+            "boot_s": 6.897491501,
+            "boot_offset_bounds": [
+              3.414061874,
+              3.414063374
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 10.4116705,
+            "raw_s": 6.997606627,
+            "raw_offset_bounds": [
+              3.414061081,
+              3.414063873
+            ],
+            "boot_s": 6.99760896,
+            "boot_offset_bounds": [
+              3.414061748,
+              3.414063373
+            ]
+          }
+        ]
+      },
+      "late": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=18.547344458 monotonic_raw=15.133280756 raw_origin_offset=[3.414061035,3.414063702] boottime=15.133282547 boot_origin_offset=[3.414061911,3.414063411]\nsample=1 counter_seconds=18.647470166 monotonic_raw=15.233405423 raw_origin_offset=[3.414060327,3.414064743] boottime=15.233408755 boot_origin_offset=[3.414061453,3.414063953]\nsample=2 counter_seconds=18.747629833 monotonic_raw=15.333565631 raw_origin_offset=[3.414060910,3.414064202] boottime=15.333568464 boot_origin_offset=[3.414061369,3.414063786]\nsample=3 counter_seconds=18.847864041 monotonic_raw=15.433799715 raw_origin_offset=[3.414060660,3.414064326] boottime=15.433802214 boot_origin_offset=[3.414061827,3.414063744]\nsample=4 counter_seconds=18.948013833 monotonic_raw=15.533948965 raw_origin_offset=[3.414060701,3.414064868] boottime=15.533952047 boot_origin_offset=[3.414061828,3.414063828]\nsample=5 counter_seconds=19.048256500 monotonic_raw=15.634191715 raw_origin_offset=[3.414060618,3.414064785] boottime=15.634194714 boot_origin_offset=[3.414061786,3.414063786]\nsample=6 counter_seconds=19.148414166 monotonic_raw=15.734349632 raw_origin_offset=[3.414060534,3.414064534] boottime=15.734352631 boot_origin_offset=[3.414061619,3.414063869]\nsample=7 counter_seconds=19.248563791 monotonic_raw=15.834499340 raw_origin_offset=[3.414060951,3.414064451] boottime=15.834502006 boot_origin_offset=[3.414061827,3.414063785]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 18.547344458,
+            "raw_s": 15.133280756,
+            "raw_offset_bounds": [
+              3.414061035,
+              3.414063702
+            ],
+            "boot_s": 15.133282547,
+            "boot_offset_bounds": [
+              3.414061911,
+              3.414063411
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 18.647470166,
+            "raw_s": 15.233405423,
+            "raw_offset_bounds": [
+              3.414060327,
+              3.414064743
+            ],
+            "boot_s": 15.233408755,
+            "boot_offset_bounds": [
+              3.414061453,
+              3.414063953
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 18.747629833,
+            "raw_s": 15.333565631,
+            "raw_offset_bounds": [
+              3.41406091,
+              3.414064202
+            ],
+            "boot_s": 15.333568464,
+            "boot_offset_bounds": [
+              3.414061369,
+              3.414063786
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 18.847864041,
+            "raw_s": 15.433799715,
+            "raw_offset_bounds": [
+              3.41406066,
+              3.414064326
+            ],
+            "boot_s": 15.433802214,
+            "boot_offset_bounds": [
+              3.414061827,
+              3.414063744
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 18.948013833,
+            "raw_s": 15.533948965,
+            "raw_offset_bounds": [
+              3.414060701,
+              3.414064868
+            ],
+            "boot_s": 15.533952047,
+            "boot_offset_bounds": [
+              3.414061828,
+              3.414063828
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 19.0482565,
+            "raw_s": 15.634191715,
+            "raw_offset_bounds": [
+              3.414060618,
+              3.414064785
+            ],
+            "boot_s": 15.634194714,
+            "boot_offset_bounds": [
+              3.414061786,
+              3.414063786
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 19.148414166,
+            "raw_s": 15.734349632,
+            "raw_offset_bounds": [
+              3.414060534,
+              3.414064534
+            ],
+            "boot_s": 15.734352631,
+            "boot_offset_bounds": [
+              3.414061619,
+              3.414063869
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 19.248563791,
+            "raw_s": 15.83449934,
+            "raw_offset_bounds": [
+              3.414060951,
+              3.414064451
+            ],
+            "boot_s": 15.834502006,
+            "boot_offset_bounds": [
+              3.414061827,
+              3.414063785
+            ]
+          }
+        ]
+      },
+      "raw_offset_intersection_s": [
+        3.41406158,
+        3.414063539
+      ],
+      "pre_kernel_estimate_s": 3.4140626545,
+      "combined_handoff_estimate_s": 5.7240626545,
+      "health": "GPU_OK\nWIFI_OK\narch_sys_counter\n100\n51659",
+      "recovery_warnings": [
+        "[    2.111104] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+      ],
+      "method": "24 MHz CNTVCT_EL0 bracketed around CLOCK_MONOTONIC_RAW and CLOCK_BOOTTIME; first /proc/uptime handoff marker. Warm NextUI reboot_next; clean remounts. Counter origin is not calibrated to power LED."
+    },
+    {
+      "label": "nextui-2",
+      "boot_id": "d1e15d9f-a8b3-4647-bc5f-423421529c8c",
+      "handoff_s": 2.33,
+      "observed_uptime_s": 6.25,
+      "nextui_pid": "1564",
+      "early": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=9.741943416 monotonic_raw=6.325493877 raw_origin_offset=[3.416447331,3.416449539] boottime=6.325495209 boot_origin_offset=[3.416448207,3.416449916]\nsample=1 counter_seconds=9.842050666 monotonic_raw=6.425600544 raw_origin_offset=[3.416447039,3.416450122] boottime=6.425602584 boot_origin_offset=[3.416448249,3.416449541]\nsample=2 counter_seconds=9.942185750 monotonic_raw=6.525735502 raw_origin_offset=[3.416447498,3.416450248] boottime=6.525737834 boot_origin_offset=[3.416447957,3.416449874]\nsample=3 counter_seconds=10.042341833 monotonic_raw=6.625891544 raw_origin_offset=[3.416447247,3.416450289] boottime=6.625893876 boot_origin_offset=[3.416447957,3.416450082]\nsample=4 counter_seconds=10.142492875 monotonic_raw=6.726043044 raw_origin_offset=[3.416446997,3.416449831] boottime=6.726044834 boot_origin_offset=[3.416448082,3.416449666]\nsample=5 counter_seconds=10.242716375 monotonic_raw=6.826265836 raw_origin_offset=[3.416447164,3.416450539] boottime=6.826268418 boot_origin_offset=[3.416447998,3.416449873]\nsample=6 counter_seconds=10.342858166 monotonic_raw=6.926408294 raw_origin_offset=[3.416447289,3.416449872] boottime=6.926410251 boot_origin_offset=[3.416448124,3.416449332]\nsample=7 counter_seconds=10.443019166 monotonic_raw=7.026568628 raw_origin_offset=[3.416447330,3.416450538] boottime=7.026571293 boot_origin_offset=[3.416447873,3.416449332]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 9.741943416,
+            "raw_s": 6.325493877,
+            "raw_offset_bounds": [
+              3.416447331,
+              3.416449539
+            ],
+            "boot_s": 6.325495209,
+            "boot_offset_bounds": [
+              3.416448207,
+              3.416449916
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 9.842050666,
+            "raw_s": 6.425600544,
+            "raw_offset_bounds": [
+              3.416447039,
+              3.416450122
+            ],
+            "boot_s": 6.425602584,
+            "boot_offset_bounds": [
+              3.416448249,
+              3.416449541
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 9.94218575,
+            "raw_s": 6.525735502,
+            "raw_offset_bounds": [
+              3.416447498,
+              3.416450248
+            ],
+            "boot_s": 6.525737834,
+            "boot_offset_bounds": [
+              3.416447957,
+              3.416449874
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 10.042341833,
+            "raw_s": 6.625891544,
+            "raw_offset_bounds": [
+              3.416447247,
+              3.416450289
+            ],
+            "boot_s": 6.625893876,
+            "boot_offset_bounds": [
+              3.416447957,
+              3.416450082
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 10.142492875,
+            "raw_s": 6.726043044,
+            "raw_offset_bounds": [
+              3.416446997,
+              3.416449831
+            ],
+            "boot_s": 6.726044834,
+            "boot_offset_bounds": [
+              3.416448082,
+              3.416449666
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 10.242716375,
+            "raw_s": 6.826265836,
+            "raw_offset_bounds": [
+              3.416447164,
+              3.416450539
+            ],
+            "boot_s": 6.826268418,
+            "boot_offset_bounds": [
+              3.416447998,
+              3.416449873
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 10.342858166,
+            "raw_s": 6.926408294,
+            "raw_offset_bounds": [
+              3.416447289,
+              3.416449872
+            ],
+            "boot_s": 6.926410251,
+            "boot_offset_bounds": [
+              3.416448124,
+              3.416449332
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 10.443019166,
+            "raw_s": 7.026568628,
+            "raw_offset_bounds": [
+              3.41644733,
+              3.416450538
+            ],
+            "boot_s": 7.026571293,
+            "boot_offset_bounds": [
+              3.416447873,
+              3.416449332
+            ]
+          }
+        ]
+      },
+      "late": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=18.574486166 monotonic_raw=15.158036340 raw_origin_offset=[3.416447285,3.416449826] boottime=15.158038172 boot_origin_offset=[3.416447994,3.416449536]\nsample=1 counter_seconds=18.674698833 monotonic_raw=15.258248048 raw_origin_offset=[3.416447202,3.416450785] boottime=15.258251255 boot_origin_offset=[3.416447620,3.416449870]\nsample=2 counter_seconds=18.774932125 monotonic_raw=15.358481590 raw_origin_offset=[3.416447368,3.416450535] boottime=15.358484255 boot_origin_offset=[3.416447911,3.416449870]\nsample=3 counter_seconds=18.875155291 monotonic_raw=15.458704715 raw_origin_offset=[3.416447368,3.416450576] boottime=15.458707339 boot_origin_offset=[3.416447994,3.416449827]\nsample=4 counter_seconds=18.975381000 monotonic_raw=15.558930423 raw_origin_offset=[3.416447285,3.416450577] boottime=15.558933005 boot_origin_offset=[3.416447995,3.416449870]\nsample=5 counter_seconds=19.075614083 monotonic_raw=15.659163507 raw_origin_offset=[3.416447201,3.416450576] boottime=15.659166339 boot_origin_offset=[3.416447786,3.416449827]\nsample=6 counter_seconds=19.175848666 monotonic_raw=15.759398090 raw_origin_offset=[3.416447243,3.416450576] boottime=15.759400922 boot_origin_offset=[3.416447786,3.416449828]\nsample=7 counter_seconds=19.276017041 monotonic_raw=15.859566382 raw_origin_offset=[3.416447368,3.416450659] boottime=15.859569130 boot_origin_offset=[3.416447911,3.416449911]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 18.574486166,
+            "raw_s": 15.15803634,
+            "raw_offset_bounds": [
+              3.416447285,
+              3.416449826
+            ],
+            "boot_s": 15.158038172,
+            "boot_offset_bounds": [
+              3.416447994,
+              3.416449536
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 18.674698833,
+            "raw_s": 15.258248048,
+            "raw_offset_bounds": [
+              3.416447202,
+              3.416450785
+            ],
+            "boot_s": 15.258251255,
+            "boot_offset_bounds": [
+              3.41644762,
+              3.41644987
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 18.774932125,
+            "raw_s": 15.35848159,
+            "raw_offset_bounds": [
+              3.416447368,
+              3.416450535
+            ],
+            "boot_s": 15.358484255,
+            "boot_offset_bounds": [
+              3.416447911,
+              3.41644987
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 18.875155291,
+            "raw_s": 15.458704715,
+            "raw_offset_bounds": [
+              3.416447368,
+              3.416450576
+            ],
+            "boot_s": 15.458707339,
+            "boot_offset_bounds": [
+              3.416447994,
+              3.416449827
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 18.975381,
+            "raw_s": 15.558930423,
+            "raw_offset_bounds": [
+              3.416447285,
+              3.416450577
+            ],
+            "boot_s": 15.558933005,
+            "boot_offset_bounds": [
+              3.416447995,
+              3.41644987
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 19.075614083,
+            "raw_s": 15.659163507,
+            "raw_offset_bounds": [
+              3.416447201,
+              3.416450576
+            ],
+            "boot_s": 15.659166339,
+            "boot_offset_bounds": [
+              3.416447786,
+              3.416449827
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 19.175848666,
+            "raw_s": 15.75939809,
+            "raw_offset_bounds": [
+              3.416447243,
+              3.416450576
+            ],
+            "boot_s": 15.759400922,
+            "boot_offset_bounds": [
+              3.416447786,
+              3.416449828
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 19.276017041,
+            "raw_s": 15.859566382,
+            "raw_offset_bounds": [
+              3.416447368,
+              3.416450659
+            ],
+            "boot_s": 15.85956913,
+            "boot_offset_bounds": [
+              3.416447911,
+              3.416449911
+            ]
+          }
+        ]
+      },
+      "raw_offset_intersection_s": [
+        3.416447498,
+        3.416449539
+      ],
+      "pre_kernel_estimate_s": 3.4164489052500002,
+      "combined_handoff_estimate_s": 5.74644890525,
+      "health": "GPU_OK\nWIFI_OK\narch_sys_counter\n100\n51335",
+      "recovery_warnings": [
+        "[    2.141734] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+      ],
+      "method": "24 MHz CNTVCT_EL0 bracketed around CLOCK_MONOTONIC_RAW and CLOCK_BOOTTIME; first /proc/uptime handoff marker. Warm NextUI reboot_next; clean remounts. Counter origin is not calibrated to power LED."
+    },
+    {
+      "label": "nextui-3",
+      "boot_id": "ca14d1ba-1599-450a-81b0-4ba0d84948ed",
+      "handoff_s": 2.37,
+      "observed_uptime_s": 6.39,
+      "nextui_pid": "1563",
+      "early": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=9.839963083 monotonic_raw=6.467661586 raw_origin_offset=[3.372298955,3.372301497] boottime=6.467663335 boot_origin_offset=[3.372299790,3.372301123]\nsample=1 counter_seconds=9.940171041 monotonic_raw=6.567869002 raw_origin_offset=[3.372298581,3.372302039] boottime=6.567871835 boot_origin_offset=[3.372299248,3.372301498]\nsample=2 counter_seconds=10.040402291 monotonic_raw=6.668099919 raw_origin_offset=[3.372298497,3.372302372] boottime=6.668102877 boot_origin_offset=[3.372299414,3.372301539]\nsample=3 counter_seconds=10.140643333 monotonic_raw=6.768340961 raw_origin_offset=[3.372298164,3.372302372] boottime=6.768343960 boot_origin_offset=[3.372299373,3.372301706]\nsample=4 counter_seconds=10.240842458 monotonic_raw=6.868540877 raw_origin_offset=[3.372298998,3.372301581] boottime=6.868542627 boot_origin_offset=[3.372299831,3.372301164]\nsample=5 counter_seconds=10.341008500 monotonic_raw=6.968706877 raw_origin_offset=[3.372298956,3.372301623] boottime=6.968708793 boot_origin_offset=[3.372299748,3.372300915]\nsample=6 counter_seconds=10.441140166 monotonic_raw=7.068837169 raw_origin_offset=[3.372297539,3.372302997] boottime=7.068840835 boot_origin_offset=[3.372299331,3.372301081]\nsample=7 counter_seconds=10.541270333 monotonic_raw=7.168968919 raw_origin_offset=[3.372298081,3.372301414] boottime=7.168971252 boot_origin_offset=[3.372299289,3.372301164]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 9.839963083,
+            "raw_s": 6.467661586,
+            "raw_offset_bounds": [
+              3.372298955,
+              3.372301497
+            ],
+            "boot_s": 6.467663335,
+            "boot_offset_bounds": [
+              3.37229979,
+              3.372301123
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 9.940171041,
+            "raw_s": 6.567869002,
+            "raw_offset_bounds": [
+              3.372298581,
+              3.372302039
+            ],
+            "boot_s": 6.567871835,
+            "boot_offset_bounds": [
+              3.372299248,
+              3.372301498
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 10.040402291,
+            "raw_s": 6.668099919,
+            "raw_offset_bounds": [
+              3.372298497,
+              3.372302372
+            ],
+            "boot_s": 6.668102877,
+            "boot_offset_bounds": [
+              3.372299414,
+              3.372301539
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 10.140643333,
+            "raw_s": 6.768340961,
+            "raw_offset_bounds": [
+              3.372298164,
+              3.372302372
+            ],
+            "boot_s": 6.76834396,
+            "boot_offset_bounds": [
+              3.372299373,
+              3.372301706
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 10.240842458,
+            "raw_s": 6.868540877,
+            "raw_offset_bounds": [
+              3.372298998,
+              3.372301581
+            ],
+            "boot_s": 6.868542627,
+            "boot_offset_bounds": [
+              3.372299831,
+              3.372301164
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 10.3410085,
+            "raw_s": 6.968706877,
+            "raw_offset_bounds": [
+              3.372298956,
+              3.372301623
+            ],
+            "boot_s": 6.968708793,
+            "boot_offset_bounds": [
+              3.372299748,
+              3.372300915
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 10.441140166,
+            "raw_s": 7.068837169,
+            "raw_offset_bounds": [
+              3.372297539,
+              3.372302997
+            ],
+            "boot_s": 7.068840835,
+            "boot_offset_bounds": [
+              3.372299331,
+              3.372301081
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 10.541270333,
+            "raw_s": 7.168968919,
+            "raw_offset_bounds": [
+              3.372298081,
+              3.372301414
+            ],
+            "boot_s": 7.168971252,
+            "boot_offset_bounds": [
+              3.372299289,
+              3.372301164
+            ]
+          }
+        ]
+      },
+      "late": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=18.684749208 monotonic_raw=15.312447965 raw_origin_offset=[3.372298576,3.372301243] boottime=15.312449422 boot_origin_offset=[3.372299786,3.372301119]\nsample=1 counter_seconds=18.784863458 monotonic_raw=15.412561256 raw_origin_offset=[3.372298577,3.372302202] boottime=15.412564089 boot_origin_offset=[3.372299369,3.372301536]\nsample=2 counter_seconds=18.885011333 monotonic_raw=15.512709298 raw_origin_offset=[3.372298910,3.372302035] boottime=15.512711756 boot_origin_offset=[3.372299619,3.372301535]\nsample=3 counter_seconds=18.985163541 monotonic_raw=15.612861673 raw_origin_offset=[3.372298202,3.372301868] boottime=15.612864006 boot_origin_offset=[3.372299577,3.372301619]\nsample=4 counter_seconds=19.085328666 monotonic_raw=15.713026632 raw_origin_offset=[3.372299159,3.372302034] boottime=15.713029131 boot_origin_offset=[3.372299577,3.372301535]\nsample=5 counter_seconds=19.185481708 monotonic_raw=15.813179632 raw_origin_offset=[3.372299201,3.372302076] boottime=15.813182173 boot_origin_offset=[3.372299577,3.372301452]\nsample=6 counter_seconds=19.285626708 monotonic_raw=15.913324673 raw_origin_offset=[3.372298952,3.372302035] boottime=15.913327214 boot_origin_offset=[3.372299536,3.372301619]\nsample=7 counter_seconds=19.385776666 monotonic_raw=16.013474673 raw_origin_offset=[3.372298868,3.372301993] boottime=16.013477173 boot_origin_offset=[3.372299493,3.372301577]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 18.684749208,
+            "raw_s": 15.312447965,
+            "raw_offset_bounds": [
+              3.372298576,
+              3.372301243
+            ],
+            "boot_s": 15.312449422,
+            "boot_offset_bounds": [
+              3.372299786,
+              3.372301119
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 18.784863458,
+            "raw_s": 15.412561256,
+            "raw_offset_bounds": [
+              3.372298577,
+              3.372302202
+            ],
+            "boot_s": 15.412564089,
+            "boot_offset_bounds": [
+              3.372299369,
+              3.372301536
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 18.885011333,
+            "raw_s": 15.512709298,
+            "raw_offset_bounds": [
+              3.37229891,
+              3.372302035
+            ],
+            "boot_s": 15.512711756,
+            "boot_offset_bounds": [
+              3.372299619,
+              3.372301535
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 18.985163541,
+            "raw_s": 15.612861673,
+            "raw_offset_bounds": [
+              3.372298202,
+              3.372301868
+            ],
+            "boot_s": 15.612864006,
+            "boot_offset_bounds": [
+              3.372299577,
+              3.372301619
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 19.085328666,
+            "raw_s": 15.713026632,
+            "raw_offset_bounds": [
+              3.372299159,
+              3.372302034
+            ],
+            "boot_s": 15.713029131,
+            "boot_offset_bounds": [
+              3.372299577,
+              3.372301535
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 19.185481708,
+            "raw_s": 15.813179632,
+            "raw_offset_bounds": [
+              3.372299201,
+              3.372302076
+            ],
+            "boot_s": 15.813182173,
+            "boot_offset_bounds": [
+              3.372299577,
+              3.372301452
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 19.285626708,
+            "raw_s": 15.913324673,
+            "raw_offset_bounds": [
+              3.372298952,
+              3.372302035
+            ],
+            "boot_s": 15.913327214,
+            "boot_offset_bounds": [
+              3.372299536,
+              3.372301619
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 19.385776666,
+            "raw_s": 16.013474673,
+            "raw_offset_bounds": [
+              3.372298868,
+              3.372301993
+            ],
+            "boot_s": 16.013477173,
+            "boot_offset_bounds": [
+              3.372299493,
+              3.372301577
+            ]
+          }
+        ]
+      },
+      "raw_offset_intersection_s": [
+        3.372299201,
+        3.372301243
+      ],
+      "pre_kernel_estimate_s": 3.3723004147499998,
+      "combined_handoff_estimate_s": 5.74230041475,
+      "health": "GPU_OK\nWIFI_OK\narch_sys_counter\n100\n51173",
+      "recovery_warnings": [
+        "[    2.154744] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+      ],
+      "method": "24 MHz CNTVCT_EL0 bracketed around CLOCK_MONOTONIC_RAW and CLOCK_BOOTTIME; first /proc/uptime handoff marker. Warm NextUI reboot_next; clean remounts. Counter origin is not calibrated to power LED."
+    },
+    {
+      "label": "nextui-4",
+      "boot_id": "0341d752-28d5-4cf9-9fd0-840664c98508",
+      "handoff_s": 2.39,
+      "observed_uptime_s": 6.4,
+      "nextui_pid": "1563",
+      "early": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=9.875039083 monotonic_raw=6.480317377 raw_origin_offset=[3.394719748,3.394721706] boottime=6.480318668 boot_origin_offset=[3.394720415,3.394721707]\nsample=1 counter_seconds=9.975139416 monotonic_raw=6.580416919 raw_origin_offset=[3.394719414,3.394722497] boottime=6.580419251 boot_origin_offset=[3.394720207,3.394721749]\nsample=2 counter_seconds=10.075274791 monotonic_raw=6.680552336 raw_origin_offset=[3.394719622,3.394722455] boottime=6.680554751 boot_origin_offset=[3.394720082,3.394722082]\nsample=3 counter_seconds=10.175409416 monotonic_raw=6.780686877 raw_origin_offset=[3.394719373,3.394722539] boottime=6.780689085 boot_origin_offset=[3.394720373,3.394721706]\nsample=4 counter_seconds=10.275544291 monotonic_raw=6.880821627 raw_origin_offset=[3.394719456,3.394722664] boottime=6.880824418 boot_origin_offset=[3.394719873,3.394722123]\nsample=5 counter_seconds=10.375677958 monotonic_raw=6.980955794 raw_origin_offset=[3.394719956,3.394722164] boottime=6.980957710 boot_origin_offset=[3.394720248,3.394721581]\nsample=6 counter_seconds=10.475798416 monotonic_raw=7.081075919 raw_origin_offset=[3.394718872,3.394722497] boottime=7.081079085 boot_origin_offset=[3.394719540,3.394722081]\nsample=7 counter_seconds=10.575933375 monotonic_raw=7.181210961 raw_origin_offset=[3.394719164,3.394722414] boottime=7.181213668 boot_origin_offset=[3.394719915,3.394722165]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 9.875039083,
+            "raw_s": 6.480317377,
+            "raw_offset_bounds": [
+              3.394719748,
+              3.394721706
+            ],
+            "boot_s": 6.480318668,
+            "boot_offset_bounds": [
+              3.394720415,
+              3.394721707
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 9.975139416,
+            "raw_s": 6.580416919,
+            "raw_offset_bounds": [
+              3.394719414,
+              3.394722497
+            ],
+            "boot_s": 6.580419251,
+            "boot_offset_bounds": [
+              3.394720207,
+              3.394721749
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 10.075274791,
+            "raw_s": 6.680552336,
+            "raw_offset_bounds": [
+              3.394719622,
+              3.394722455
+            ],
+            "boot_s": 6.680554751,
+            "boot_offset_bounds": [
+              3.394720082,
+              3.394722082
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 10.175409416,
+            "raw_s": 6.780686877,
+            "raw_offset_bounds": [
+              3.394719373,
+              3.394722539
+            ],
+            "boot_s": 6.780689085,
+            "boot_offset_bounds": [
+              3.394720373,
+              3.394721706
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 10.275544291,
+            "raw_s": 6.880821627,
+            "raw_offset_bounds": [
+              3.394719456,
+              3.394722664
+            ],
+            "boot_s": 6.880824418,
+            "boot_offset_bounds": [
+              3.394719873,
+              3.394722123
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 10.375677958,
+            "raw_s": 6.980955794,
+            "raw_offset_bounds": [
+              3.394719956,
+              3.394722164
+            ],
+            "boot_s": 6.98095771,
+            "boot_offset_bounds": [
+              3.394720248,
+              3.394721581
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 10.475798416,
+            "raw_s": 7.081075919,
+            "raw_offset_bounds": [
+              3.394718872,
+              3.394722497
+            ],
+            "boot_s": 7.081079085,
+            "boot_offset_bounds": [
+              3.39471954,
+              3.394722081
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 10.575933375,
+            "raw_s": 7.181210961,
+            "raw_offset_bounds": [
+              3.394719164,
+              3.394722414
+            ],
+            "boot_s": 7.181213668,
+            "boot_offset_bounds": [
+              3.394719915,
+              3.394722165
+            ]
+          }
+        ]
+      },
+      "late": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=18.726932916 monotonic_raw=15.332211006 raw_origin_offset=[3.394719160,3.394721910] boottime=15.332212630 boot_origin_offset=[3.394720286,3.394721453]\nsample=1 counter_seconds=18.827129083 monotonic_raw=15.432406423 raw_origin_offset=[3.394718827,3.394722660] boottime=15.432409172 boot_origin_offset=[3.394719911,3.394721994]\nsample=2 counter_seconds=18.927277541 monotonic_raw=15.532555048 raw_origin_offset=[3.394719452,3.394722493] boottime=15.532557381 boot_origin_offset=[3.394720202,3.394722035]\nsample=3 counter_seconds=19.027423666 monotonic_raw=15.632701173 raw_origin_offset=[3.394719410,3.394722493] boottime=15.632703547 boot_origin_offset=[3.394720161,3.394721994]\nsample=4 counter_seconds=19.127583250 monotonic_raw=15.732860757 raw_origin_offset=[3.394719159,3.394722493] boottime=15.732863131 boot_origin_offset=[3.394720119,3.394722035]\nsample=5 counter_seconds=19.227749458 monotonic_raw=15.833027007 raw_origin_offset=[3.394719243,3.394722451] boottime=15.833029422 boot_origin_offset=[3.394720078,3.394722078]\nsample=6 counter_seconds=19.327895583 monotonic_raw=15.933173173 raw_origin_offset=[3.394719410,3.394722410] boottime=15.933175464 boot_origin_offset=[3.394720119,3.394722161]\nsample=7 counter_seconds=19.428037750 monotonic_raw=16.033315382 raw_origin_offset=[3.394719534,3.394722368] boottime=16.033317714 boot_origin_offset=[3.394720077,3.394722036]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 18.726932916,
+            "raw_s": 15.332211006,
+            "raw_offset_bounds": [
+              3.39471916,
+              3.39472191
+            ],
+            "boot_s": 15.33221263,
+            "boot_offset_bounds": [
+              3.394720286,
+              3.394721453
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 18.827129083,
+            "raw_s": 15.432406423,
+            "raw_offset_bounds": [
+              3.394718827,
+              3.39472266
+            ],
+            "boot_s": 15.432409172,
+            "boot_offset_bounds": [
+              3.394719911,
+              3.394721994
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 18.927277541,
+            "raw_s": 15.532555048,
+            "raw_offset_bounds": [
+              3.394719452,
+              3.394722493
+            ],
+            "boot_s": 15.532557381,
+            "boot_offset_bounds": [
+              3.394720202,
+              3.394722035
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 19.027423666,
+            "raw_s": 15.632701173,
+            "raw_offset_bounds": [
+              3.39471941,
+              3.394722493
+            ],
+            "boot_s": 15.632703547,
+            "boot_offset_bounds": [
+              3.394720161,
+              3.394721994
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 19.12758325,
+            "raw_s": 15.732860757,
+            "raw_offset_bounds": [
+              3.394719159,
+              3.394722493
+            ],
+            "boot_s": 15.732863131,
+            "boot_offset_bounds": [
+              3.394720119,
+              3.394722035
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 19.227749458,
+            "raw_s": 15.833027007,
+            "raw_offset_bounds": [
+              3.394719243,
+              3.394722451
+            ],
+            "boot_s": 15.833029422,
+            "boot_offset_bounds": [
+              3.394720078,
+              3.394722078
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 19.327895583,
+            "raw_s": 15.933173173,
+            "raw_offset_bounds": [
+              3.39471941,
+              3.39472241
+            ],
+            "boot_s": 15.933175464,
+            "boot_offset_bounds": [
+              3.394720119,
+              3.394722161
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 19.42803775,
+            "raw_s": 16.033315382,
+            "raw_offset_bounds": [
+              3.394719534,
+              3.394722368
+            ],
+            "boot_s": 16.033317714,
+            "boot_offset_bounds": [
+              3.394720077,
+              3.394722036
+            ]
+          }
+        ]
+      },
+      "raw_offset_intersection_s": [
+        3.394719956,
+        3.394721706
+      ],
+      "pre_kernel_estimate_s": 3.3947210187500003,
+      "combined_handoff_estimate_s": 5.78472101875,
+      "health": "GPU_OK\nWIFI_OK\narch_sys_counter\n100\n51740",
+      "recovery_warnings": [
+        "[    2.185766] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+      ],
+      "method": "24 MHz CNTVCT_EL0 bracketed around CLOCK_MONOTONIC_RAW and CLOCK_BOOTTIME; first /proc/uptime handoff marker. Warm NextUI reboot_next; clean remounts. Counter origin is not calibrated to power LED."
+    },
+    {
+      "label": "nextui-5",
+      "boot_id": "b4b33fa0-6afa-4e0b-b7b9-f04180a2a623",
+      "handoff_s": 2.31,
+      "observed_uptime_s": 6.17,
+      "nextui_pid": "1564",
+      "early": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=9.609124708 monotonic_raw=6.237260169 raw_origin_offset=[3.371862164,3.371864539] boottime=6.237261668 boot_origin_offset=[3.371863040,3.371864290]\nsample=1 counter_seconds=9.709311166 monotonic_raw=6.337445669 raw_origin_offset=[3.371861831,3.371865497] boottime=6.337448335 boot_origin_offset=[3.371862873,3.371864831]\nsample=2 counter_seconds=9.809545250 monotonic_raw=6.437679627 raw_origin_offset=[3.371861456,3.371865623] boottime=6.437683085 boot_origin_offset=[3.371862206,3.371864956]\nsample=3 counter_seconds=9.909795958 monotonic_raw=6.537930586 raw_origin_offset=[3.371862122,3.371865372] boottime=6.537933126 boot_origin_offset=[3.371862874,3.371864874]\nsample=4 counter_seconds=10.009937166 monotonic_raw=6.638072419 raw_origin_offset=[3.371862706,3.371864747] boottime=6.638074085 boot_origin_offset=[3.371863123,3.371864290]\nsample=5 counter_seconds=10.110149833 monotonic_raw=6.738284461 raw_origin_offset=[3.371861955,3.371865372] boottime=6.738287335 boot_origin_offset=[3.371862540,3.371864790]\nsample=6 counter_seconds=10.210386208 monotonic_raw=6.838520919 raw_origin_offset=[3.371861914,3.371865289] boottime=6.838523376 boot_origin_offset=[3.371862832,3.371864790]\nsample=7 counter_seconds=10.310516875 monotonic_raw=6.938651961 raw_origin_offset=[3.371862164,3.371864914] boottime=6.938653751 boot_origin_offset=[3.371863124,3.371864457]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 9.609124708,
+            "raw_s": 6.237260169,
+            "raw_offset_bounds": [
+              3.371862164,
+              3.371864539
+            ],
+            "boot_s": 6.237261668,
+            "boot_offset_bounds": [
+              3.37186304,
+              3.37186429
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 9.709311166,
+            "raw_s": 6.337445669,
+            "raw_offset_bounds": [
+              3.371861831,
+              3.371865497
+            ],
+            "boot_s": 6.337448335,
+            "boot_offset_bounds": [
+              3.371862873,
+              3.371864831
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 9.80954525,
+            "raw_s": 6.437679627,
+            "raw_offset_bounds": [
+              3.371861456,
+              3.371865623
+            ],
+            "boot_s": 6.437683085,
+            "boot_offset_bounds": [
+              3.371862206,
+              3.371864956
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 9.909795958,
+            "raw_s": 6.537930586,
+            "raw_offset_bounds": [
+              3.371862122,
+              3.371865372
+            ],
+            "boot_s": 6.537933126,
+            "boot_offset_bounds": [
+              3.371862874,
+              3.371864874
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 10.009937166,
+            "raw_s": 6.638072419,
+            "raw_offset_bounds": [
+              3.371862706,
+              3.371864747
+            ],
+            "boot_s": 6.638074085,
+            "boot_offset_bounds": [
+              3.371863123,
+              3.37186429
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 10.110149833,
+            "raw_s": 6.738284461,
+            "raw_offset_bounds": [
+              3.371861955,
+              3.371865372
+            ],
+            "boot_s": 6.738287335,
+            "boot_offset_bounds": [
+              3.37186254,
+              3.37186479
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 10.210386208,
+            "raw_s": 6.838520919,
+            "raw_offset_bounds": [
+              3.371861914,
+              3.371865289
+            ],
+            "boot_s": 6.838523376,
+            "boot_offset_bounds": [
+              3.371862832,
+              3.37186479
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 10.310516875,
+            "raw_s": 6.938651961,
+            "raw_offset_bounds": [
+              3.371862164,
+              3.371864914
+            ],
+            "boot_s": 6.938653751,
+            "boot_offset_bounds": [
+              3.371863124,
+              3.371864457
+            ]
+          }
+        ]
+      },
+      "late": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=18.439909458 monotonic_raw=15.068045006 raw_origin_offset=[3.371862077,3.371864452] boottime=15.068046672 boot_origin_offset=[3.371862786,3.371864203]\nsample=1 counter_seconds=18.540050583 monotonic_raw=15.168184798 raw_origin_offset=[3.371861035,3.371865785] boottime=15.168188714 boot_origin_offset=[3.371862119,3.371865077]\nsample=2 counter_seconds=18.640303708 monotonic_raw=15.268438215 raw_origin_offset=[3.371862035,3.371865493] boottime=15.268441547 boot_origin_offset=[3.371862203,3.371864828]\nsample=3 counter_seconds=18.740546166 monotonic_raw=15.368680548 raw_origin_offset=[3.371862160,3.371865618] boottime=15.368683672 boot_origin_offset=[3.371862536,3.371864744]\nsample=4 counter_seconds=18.840775833 monotonic_raw=15.468910590 raw_origin_offset=[3.371862160,3.371865243] boottime=15.468913297 boot_origin_offset=[3.371862578,3.371864786]\nsample=5 counter_seconds=18.941007333 monotonic_raw=15.569142048 raw_origin_offset=[3.371862077,3.371865285] boottime=15.569144631 boot_origin_offset=[3.371862702,3.371864785]\nsample=6 counter_seconds=19.041236916 monotonic_raw=15.669371465 raw_origin_offset=[3.371862160,3.371865451] boottime=15.669374297 boot_origin_offset=[3.371862661,3.371864786]\nsample=7 counter_seconds=19.141387833 monotonic_raw=15.769522340 raw_origin_offset=[3.371862076,3.371865493] boottime=15.769525214 boot_origin_offset=[3.371862661,3.371864827]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 18.439909458,
+            "raw_s": 15.068045006,
+            "raw_offset_bounds": [
+              3.371862077,
+              3.371864452
+            ],
+            "boot_s": 15.068046672,
+            "boot_offset_bounds": [
+              3.371862786,
+              3.371864203
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 18.540050583,
+            "raw_s": 15.168184798,
+            "raw_offset_bounds": [
+              3.371861035,
+              3.371865785
+            ],
+            "boot_s": 15.168188714,
+            "boot_offset_bounds": [
+              3.371862119,
+              3.371865077
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 18.640303708,
+            "raw_s": 15.268438215,
+            "raw_offset_bounds": [
+              3.371862035,
+              3.371865493
+            ],
+            "boot_s": 15.268441547,
+            "boot_offset_bounds": [
+              3.371862203,
+              3.371864828
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 18.740546166,
+            "raw_s": 15.368680548,
+            "raw_offset_bounds": [
+              3.37186216,
+              3.371865618
+            ],
+            "boot_s": 15.368683672,
+            "boot_offset_bounds": [
+              3.371862536,
+              3.371864744
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 18.840775833,
+            "raw_s": 15.46891059,
+            "raw_offset_bounds": [
+              3.37186216,
+              3.371865243
+            ],
+            "boot_s": 15.468913297,
+            "boot_offset_bounds": [
+              3.371862578,
+              3.371864786
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 18.941007333,
+            "raw_s": 15.569142048,
+            "raw_offset_bounds": [
+              3.371862077,
+              3.371865285
+            ],
+            "boot_s": 15.569144631,
+            "boot_offset_bounds": [
+              3.371862702,
+              3.371864785
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 19.041236916,
+            "raw_s": 15.669371465,
+            "raw_offset_bounds": [
+              3.37186216,
+              3.371865451
+            ],
+            "boot_s": 15.669374297,
+            "boot_offset_bounds": [
+              3.371862661,
+              3.371864786
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 19.141387833,
+            "raw_s": 15.76952234,
+            "raw_offset_bounds": [
+              3.371862076,
+              3.371865493
+            ],
+            "boot_s": 15.769525214,
+            "boot_offset_bounds": [
+              3.371862661,
+              3.371864827
+            ]
+          }
+        ]
+      },
+      "raw_offset_intersection_s": [
+        3.371862706,
+        3.371864452
+      ],
+      "pre_kernel_estimate_s": 3.3718637485,
+      "combined_handoff_estimate_s": 5.6818637485,
+      "health": "GPU_OK\nWIFI_OK\narch_sys_counter\n100\n51578",
+      "recovery_warnings": [
+        "[    2.110948] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+      ],
+      "method": "24 MHz CNTVCT_EL0 bracketed around CLOCK_MONOTONIC_RAW and CLOCK_BOOTTIME; first /proc/uptime handoff marker. Warm NextUI reboot_next; clean remounts. Counter origin is not calibrated to power LED."
+    },
+    {
+      "label": "original-logged-1",
+      "boot_id": "ed0beb54-c881-41a1-abf2-773ac783e1e3",
+      "handoff_s": 2.33,
+      "observed_uptime_s": 6.03,
+      "nextui_pid": "1562",
+      "early": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=9.827703541 monotonic_raw=6.112859794 raw_origin_offset=[3.714841622,3.714843747] boottime=6.112861293 boot_origin_offset=[3.714842290,3.714843582]\nsample=1 counter_seconds=9.927818500 monotonic_raw=6.212973210 raw_origin_offset=[3.714840748,3.714845290] boottime=6.212976626 boot_origin_offset=[3.714841915,3.714844124]\nsample=2 counter_seconds=10.027957500 monotonic_raw=6.313113502 raw_origin_offset=[3.714841748,3.714843998] boottime=6.313115335 boot_origin_offset=[3.714842206,3.714843540]\nsample=3 counter_seconds=10.128066458 monotonic_raw=6.413222377 raw_origin_offset=[3.714841664,3.714844081] boottime=6.413224085 boot_origin_offset=[3.714842415,3.714843498]\nsample=4 counter_seconds=10.228190916 monotonic_raw=6.513346127 raw_origin_offset=[3.714841373,3.714844789] boottime=6.513349043 boot_origin_offset=[3.714841957,3.714844082]\nsample=5 counter_seconds=10.328426166 monotonic_raw=6.613581252 raw_origin_offset=[3.714841289,3.714844914] boottime=6.613584251 boot_origin_offset=[3.714841957,3.714844249]\nsample=6 counter_seconds=10.428582625 monotonic_raw=6.713737711 raw_origin_offset=[3.714840997,3.714844914] boottime=6.713740793 boot_origin_offset=[3.714841873,3.714844123]\nsample=7 counter_seconds=10.528780416 monotonic_raw=6.813936544 raw_origin_offset=[3.714842122,3.714843872] boottime=6.813938335 boot_origin_offset=[3.714842123,3.714843498]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 9.827703541,
+            "raw_s": 6.112859794,
+            "raw_offset_bounds": [
+              3.714841622,
+              3.714843747
+            ],
+            "boot_s": 6.112861293,
+            "boot_offset_bounds": [
+              3.71484229,
+              3.714843582
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 9.9278185,
+            "raw_s": 6.21297321,
+            "raw_offset_bounds": [
+              3.714840748,
+              3.71484529
+            ],
+            "boot_s": 6.212976626,
+            "boot_offset_bounds": [
+              3.714841915,
+              3.714844124
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 10.0279575,
+            "raw_s": 6.313113502,
+            "raw_offset_bounds": [
+              3.714841748,
+              3.714843998
+            ],
+            "boot_s": 6.313115335,
+            "boot_offset_bounds": [
+              3.714842206,
+              3.71484354
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 10.128066458,
+            "raw_s": 6.413222377,
+            "raw_offset_bounds": [
+              3.714841664,
+              3.714844081
+            ],
+            "boot_s": 6.413224085,
+            "boot_offset_bounds": [
+              3.714842415,
+              3.714843498
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 10.228190916,
+            "raw_s": 6.513346127,
+            "raw_offset_bounds": [
+              3.714841373,
+              3.714844789
+            ],
+            "boot_s": 6.513349043,
+            "boot_offset_bounds": [
+              3.714841957,
+              3.714844082
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 10.328426166,
+            "raw_s": 6.613581252,
+            "raw_offset_bounds": [
+              3.714841289,
+              3.714844914
+            ],
+            "boot_s": 6.613584251,
+            "boot_offset_bounds": [
+              3.714841957,
+              3.714844249
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 10.428582625,
+            "raw_s": 6.713737711,
+            "raw_offset_bounds": [
+              3.714840997,
+              3.714844914
+            ],
+            "boot_s": 6.713740793,
+            "boot_offset_bounds": [
+              3.714841873,
+              3.714844123
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 10.528780416,
+            "raw_s": 6.813936544,
+            "raw_offset_bounds": [
+              3.714842122,
+              3.714843872
+            ],
+            "boot_s": 6.813938335,
+            "boot_offset_bounds": [
+              3.714842123,
+              3.714843498
+            ]
+          }
+        ]
+      },
+      "late": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=18.665578125 monotonic_raw=14.950734340 raw_origin_offset=[3.714841160,3.714843785] boottime=14.950735839 boot_origin_offset=[3.714842327,3.714843494]\nsample=1 counter_seconds=18.765772625 monotonic_raw=15.050927965 raw_origin_offset=[3.714841410,3.714844660] boottime=15.050930797 boot_origin_offset=[3.714841869,3.714844078]\nsample=2 counter_seconds=18.866002458 monotonic_raw=15.151157965 raw_origin_offset=[3.714841576,3.714844493] boottime=15.151160339 boot_origin_offset=[3.714842119,3.714844036]\nsample=3 counter_seconds=18.966230458 monotonic_raw=15.251385965 raw_origin_offset=[3.714841535,3.714844493] boottime=15.251388422 boot_origin_offset=[3.714842078,3.714843994]\nsample=4 counter_seconds=19.066391875 monotonic_raw=15.351547423 raw_origin_offset=[3.714841618,3.714844452] boottime=15.351549755 boot_origin_offset=[3.714842161,3.714844078]\nsample=5 counter_seconds=19.166537166 monotonic_raw=15.451692632 raw_origin_offset=[3.714841618,3.714844534] boottime=15.451695131 boot_origin_offset=[3.714842035,3.714844035]\nsample=6 counter_seconds=19.266685583 monotonic_raw=15.551841048 raw_origin_offset=[3.714841493,3.714844535] boottime=15.551843547 boot_origin_offset=[3.714842078,3.714843994]\nsample=7 counter_seconds=19.366838708 monotonic_raw=15.651994132 raw_origin_offset=[3.714841701,3.714844576] boottime=15.651996881 boot_origin_offset=[3.714841869,3.714844119]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 18.665578125,
+            "raw_s": 14.95073434,
+            "raw_offset_bounds": [
+              3.71484116,
+              3.714843785
+            ],
+            "boot_s": 14.950735839,
+            "boot_offset_bounds": [
+              3.714842327,
+              3.714843494
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 18.765772625,
+            "raw_s": 15.050927965,
+            "raw_offset_bounds": [
+              3.71484141,
+              3.71484466
+            ],
+            "boot_s": 15.050930797,
+            "boot_offset_bounds": [
+              3.714841869,
+              3.714844078
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 18.866002458,
+            "raw_s": 15.151157965,
+            "raw_offset_bounds": [
+              3.714841576,
+              3.714844493
+            ],
+            "boot_s": 15.151160339,
+            "boot_offset_bounds": [
+              3.714842119,
+              3.714844036
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 18.966230458,
+            "raw_s": 15.251385965,
+            "raw_offset_bounds": [
+              3.714841535,
+              3.714844493
+            ],
+            "boot_s": 15.251388422,
+            "boot_offset_bounds": [
+              3.714842078,
+              3.714843994
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 19.066391875,
+            "raw_s": 15.351547423,
+            "raw_offset_bounds": [
+              3.714841618,
+              3.714844452
+            ],
+            "boot_s": 15.351549755,
+            "boot_offset_bounds": [
+              3.714842161,
+              3.714844078
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 19.166537166,
+            "raw_s": 15.451692632,
+            "raw_offset_bounds": [
+              3.714841618,
+              3.714844534
+            ],
+            "boot_s": 15.451695131,
+            "boot_offset_bounds": [
+              3.714842035,
+              3.714844035
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 19.266685583,
+            "raw_s": 15.551841048,
+            "raw_offset_bounds": [
+              3.714841493,
+              3.714844535
+            ],
+            "boot_s": 15.551843547,
+            "boot_offset_bounds": [
+              3.714842078,
+              3.714843994
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 19.366838708,
+            "raw_s": 15.651994132,
+            "raw_offset_bounds": [
+              3.714841701,
+              3.714844576
+            ],
+            "boot_s": 15.651996881,
+            "boot_offset_bounds": [
+              3.714841869,
+              3.714844119
+            ]
+          }
+        ]
+      },
+      "raw_offset_intersection_s": [
+        3.714842122,
+        3.714843747
+      ],
+      "pre_kernel_estimate_s": 3.71484297725,
+      "combined_handoff_estimate_s": 6.04484297725,
+      "health": "GPU_OK\nWIFI_OK\narch_sys_counter\n100\n52226",
+      "recovery_warnings": [
+        "[    2.114189] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+      ],
+      "method": "24 MHz CNTVCT_EL0 bracketed around CLOCK_MONOTONIC_RAW and CLOCK_BOOTTIME; first /proc/uptime handoff marker. Warm NextUI reboot_next; clean remounts. Counter origin is not calibrated to power LED.",
+      "handoff_stages_s": {
+        "legacy": 2.33,
+        "pre_kernel": 3.715,
+        "post_kernel_raw": 2.339,
+        "combined": 6.054
+      },
+      "installed_timing_sha256": "39506a256c52690623b94631d02f997685b6efe9eed12e195116455353f76e2e  /usr/sbin/boot-clock\ne862a01c0cd21f3ee98b9fede590457c7a2764cac9fd546f8f30db9ce959d728  /usr/sbin/frontend-session"
+    },
+    {
+      "label": "original-logged-2",
+      "boot_id": "3241226d-6653-4e32-83ee-c11b93d94885",
+      "handoff_s": 2.36,
+      "observed_uptime_s": 6.05,
+      "nextui_pid": "1563",
+      "early": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=9.855332458 monotonic_raw=6.120912710 raw_origin_offset=[3.734417373,3.734419748] boottime=6.120914502 boot_origin_offset=[3.734417998,3.734419456]\nsample=1 counter_seconds=9.955427791 monotonic_raw=6.221007794 raw_origin_offset=[3.734417372,3.734419997] boottime=6.221009710 boot_origin_offset=[3.734418290,3.734419331]\nsample=2 counter_seconds=10.055537625 monotonic_raw=6.321118127 raw_origin_offset=[3.734417664,3.734419498] boottime=6.321119585 boot_origin_offset=[3.734418248,3.734419373]\nsample=3 counter_seconds=10.155671000 monotonic_raw=6.421250502 raw_origin_offset=[3.734417206,3.734420498] boottime=6.421253335 boot_origin_offset=[3.734417915,3.734419915]\nsample=4 counter_seconds=10.255821083 monotonic_raw=6.521400336 raw_origin_offset=[3.734416747,3.734420747] boottime=6.521403627 boot_origin_offset=[3.734417706,3.734419873]\nsample=5 counter_seconds=10.355978666 monotonic_raw=6.621557544 raw_origin_offset=[3.734416747,3.734421122] boottime=6.621571210 boot_origin_offset=[3.734407706,3.734420040]\nsample=6 counter_seconds=10.456144791 monotonic_raw=6.721724669 raw_origin_offset=[3.734417622,3.734420122] boottime=6.721726752 boot_origin_offset=[3.734418248,3.734419373]\nsample=7 counter_seconds=10.556252333 monotonic_raw=6.821832419 raw_origin_offset=[3.734417747,3.734419914] boottime=6.821834502 boot_origin_offset=[3.734418039,3.734419414]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 9.855332458,
+            "raw_s": 6.12091271,
+            "raw_offset_bounds": [
+              3.734417373,
+              3.734419748
+            ],
+            "boot_s": 6.120914502,
+            "boot_offset_bounds": [
+              3.734417998,
+              3.734419456
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 9.955427791,
+            "raw_s": 6.221007794,
+            "raw_offset_bounds": [
+              3.734417372,
+              3.734419997
+            ],
+            "boot_s": 6.22100971,
+            "boot_offset_bounds": [
+              3.73441829,
+              3.734419331
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 10.055537625,
+            "raw_s": 6.321118127,
+            "raw_offset_bounds": [
+              3.734417664,
+              3.734419498
+            ],
+            "boot_s": 6.321119585,
+            "boot_offset_bounds": [
+              3.734418248,
+              3.734419373
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 10.155671,
+            "raw_s": 6.421250502,
+            "raw_offset_bounds": [
+              3.734417206,
+              3.734420498
+            ],
+            "boot_s": 6.421253335,
+            "boot_offset_bounds": [
+              3.734417915,
+              3.734419915
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 10.255821083,
+            "raw_s": 6.521400336,
+            "raw_offset_bounds": [
+              3.734416747,
+              3.734420747
+            ],
+            "boot_s": 6.521403627,
+            "boot_offset_bounds": [
+              3.734417706,
+              3.734419873
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 10.355978666,
+            "raw_s": 6.621557544,
+            "raw_offset_bounds": [
+              3.734416747,
+              3.734421122
+            ],
+            "boot_s": 6.62157121,
+            "boot_offset_bounds": [
+              3.734407706,
+              3.73442004
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 10.456144791,
+            "raw_s": 6.721724669,
+            "raw_offset_bounds": [
+              3.734417622,
+              3.734420122
+            ],
+            "boot_s": 6.721726752,
+            "boot_offset_bounds": [
+              3.734418248,
+              3.734419373
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 10.556252333,
+            "raw_s": 6.821832419,
+            "raw_offset_bounds": [
+              3.734417747,
+              3.734419914
+            ],
+            "boot_s": 6.821834502,
+            "boot_offset_bounds": [
+              3.734418039,
+              3.734419414
+            ]
+          }
+        ]
+      },
+      "late": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=18.702500916 monotonic_raw=14.968081381 raw_origin_offset=[3.734417577,3.734419535] boottime=14.968082714 boot_origin_offset=[3.734418244,3.734419494]\nsample=1 counter_seconds=18.802628375 monotonic_raw=15.068207506 raw_origin_offset=[3.734416494,3.734420869] boottime=15.068210423 boot_origin_offset=[3.734417993,3.734419827]\nsample=2 counter_seconds=18.902787166 monotonic_raw=15.168366881 raw_origin_offset=[3.734417285,3.734420285] boottime=15.168369173 boot_origin_offset=[3.734417993,3.734419827]\nsample=3 counter_seconds=19.002938208 monotonic_raw=15.268517923 raw_origin_offset=[3.734417535,3.734420285] boottime=15.268520214 boot_origin_offset=[3.734417994,3.734419869]\nsample=4 counter_seconds=19.103084916 monotonic_raw=15.368664631 raw_origin_offset=[3.734417410,3.734420285] boottime=15.368666923 boot_origin_offset=[3.734418035,3.734419785]\nsample=5 counter_seconds=19.203199958 monotonic_raw=15.468779757 raw_origin_offset=[3.734417451,3.734420201] boottime=15.468782173 boot_origin_offset=[3.734417868,3.734419868]\nsample=6 counter_seconds=19.303350958 monotonic_raw=15.568930757 raw_origin_offset=[3.734417409,3.734420201] boottime=15.568933131 boot_origin_offset=[3.734417910,3.734419952]\nsample=7 counter_seconds=19.403504000 monotonic_raw=15.669082840 raw_origin_offset=[3.734416576,3.734421160] boottime=15.669086090 boot_origin_offset=[3.734417910,3.734419910]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 18.702500916,
+            "raw_s": 14.968081381,
+            "raw_offset_bounds": [
+              3.734417577,
+              3.734419535
+            ],
+            "boot_s": 14.968082714,
+            "boot_offset_bounds": [
+              3.734418244,
+              3.734419494
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 18.802628375,
+            "raw_s": 15.068207506,
+            "raw_offset_bounds": [
+              3.734416494,
+              3.734420869
+            ],
+            "boot_s": 15.068210423,
+            "boot_offset_bounds": [
+              3.734417993,
+              3.734419827
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 18.902787166,
+            "raw_s": 15.168366881,
+            "raw_offset_bounds": [
+              3.734417285,
+              3.734420285
+            ],
+            "boot_s": 15.168369173,
+            "boot_offset_bounds": [
+              3.734417993,
+              3.734419827
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 19.002938208,
+            "raw_s": 15.268517923,
+            "raw_offset_bounds": [
+              3.734417535,
+              3.734420285
+            ],
+            "boot_s": 15.268520214,
+            "boot_offset_bounds": [
+              3.734417994,
+              3.734419869
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 19.103084916,
+            "raw_s": 15.368664631,
+            "raw_offset_bounds": [
+              3.73441741,
+              3.734420285
+            ],
+            "boot_s": 15.368666923,
+            "boot_offset_bounds": [
+              3.734418035,
+              3.734419785
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 19.203199958,
+            "raw_s": 15.468779757,
+            "raw_offset_bounds": [
+              3.734417451,
+              3.734420201
+            ],
+            "boot_s": 15.468782173,
+            "boot_offset_bounds": [
+              3.734417868,
+              3.734419868
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 19.303350958,
+            "raw_s": 15.568930757,
+            "raw_offset_bounds": [
+              3.734417409,
+              3.734420201
+            ],
+            "boot_s": 15.568933131,
+            "boot_offset_bounds": [
+              3.73441791,
+              3.734419952
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 19.403504,
+            "raw_s": 15.66908284,
+            "raw_offset_bounds": [
+              3.734416576,
+              3.73442116
+            ],
+            "boot_s": 15.66908609,
+            "boot_offset_bounds": [
+              3.73441791,
+              3.73441991
+            ]
+          }
+        ]
+      },
+      "raw_offset_intersection_s": [
+        3.734417747,
+        3.734419498
+      ],
+      "pre_kernel_estimate_s": 3.7344188,
+      "combined_handoff_estimate_s": 6.0944188,
+      "health": "GPU_OK\nWIFI_OK\narch_sys_counter\n100\n52226",
+      "recovery_warnings": [
+        "[    2.153284] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+      ],
+      "method": "24 MHz CNTVCT_EL0 bracketed around CLOCK_MONOTONIC_RAW and CLOCK_BOOTTIME; first /proc/uptime handoff marker. Warm NextUI reboot_next; clean remounts. Counter origin is not calibrated to power LED.",
+      "handoff_stages_s": {
+        "legacy": 2.36,
+        "pre_kernel": 3.734,
+        "post_kernel_raw": 2.365,
+        "combined": 6.1
+      },
+      "installed_timing_sha256": "39506a256c52690623b94631d02f997685b6efe9eed12e195116455353f76e2e  /usr/sbin/boot-clock\ne862a01c0cd21f3ee98b9fede590457c7a2764cac9fd546f8f30db9ce959d728  /usr/sbin/frontend-session"
+    },
+    {
+      "label": "original-logged-3",
+      "boot_id": "480b5feb-6b0d-4229-a217-f11f94fdefa2",
+      "handoff_s": 2.32,
+      "observed_uptime_s": 6.34,
+      "nextui_pid": "1563",
+      "early": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=9.915499875 monotonic_raw=6.421012877 raw_origin_offset=[3.494484873,3.494486998] boottime=6.421014376 boot_origin_offset=[3.494485499,3.494486874]\nsample=1 counter_seconds=10.015610833 monotonic_raw=6.521122711 raw_origin_offset=[3.494484580,3.494488122] boottime=6.521125668 boot_origin_offset=[3.494485207,3.494487373]\nsample=2 counter_seconds=10.115744333 monotonic_raw=6.621256711 raw_origin_offset=[3.494484747,3.494487622] boottime=6.621258876 boot_origin_offset=[3.494485665,3.494486790]\nsample=3 counter_seconds=10.215872791 monotonic_raw=6.721384794 raw_origin_offset=[3.494484831,3.494487997] boottime=6.721387501 boot_origin_offset=[3.494485374,3.494487374]\nsample=4 counter_seconds=10.316002708 monotonic_raw=6.821515544 raw_origin_offset=[3.494484872,3.494487164] boottime=6.821517085 boot_origin_offset=[3.494485623,3.494486831]\nsample=5 counter_seconds=10.416114083 monotonic_raw=6.921626627 raw_origin_offset=[3.494484914,3.494487456] boottime=6.921628835 boot_origin_offset=[3.494485456,3.494486790]\nsample=6 counter_seconds=10.516289083 monotonic_raw=7.021801044 raw_origin_offset=[3.494484247,3.494488039] boottime=7.021804168 boot_origin_offset=[3.494484915,3.494486998]\nsample=7 counter_seconds=10.616417250 monotonic_raw=7.121929378 raw_origin_offset=[3.494484788,3.494487872] boottime=7.121931918 boot_origin_offset=[3.494485332,3.494486998]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 9.915499875,
+            "raw_s": 6.421012877,
+            "raw_offset_bounds": [
+              3.494484873,
+              3.494486998
+            ],
+            "boot_s": 6.421014376,
+            "boot_offset_bounds": [
+              3.494485499,
+              3.494486874
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 10.015610833,
+            "raw_s": 6.521122711,
+            "raw_offset_bounds": [
+              3.49448458,
+              3.494488122
+            ],
+            "boot_s": 6.521125668,
+            "boot_offset_bounds": [
+              3.494485207,
+              3.494487373
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 10.115744333,
+            "raw_s": 6.621256711,
+            "raw_offset_bounds": [
+              3.494484747,
+              3.494487622
+            ],
+            "boot_s": 6.621258876,
+            "boot_offset_bounds": [
+              3.494485665,
+              3.49448679
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 10.215872791,
+            "raw_s": 6.721384794,
+            "raw_offset_bounds": [
+              3.494484831,
+              3.494487997
+            ],
+            "boot_s": 6.721387501,
+            "boot_offset_bounds": [
+              3.494485374,
+              3.494487374
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 10.316002708,
+            "raw_s": 6.821515544,
+            "raw_offset_bounds": [
+              3.494484872,
+              3.494487164
+            ],
+            "boot_s": 6.821517085,
+            "boot_offset_bounds": [
+              3.494485623,
+              3.494486831
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 10.416114083,
+            "raw_s": 6.921626627,
+            "raw_offset_bounds": [
+              3.494484914,
+              3.494487456
+            ],
+            "boot_s": 6.921628835,
+            "boot_offset_bounds": [
+              3.494485456,
+              3.49448679
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 10.516289083,
+            "raw_s": 7.021801044,
+            "raw_offset_bounds": [
+              3.494484247,
+              3.494488039
+            ],
+            "boot_s": 7.021804168,
+            "boot_offset_bounds": [
+              3.494484915,
+              3.494486998
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 10.61641725,
+            "raw_s": 7.121929378,
+            "raw_offset_bounds": [
+              3.494484788,
+              3.494487872
+            ],
+            "boot_s": 7.121931918,
+            "boot_offset_bounds": [
+              3.494485332,
+              3.494486998
+            ]
+          }
+        ]
+      },
+      "late": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=18.756284708 monotonic_raw=15.261797715 raw_origin_offset=[3.494484910,3.494486993] boottime=15.261799089 boot_origin_offset=[3.494485661,3.494487077]\nsample=1 counter_seconds=18.856484208 monotonic_raw=15.361996215 raw_origin_offset=[3.494484660,3.494487993] boottime=15.361999297 boot_origin_offset=[3.494485369,3.494487328]\nsample=2 counter_seconds=18.956634125 monotonic_raw=15.462146048 raw_origin_offset=[3.494484285,3.494488077] boottime=15.462148964 boot_origin_offset=[3.494485411,3.494487327]\nsample=3 counter_seconds=19.056779750 monotonic_raw=15.562292007 raw_origin_offset=[3.494484868,3.494487743] boottime=15.562294547 boot_origin_offset=[3.494485453,3.494487369]\nsample=4 counter_seconds=19.156922083 monotonic_raw=15.662434298 raw_origin_offset=[3.494484993,3.494487785] boottime=15.662436964 boot_origin_offset=[3.494485369,3.494487369]\nsample=5 counter_seconds=19.257068791 monotonic_raw=15.762581007 raw_origin_offset=[3.494484909,3.494487784] boottime=15.762583797 boot_origin_offset=[3.494485244,3.494487411]\nsample=6 counter_seconds=19.357228083 monotonic_raw=15.862740423 raw_origin_offset=[3.494484618,3.494487660] boottime=15.862742922 boot_origin_offset=[3.494485411,3.494487369]\nsample=7 counter_seconds=19.457375833 monotonic_raw=15.962888215 raw_origin_offset=[3.494484785,3.494487618] boottime=15.962890714 boot_origin_offset=[3.494485369,3.494487411]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 18.756284708,
+            "raw_s": 15.261797715,
+            "raw_offset_bounds": [
+              3.49448491,
+              3.494486993
+            ],
+            "boot_s": 15.261799089,
+            "boot_offset_bounds": [
+              3.494485661,
+              3.494487077
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 18.856484208,
+            "raw_s": 15.361996215,
+            "raw_offset_bounds": [
+              3.49448466,
+              3.494487993
+            ],
+            "boot_s": 15.361999297,
+            "boot_offset_bounds": [
+              3.494485369,
+              3.494487328
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 18.956634125,
+            "raw_s": 15.462146048,
+            "raw_offset_bounds": [
+              3.494484285,
+              3.494488077
+            ],
+            "boot_s": 15.462148964,
+            "boot_offset_bounds": [
+              3.494485411,
+              3.494487327
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 19.05677975,
+            "raw_s": 15.562292007,
+            "raw_offset_bounds": [
+              3.494484868,
+              3.494487743
+            ],
+            "boot_s": 15.562294547,
+            "boot_offset_bounds": [
+              3.494485453,
+              3.494487369
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 19.156922083,
+            "raw_s": 15.662434298,
+            "raw_offset_bounds": [
+              3.494484993,
+              3.494487785
+            ],
+            "boot_s": 15.662436964,
+            "boot_offset_bounds": [
+              3.494485369,
+              3.494487369
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 19.257068791,
+            "raw_s": 15.762581007,
+            "raw_offset_bounds": [
+              3.494484909,
+              3.494487784
+            ],
+            "boot_s": 15.762583797,
+            "boot_offset_bounds": [
+              3.494485244,
+              3.494487411
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 19.357228083,
+            "raw_s": 15.862740423,
+            "raw_offset_bounds": [
+              3.494484618,
+              3.49448766
+            ],
+            "boot_s": 15.862742922,
+            "boot_offset_bounds": [
+              3.494485411,
+              3.494487369
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 19.457375833,
+            "raw_s": 15.962888215,
+            "raw_offset_bounds": [
+              3.494484785,
+              3.494487618
+            ],
+            "boot_s": 15.962890714,
+            "boot_offset_bounds": [
+              3.494485369,
+              3.494487411
+            ]
+          }
+        ]
+      },
+      "raw_offset_intersection_s": [
+        3.494484993,
+        3.494486993
+      ],
+      "pre_kernel_estimate_s": 3.4944862067500004,
+      "combined_handoff_estimate_s": 5.814486206750001,
+      "health": "GPU_OK\nWIFI_OK\narch_sys_counter\n100\n52064",
+      "recovery_warnings": [
+        "[    2.098016] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+      ],
+      "method": "24 MHz CNTVCT_EL0 bracketed around CLOCK_MONOTONIC_RAW and CLOCK_BOOTTIME; first /proc/uptime handoff marker. Warm NextUI reboot_next; clean remounts. Counter origin is not calibrated to power LED.",
+      "handoff_stages_s": {
+        "legacy": 2.32,
+        "pre_kernel": 3.494,
+        "post_kernel_raw": 2.323,
+        "combined": 5.818
+      },
+      "installed_timing_sha256": "39506a256c52690623b94631d02f997685b6efe9eed12e195116455353f76e2e  /usr/sbin/boot-clock\ne862a01c0cd21f3ee98b9fede590457c7a2764cac9fd546f8f30db9ce959d728  /usr/sbin/frontend-session"
+    },
+    {
+      "label": "original-logged-4",
+      "boot_id": "38cdf591-e139-457f-9c27-bbb2fe9a9c05",
+      "handoff_s": 2.34,
+      "observed_uptime_s": 6.2,
+      "nextui_pid": "1564",
+      "early": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=9.773085041 monotonic_raw=6.283608877 raw_origin_offset=[3.489473914,3.489476164] boottime=6.283610293 boot_origin_offset=[3.489474790,3.489475957]\nsample=1 counter_seconds=9.873205916 monotonic_raw=6.383728544 raw_origin_offset=[3.489473081,3.489477372] boottime=6.383731794 boot_origin_offset=[3.489474372,3.489476497]\nsample=2 counter_seconds=9.973363250 monotonic_raw=6.483886127 raw_origin_offset=[3.489473498,3.489477123] boottime=6.483889127 boot_origin_offset=[3.489474414,3.489476498]\nsample=3 counter_seconds=10.073563833 monotonic_raw=6.584087336 raw_origin_offset=[3.489474372,3.489476497] boottime=6.584089002 boot_origin_offset=[3.489474831,3.489475914]\nsample=4 counter_seconds=10.173730500 monotonic_raw=6.684254127 raw_origin_offset=[3.489474248,3.489476373] boottime=6.684255585 boot_origin_offset=[3.489474915,3.489475998]\nsample=5 counter_seconds=10.273942875 monotonic_raw=6.784465711 raw_origin_offset=[3.489473622,3.489477164] boottime=6.784468460 boot_origin_offset=[3.489474456,3.489476581]\nsample=6 counter_seconds=10.374177083 monotonic_raw=6.884699961 raw_origin_offset=[3.489473830,3.489477122] boottime=6.884702794 boot_origin_offset=[3.489474331,3.489476497]\nsample=7 counter_seconds=10.474322833 monotonic_raw=6.984846086 raw_origin_offset=[3.489473747,3.489476747] boottime=6.984848335 boot_origin_offset=[3.489474706,3.489475956]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 9.773085041,
+            "raw_s": 6.283608877,
+            "raw_offset_bounds": [
+              3.489473914,
+              3.489476164
+            ],
+            "boot_s": 6.283610293,
+            "boot_offset_bounds": [
+              3.48947479,
+              3.489475957
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 9.873205916,
+            "raw_s": 6.383728544,
+            "raw_offset_bounds": [
+              3.489473081,
+              3.489477372
+            ],
+            "boot_s": 6.383731794,
+            "boot_offset_bounds": [
+              3.489474372,
+              3.489476497
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 9.97336325,
+            "raw_s": 6.483886127,
+            "raw_offset_bounds": [
+              3.489473498,
+              3.489477123
+            ],
+            "boot_s": 6.483889127,
+            "boot_offset_bounds": [
+              3.489474414,
+              3.489476498
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 10.073563833,
+            "raw_s": 6.584087336,
+            "raw_offset_bounds": [
+              3.489474372,
+              3.489476497
+            ],
+            "boot_s": 6.584089002,
+            "boot_offset_bounds": [
+              3.489474831,
+              3.489475914
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 10.1737305,
+            "raw_s": 6.684254127,
+            "raw_offset_bounds": [
+              3.489474248,
+              3.489476373
+            ],
+            "boot_s": 6.684255585,
+            "boot_offset_bounds": [
+              3.489474915,
+              3.489475998
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 10.273942875,
+            "raw_s": 6.784465711,
+            "raw_offset_bounds": [
+              3.489473622,
+              3.489477164
+            ],
+            "boot_s": 6.78446846,
+            "boot_offset_bounds": [
+              3.489474456,
+              3.489476581
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 10.374177083,
+            "raw_s": 6.884699961,
+            "raw_offset_bounds": [
+              3.48947383,
+              3.489477122
+            ],
+            "boot_s": 6.884702794,
+            "boot_offset_bounds": [
+              3.489474331,
+              3.489476497
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 10.474322833,
+            "raw_s": 6.984846086,
+            "raw_offset_bounds": [
+              3.489473747,
+              3.489476747
+            ],
+            "boot_s": 6.984848335,
+            "boot_offset_bounds": [
+              3.489474706,
+              3.489475956
+            ]
+          }
+        ]
+      },
+      "late": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=18.610568083 monotonic_raw=15.121091756 raw_origin_offset=[3.489473410,3.489476327] boottime=15.121093256 boot_origin_offset=[3.489474827,3.489476077]\nsample=1 counter_seconds=18.710763083 monotonic_raw=15.221285465 raw_origin_offset=[3.489473785,3.489477618] boottime=15.221288756 boot_origin_offset=[3.489474369,3.489476494]\nsample=2 counter_seconds=18.810916708 monotonic_raw=15.321439590 raw_origin_offset=[3.489473868,3.489477118] boottime=15.321442173 boot_origin_offset=[3.489474577,3.489476577]\nsample=3 counter_seconds=18.911064958 monotonic_raw=15.421588173 raw_origin_offset=[3.489473285,3.489476785] boottime=15.421590881 boot_origin_offset=[3.489474119,3.489476452]\nsample=4 counter_seconds=19.011206291 monotonic_raw=15.521729007 raw_origin_offset=[3.489474201,3.489477284] boottime=15.521732048 boot_origin_offset=[3.489474285,3.489476535]\nsample=5 counter_seconds=19.111436375 monotonic_raw=15.621959423 raw_origin_offset=[3.489473952,3.489476952] boottime=15.621962006 boot_origin_offset=[3.489474410,3.489476494]\nsample=6 counter_seconds=19.211668666 monotonic_raw=15.722191757 raw_origin_offset=[3.489473909,3.489476909] boottime=15.722194340 boot_origin_offset=[3.489474368,3.489476535]\nsample=7 counter_seconds=19.311900041 monotonic_raw=15.822423090 raw_origin_offset=[3.489473910,3.489476951] boottime=15.822425673 boot_origin_offset=[3.489474410,3.489476493]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 18.610568083,
+            "raw_s": 15.121091756,
+            "raw_offset_bounds": [
+              3.48947341,
+              3.489476327
+            ],
+            "boot_s": 15.121093256,
+            "boot_offset_bounds": [
+              3.489474827,
+              3.489476077
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 18.710763083,
+            "raw_s": 15.221285465,
+            "raw_offset_bounds": [
+              3.489473785,
+              3.489477618
+            ],
+            "boot_s": 15.221288756,
+            "boot_offset_bounds": [
+              3.489474369,
+              3.489476494
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 18.810916708,
+            "raw_s": 15.32143959,
+            "raw_offset_bounds": [
+              3.489473868,
+              3.489477118
+            ],
+            "boot_s": 15.321442173,
+            "boot_offset_bounds": [
+              3.489474577,
+              3.489476577
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 18.911064958,
+            "raw_s": 15.421588173,
+            "raw_offset_bounds": [
+              3.489473285,
+              3.489476785
+            ],
+            "boot_s": 15.421590881,
+            "boot_offset_bounds": [
+              3.489474119,
+              3.489476452
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 19.011206291,
+            "raw_s": 15.521729007,
+            "raw_offset_bounds": [
+              3.489474201,
+              3.489477284
+            ],
+            "boot_s": 15.521732048,
+            "boot_offset_bounds": [
+              3.489474285,
+              3.489476535
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 19.111436375,
+            "raw_s": 15.621959423,
+            "raw_offset_bounds": [
+              3.489473952,
+              3.489476952
+            ],
+            "boot_s": 15.621962006,
+            "boot_offset_bounds": [
+              3.48947441,
+              3.489476494
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 19.211668666,
+            "raw_s": 15.722191757,
+            "raw_offset_bounds": [
+              3.489473909,
+              3.489476909
+            ],
+            "boot_s": 15.72219434,
+            "boot_offset_bounds": [
+              3.489474368,
+              3.489476535
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 19.311900041,
+            "raw_s": 15.82242309,
+            "raw_offset_bounds": [
+              3.48947391,
+              3.489476951
+            ],
+            "boot_s": 15.822425673,
+            "boot_offset_bounds": [
+              3.48947441,
+              3.489476493
+            ]
+          }
+        ]
+      },
+      "raw_offset_intersection_s": [
+        3.489474372,
+        3.489476164
+      ],
+      "pre_kernel_estimate_s": 3.48947542425,
+      "combined_handoff_estimate_s": 5.82947542425,
+      "health": "GPU_OK\nWIFI_OK\narch_sys_counter\n100\n52307",
+      "recovery_warnings": [
+        "[    2.123435] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+      ],
+      "method": "24 MHz CNTVCT_EL0 bracketed around CLOCK_MONOTONIC_RAW and CLOCK_BOOTTIME; first /proc/uptime handoff marker. Warm NextUI reboot_next; clean remounts. Counter origin is not calibrated to power LED.",
+      "handoff_stages_s": {
+        "legacy": 2.34,
+        "pre_kernel": 3.489,
+        "post_kernel_raw": 2.348,
+        "combined": 5.837
+      },
+      "installed_timing_sha256": "39506a256c52690623b94631d02f997685b6efe9eed12e195116455353f76e2e  /usr/sbin/boot-clock\ne862a01c0cd21f3ee98b9fede590457c7a2764cac9fd546f8f30db9ce959d728  /usr/sbin/frontend-session"
+    },
+    {
+      "label": "original-logged-5",
+      "boot_id": "6e9271c6-a192-449c-b4e2-5d344cc1efbf",
+      "handoff_s": 2.4,
+      "observed_uptime_s": 6.51,
+      "nextui_pid": "1566",
+      "early": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=10.347247625 monotonic_raw=6.573566627 raw_origin_offset=[3.773678789,3.773680998] boottime=6.573568042 boot_origin_offset=[3.773679583,3.773680749]\nsample=1 counter_seconds=10.447448000 monotonic_raw=6.673765461 raw_origin_offset=[3.773677622,3.773682539] boottime=6.673768959 boot_origin_offset=[3.773679082,3.773681374]\nsample=2 counter_seconds=10.547599708 monotonic_raw=6.773918169 raw_origin_offset=[3.773678789,3.773681539] boottime=6.773920167 boot_origin_offset=[3.773679583,3.773680666]\nsample=3 counter_seconds=10.647772583 monotonic_raw=6.874090544 raw_origin_offset=[3.773678997,3.773682039] boottime=6.874093042 boot_origin_offset=[3.773679541,3.773680666]\nsample=4 counter_seconds=10.753854083 monotonic_raw=6.980171794 raw_origin_offset=[3.773677581,3.773682289] boottime=6.980175251 boot_origin_offset=[3.773678915,3.773681165]\nsample=5 counter_seconds=10.871641041 monotonic_raw=7.097959711 raw_origin_offset=[3.773678247,3.773681330] boottime=7.097961918 boot_origin_offset=[3.773679332,3.773680832]\nsample=6 counter_seconds=10.971852916 monotonic_raw=7.198171003 raw_origin_offset=[3.773678622,3.773681913] boottime=7.198173793 boot_origin_offset=[3.773679165,3.773680748]\nsample=7 counter_seconds=11.071977125 monotonic_raw=7.298296003 raw_origin_offset=[3.773678663,3.773681122] boottime=7.298297959 boot_origin_offset=[3.773679416,3.773680707]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 10.347247625,
+            "raw_s": 6.573566627,
+            "raw_offset_bounds": [
+              3.773678789,
+              3.773680998
+            ],
+            "boot_s": 6.573568042,
+            "boot_offset_bounds": [
+              3.773679583,
+              3.773680749
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 10.447448,
+            "raw_s": 6.673765461,
+            "raw_offset_bounds": [
+              3.773677622,
+              3.773682539
+            ],
+            "boot_s": 6.673768959,
+            "boot_offset_bounds": [
+              3.773679082,
+              3.773681374
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 10.547599708,
+            "raw_s": 6.773918169,
+            "raw_offset_bounds": [
+              3.773678789,
+              3.773681539
+            ],
+            "boot_s": 6.773920167,
+            "boot_offset_bounds": [
+              3.773679583,
+              3.773680666
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 10.647772583,
+            "raw_s": 6.874090544,
+            "raw_offset_bounds": [
+              3.773678997,
+              3.773682039
+            ],
+            "boot_s": 6.874093042,
+            "boot_offset_bounds": [
+              3.773679541,
+              3.773680666
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 10.753854083,
+            "raw_s": 6.980171794,
+            "raw_offset_bounds": [
+              3.773677581,
+              3.773682289
+            ],
+            "boot_s": 6.980175251,
+            "boot_offset_bounds": [
+              3.773678915,
+              3.773681165
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 10.871641041,
+            "raw_s": 7.097959711,
+            "raw_offset_bounds": [
+              3.773678247,
+              3.77368133
+            ],
+            "boot_s": 7.097961918,
+            "boot_offset_bounds": [
+              3.773679332,
+              3.773680832
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 10.971852916,
+            "raw_s": 7.198171003,
+            "raw_offset_bounds": [
+              3.773678622,
+              3.773681913
+            ],
+            "boot_s": 7.198173793,
+            "boot_offset_bounds": [
+              3.773679165,
+              3.773680748
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 11.071977125,
+            "raw_s": 7.298296003,
+            "raw_offset_bounds": [
+              3.773678663,
+              3.773681122
+            ],
+            "boot_s": 7.298297959,
+            "boot_offset_bounds": [
+              3.773679416,
+              3.773680707
+            ]
+          }
+        ]
+      },
+      "late": {
+        "output": "counter_frequency_hz=24000000\nsample=0 counter_seconds=19.216230041 monotonic_raw=15.442549048 raw_origin_offset=[3.773678202,3.773680993] boottime=15.442550671 boot_origin_offset=[3.773679370,3.773680829]\nsample=1 counter_seconds=19.316435500 monotonic_raw=15.542753673 raw_origin_offset=[3.773677827,3.773681827] boottime=15.542756422 boot_origin_offset=[3.773679078,3.773681203]\nsample=2 counter_seconds=19.416583375 monotonic_raw=15.642901257 raw_origin_offset=[3.773678409,3.773682118] boottime=15.642904130 boot_origin_offset=[3.773679286,3.773681203]\nsample=3 counter_seconds=19.516719625 monotonic_raw=15.743038048 raw_origin_offset=[3.773678368,3.773681577] boottime=15.743040422 boot_origin_offset=[3.773679411,3.773680869]\nsample=4 counter_seconds=19.616945208 monotonic_raw=15.843262673 raw_origin_offset=[3.773677785,3.773682535] boottime=15.843266505 boot_origin_offset=[3.773678745,3.773681370]\nsample=5 counter_seconds=19.717105833 monotonic_raw=15.943423757 raw_origin_offset=[3.773678576,3.773682076] boottime=15.943426797 boot_origin_offset=[3.773679078,3.773681244]\nsample=6 counter_seconds=19.817244750 monotonic_raw=16.043563048 raw_origin_offset=[3.773678118,3.773681702] boottime=16.043565797 boot_origin_offset=[3.773678953,3.773680744]\nsample=7 counter_seconds=19.917392416 monotonic_raw=16.143710007 raw_origin_offset=[3.773677576,3.773682409] boottime=16.143713755 boot_origin_offset=[3.773678703,3.773681661]",
+        "samples": [
+          {
+            "sample": 0,
+            "counter_s": 19.216230041,
+            "raw_s": 15.442549048,
+            "raw_offset_bounds": [
+              3.773678202,
+              3.773680993
+            ],
+            "boot_s": 15.442550671,
+            "boot_offset_bounds": [
+              3.77367937,
+              3.773680829
+            ]
+          },
+          {
+            "sample": 1,
+            "counter_s": 19.3164355,
+            "raw_s": 15.542753673,
+            "raw_offset_bounds": [
+              3.773677827,
+              3.773681827
+            ],
+            "boot_s": 15.542756422,
+            "boot_offset_bounds": [
+              3.773679078,
+              3.773681203
+            ]
+          },
+          {
+            "sample": 2,
+            "counter_s": 19.416583375,
+            "raw_s": 15.642901257,
+            "raw_offset_bounds": [
+              3.773678409,
+              3.773682118
+            ],
+            "boot_s": 15.64290413,
+            "boot_offset_bounds": [
+              3.773679286,
+              3.773681203
+            ]
+          },
+          {
+            "sample": 3,
+            "counter_s": 19.516719625,
+            "raw_s": 15.743038048,
+            "raw_offset_bounds": [
+              3.773678368,
+              3.773681577
+            ],
+            "boot_s": 15.743040422,
+            "boot_offset_bounds": [
+              3.773679411,
+              3.773680869
+            ]
+          },
+          {
+            "sample": 4,
+            "counter_s": 19.616945208,
+            "raw_s": 15.843262673,
+            "raw_offset_bounds": [
+              3.773677785,
+              3.773682535
+            ],
+            "boot_s": 15.843266505,
+            "boot_offset_bounds": [
+              3.773678745,
+              3.77368137
+            ]
+          },
+          {
+            "sample": 5,
+            "counter_s": 19.717105833,
+            "raw_s": 15.943423757,
+            "raw_offset_bounds": [
+              3.773678576,
+              3.773682076
+            ],
+            "boot_s": 15.943426797,
+            "boot_offset_bounds": [
+              3.773679078,
+              3.773681244
+            ]
+          },
+          {
+            "sample": 6,
+            "counter_s": 19.81724475,
+            "raw_s": 16.043563048,
+            "raw_offset_bounds": [
+              3.773678118,
+              3.773681702
+            ],
+            "boot_s": 16.043565797,
+            "boot_offset_bounds": [
+              3.773678953,
+              3.773680744
+            ]
+          },
+          {
+            "sample": 7,
+            "counter_s": 19.917392416,
+            "raw_s": 16.143710007,
+            "raw_offset_bounds": [
+              3.773677576,
+              3.773682409
+            ],
+            "boot_s": 16.143713755,
+            "boot_offset_bounds": [
+              3.773678703,
+              3.773681661
+            ]
+          }
+        ]
+      },
+      "raw_offset_intersection_s": [
+        3.773678997,
+        3.773680993
+      ],
+      "pre_kernel_estimate_s": 3.7736800927500003,
+      "combined_handoff_estimate_s": 6.173680092750001,
+      "health": "GPU_OK\nWIFI_OK\narch_sys_counter\n100\n52226",
+      "recovery_warnings": [
+        "[    2.193043] FAT-fs (mmcblk0p7): Volume was not properly unmounted. Some data may be corrupt. Please run fsck."
+      ],
+      "method": "24 MHz CNTVCT_EL0 bracketed around CLOCK_MONOTONIC_RAW and CLOCK_BOOTTIME; first /proc/uptime handoff marker. Warm NextUI reboot_next; clean remounts. Counter origin is not calibrated to power LED.",
+      "handoff_stages_s": {
+        "legacy": 2.4,
+        "pre_kernel": 3.774,
+        "post_kernel_raw": 2.405,
+        "combined": 6.179
+      },
+      "installed_timing_sha256": "39506a256c52690623b94631d02f997685b6efe9eed12e195116455353f76e2e  /usr/sbin/boot-clock\ne862a01c0cd21f3ee98b9fede590457c7a2764cac9fd546f8f30db9ce959d728  /usr/sbin/frontend-session"
+    }
+  ]
+}

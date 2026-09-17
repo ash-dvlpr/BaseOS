@@ -514,5 +514,43 @@ for state in ready failed; do
 	fi
 done
 echo 'ok: USB storage mode blocks card access, installers and all frontends'
+
+# A validated target supplies both clocks; preserve the legacy BOOTTIME marker
+# and the first counter sample across frontend respawns.
+reset
+nextui_card
+cat > /usr/sbin/boot-clock <<'EOF'
+#!/bin/sh
+echo called >> /tmp/counter-calls
+echo '2.31 3.414 2.319 5.733'
+EOF
+chmod 755 /usr/sbin/boot-clock
+run_session
+[ "$status" -eq 0 ]
+[ "$(cat /run/boot-frontend-exec)" = 2.31 ]
+[ "$(cat /run/boot-clock-handoff)" = '2.31 3.414 2.319 5.733' ]
+check_handoff_log "$BOOT_LOG" 1
+grep -Fqx '2.31 BaseOS boot stages: pre-kernel 3.414 s; post-kernel 2.319 s; combined 5.733 s (counter origin to frontend handoff; raw clock)' "$BOOT_LOG"
+rm /tmp/update.log
+run_session
+[ "$status" -eq 0 ]
+[ "$(cat /tmp/counter-calls)" = called ]
+[ "$(grep -c 'BaseOS boot stages:' "$BOOT_LOG")" -eq 1 ]
+echo 'ok: counter stages retain BOOTTIME compatibility and survive respawns'
+
+# Unavailable counters must not prevent the frontend from starting or emit a
+# misleading partial stage record. Earlier cases cover an absent helper.
+reset
+nextui_card
+cat > /usr/sbin/boot-clock <<'EOF'
+#!/bin/sh
+echo 'partial'
+exit 1
+EOF
+run_session
+[ "$status" -eq 0 ]
+check_handoff_log "$BOOT_LOG" 1
+! grep -q 'BaseOS boot stages:' "$BOOT_LOG"
+echo 'ok: failed counter sampling falls back to uptime-only handoff'
 echo 'frontend session tests passed'
 TEST

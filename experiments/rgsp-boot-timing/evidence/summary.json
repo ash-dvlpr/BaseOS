@@ -1,0 +1,67 @@
+{
+  "gzip": {
+    "count": 3,
+    "stages_s": {
+      "pre_kernel": {
+        "median": 3.416,
+        "min": 3.372,
+        "max": 3.423
+      },
+      "post_kernel_raw": {
+        "median": 2.334,
+        "min": 2.319,
+        "max": 2.347
+      },
+      "combined": {
+        "median": 5.735,
+        "min": 5.719,
+        "max": 5.757
+      }
+    }
+  },
+  "original": {
+    "count": 5,
+    "stages_s": {
+      "pre_kernel": {
+        "median": 3.715,
+        "min": 3.489,
+        "max": 3.774
+      },
+      "post_kernel_raw": {
+        "median": 2.348,
+        "min": 2.323,
+        "max": 2.405
+      },
+      "combined": {
+        "median": 6.054,
+        "min": 5.818,
+        "max": 6.179
+      }
+    }
+  },
+  "median_differences_original_minus_gzip_s": {
+    "pre_kernel": 0.299,
+    "post_kernel_raw": 0.014,
+    "combined": 0.319
+  },
+  "sample_ids": [
+    "18431cdd-f1f0-4cdd-8824-b704141965da",
+    "a692fb74-ea9a-4106-82c2-d94fbdc41cba",
+    "f47db42e-236f-48be-b3a9-986b014e177e",
+    "ed0beb54-c881-41a1-abf2-773ac783e1e3",
+    "3241226d-6653-4e32-83ee-c11b93d94885",
+    "480b5feb-6b0d-4229-a217-f11f94fdefa2",
+    "38cdf591-e139-457f-9c27-bbb2fe9a9c05",
+    "6e9271c6-a192-449c-b4e2-5d344cc1efbf"
+  ],
+  "excluded_es_boot_id": "2a584c4c-d641-48f5-a6bc-8050f9d1d54f",
+  "hashes": {
+    "gzip_kernel_partition": "83b6e8a62cf1d0479dd8a9132d2656af00c8aa15c27cdd583d29da6509071233",
+    "gzip_boot_package": "fa745599c9eb95110f03c6c426e6d08e0317146d51059c6a790e25f604ea0942",
+    "original_kernel_partition": "d42252f30730d35ca7759a651da7260ba482144130e58f05f23ea5e33270a6f5",
+    "original_boot_package": "957929afa2879e18ff758d93eafa98879b21aec70dedcb731d7862a2c20f075c",
+    "boot_clock_binary": "39506a256c52690623b94631d02f997685b6efe9eed12e195116455353f76e2e",
+    "frontend_session_original": "33e906e8c9c855bf0f5abb28725e985a97f4007193773d68ebd38447ea2ed4bb",
+    "frontend_session_timing": "e862a01c0cd21f3ee98b9fede590457c7a2764cac9fd546f8f30db9ce959d728"
+  }
+}

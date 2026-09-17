@@ -148,10 +148,24 @@ if [ "$CARD_MISSING" -eq 0 ] && [ -f "$LAUNCH" ]; then
 	log "exec $LAUNCH (mali wait ${m}x)"
 	# Keep the first handoff across respawns and record it in the readable log.
 	if [ ! -s /run/boot-frontend-exec ]; then
-		{ read -r boot_uptime boot_idle < /proc/uptime \
+		# boot-clock is installed only on a target with a validated counter.
+		# Keep BOOTTIME for the existing marker/budget. The additional split
+		# uses the unadjusted clock so NTP cannot masquerade as boot work.
+		boot_pre= boot_post= boot_total=
+		if ! { [ -x /usr/sbin/boot-clock ] \
+			&& /usr/sbin/boot-clock > /run/boot-clock-handoff 2>/dev/null \
+			&& read -r boot_uptime boot_pre boot_post boot_total < /run/boot-clock-handoff; }; then
+			boot_pre= boot_post= boot_total=
+			read -r boot_uptime boot_idle < /proc/uptime || boot_uptime=
+		fi
+		{ [ -n "$boot_uptime" ] \
 			&& printf '%s\n' "$boot_uptime" > /run/boot-frontend-exec \
 			&& printf '%s BaseOS boot time: %s s (kernel start to frontend handoff)\n' \
 				"$boot_uptime" "$boot_uptime" >> "$LOG"; } 2>/dev/null || :
+		if [ -n "$boot_total" ]; then
+			printf '%s BaseOS boot stages: pre-kernel %s s; post-kernel %s s; combined %s s (counter origin to frontend handoff; raw clock)\n' \
+				"$boot_uptime" "$boot_pre" "$boot_post" "$boot_total" >> "$LOG" 2>/dev/null || :
+		fi
 	fi
 	if [ "$LAUNCH_TYPE" = binary ]; then
 		# Binaries use the glibc AArch64 runtime. Use the system

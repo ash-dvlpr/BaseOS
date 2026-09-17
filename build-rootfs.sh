@@ -23,6 +23,9 @@ TOOLS="$HERE/work/tools"
 for tool in busybox dropbearmulti curl fbsplash gptgrow gptslot sftp-server adbd axp-off charger-wait avahi-daemon; do
   [ -x "$TOOLS/$tool" ] || { echo "missing $TOOLS/$tool (run build-tools.sh)"; exit 1; }
 done
+if [ "$TARGET" = rgsp ]; then
+  [ -x "$TOOLS/boot-clock" ] || { echo "missing $TOOLS/boot-clock (run build-tools.sh)"; exit 1; }
+fi
 BASEOS_VERSION="$(tr -d ' \n' < "$HERE/VERSION")"
 [ -n "$BASEOS_VERSION" ] || { echo "VERSION is empty"; exit 1; }
 BASEOS_BUILD="$(git -C "$HERE" describe --always --dirty 2>/dev/null || echo unknown)"
@@ -223,6 +226,11 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
     cp "/tools/$tool" "$R/usr/sbin/$tool"
     chmod 755 "$R/usr/sbin/$tool"
   done
+  # Counter origin/reset behavior has only been measured on RG SP so far.
+  if [ "$BASEOS_TARGET" = rgsp ]; then
+    cp /tools/boot-clock "$R/usr/sbin/boot-clock"
+    chmod 755 "$R/usr/sbin/boot-clock"
+  fi
   # Card settings and README are restored after first-boot FAT expansion.
   mkdir -p "$R/usr/share/baseos"
   [ -f /assets/card-readme.txt ] && cp /assets/card-readme.txt "$R/usr/share/baseos/card-readme.txt"

@@ -9,6 +9,7 @@
 #   work/tools/gptgrow        (grow last GPT partition on first boot)
 #   work/tools/gptslot        (A/B root-slot geometry + flip for updates)
 #   work/tools/charger-wait   (blocking charger recovery input)
+#   work/tools/boot-clock     (RG SP hardware-counter boot-stage timing)
 #   work/tools/axp-off        (cut power at the PMIC; rcK's last step)
 #   work/tools/sftp-server    (OpenSSH sftp subsystem child for dropbear)
 #   work/tools/adbd           (Android adb daemon, USB-only, static)
@@ -96,7 +97,8 @@ docker run --rm --platform "$BASEOS_DOCKER_PLATFORM_AARCH64" \
   apk add -q build-base linux-headers
   gcc -static -O2 -Wall -Wextra -o /out/axp-off /src/axp-off.c
   gcc -static -O2 -Wall -Wextra -o /out/charger-wait /src/charger-wait.c
-  strip /out/axp-off /out/charger-wait
+  gcc -static -O2 -Wall -Wextra -o /out/boot-clock /src/boot-clock.c
+  strip /out/axp-off /out/charger-wait /out/boot-clock
 '
 
 # sftp-server: dropbear 2024.85 ships the sftp subsystem execing

@@ -33,6 +33,36 @@ time and frontend rendering. Measure power-on to a usable frontend separately
 for user-facing startup time; USB discovery and host polling delays are not
 boot timings.
 
+### RG SP counter-based stages
+
+RG SP builds also install `boot-clock`. At the first handoff it reads the
+24 MHz ARM generic counter and `CLOCK_MONOTONIC_RAW` together and logs:
+
+```text
+BaseOS boot stages: pre-kernel ... s; post-kernel ... s; combined ... s (counter origin to frontend handoff; raw clock)
+```
+
+`pre-kernel` is the counter value at Linux's initial timekeeping origin,
+calculated as counter seconds minus raw monotonic seconds. It includes kernel
+loading/decompression and the earliest kernel work before timekeeping starts.
+`post-kernel` is raw monotonic time at frontend handoff: remaining kernel
+initialization, initramfs and rootfs startup. `combined` is their sum, the raw
+counter value at that handoff. The division is Linux's clock origin, not the
+first kernel instruction. Reading the counter does not change or reset it.
+
+The raw clock avoids NTP adjustments. The existing `/run/boot-frontend-exec`
+marker and 2.50-second budget retain `CLOCK_BOOTTIME` semantics and centisecond
+precision; the additional stages are rounded to milliseconds. The four values
+in `/run/boot-clock-handoff` are legacy handoff, pre-kernel, raw post-kernel and
+combined seconds. Records are retained across frontend respawns.
+
+Counter reset and within-boot stability have been measured with NextUI warm
+reboots on RG SP. Counter zero is **not calibrated to LED-on**, and handoff is
+not the first rendered frame. Cold starts and suspend/resume still need separate
+validation. Other targets retain uptime-only logging. Missing, unavailable,
+unexpected-frequency or imprecisely sampled counters also fall back to the
+existing uptime-only path. See the [measurement evidence](../experiments/rgsp-boot-timing/README.md).
+
 For performance comparisons:
 
 - Use the same device, SD card, firmware, frontend and cable state.
