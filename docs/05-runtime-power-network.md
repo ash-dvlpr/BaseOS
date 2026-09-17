@@ -150,3 +150,22 @@ restarting without MENU.
 
 See [USB adb, mass storage and H700 OTG](08-usb-adb-and-otg.md) for gadget
 configuration, role handling, storage safety and validation.
+
+## Optional startup sound
+
+Place `startup_sound.wav` at the root of TF1's BASEOS partition. The tested
+format is 48 kHz stereo, signed 16-bit PCM WAV. No audio asset is bundled;
+remove or rename the file for silent startup.
+
+`rcS` starts `baseos-startup-sound` in the background after the audio repair.
+It reuses TF1's existing mount, or mounts TF1 read-only under
+`/run/startup-sound-tf1` when TF2 hosts the frontend, releasing that private
+mount after playback. It never searches TF2. Missing and empty files leave
+audio controls untouched. USB-storage boots skip the helper, and charger-only
+startup does not reach it until POWER is accepted.
+
+Playback uses full codec gain and the default ALSA speaker route, is limited
+to 30 seconds, and does not wait before frontend handoff. The default PCM locks
+its routing and digital-volume controls during playback; a frontend opening
+the same hardware PCM during the sound may find it busy. Keep startup clips
+short. Diagnostics go to `/run/startup-sound.log`.

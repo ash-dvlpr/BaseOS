@@ -1,0 +1,35 @@
+#!/bin/sh
+# Play optional startup_sound.wav from TF1 BASEOS without blocking startup.
+MOUNTS=${BASEOS_SOUND_MOUNTS:-/proc/mounts}
+RUN=${BASEOS_SOUND_RUN:-/run}
+TF1=
+OWN_MOUNT=0
+while read -r device target rest; do
+    if [ "$device" = /dev/mmcblk0p7 ]; then TF1=$target; break; fi
+done < "$MOUNTS"
+if [ -z "$TF1" ]; then
+    TF1="$RUN/startup-sound-tf1"
+    mkdir -p "$TF1" || exit 0
+    mount -t vfat -o ro /dev/mmcblk0p7 "$TF1" || exit 0
+    OWN_MOUNT=1
+fi
+cleanup() {
+    [ "$OWN_MOUNT" -eq 0 ] || umount "$TF1"
+}
+trap cleanup EXIT
+SOUND="$TF1/startup_sound.wav"
+[ -s "$SOUND" ] || exit 0
+mkdir "$RUN/startup-sound.once" 2>/dev/null || exit 0
+printf 'Playing %s at ' "$SOUND"; cat /proc/uptime
+# The codec default PCM supplies and preserves its routing controls.
+# Match the full-volume startup playback verified on RG SP.
+amixer -q -c 0 sset 'digital volume' 63
+amixer -q -c 0 sset 'lineout volume' 31
+amixer -q -c 0 sset 'OutputL Mixer DACL' on
+amixer -q -c 0 sset 'OutputR Mixer DACR' on
+amixer -q -c 0 sset 'LINEOUT' on
+amixer -q -c 0 sset 'SPK' on
+timeout 30 aplay -q -D default "$SOUND"
+result=$?
+printf 'Playback exit=%s at ' "$result"; cat /proc/uptime
+exit "$result"

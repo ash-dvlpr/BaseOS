@@ -95,3 +95,12 @@ Boot diagnostics
 BaseOS appends boot diagnostics to baseos-boot.log at the root of the active
 frontend card: TF2 when usable, otherwise TF1. This includes BaseOS's time
 from kernel start to frontend handoff.
+
+Optional startup sound
+----------------------
+
+Copy startup_sound.wav to the root of TF1's BASEOS partition to play it once
+in the background during normal startup. Use a 48 kHz stereo, 16-bit PCM WAV.
+Delete or rename the file to disable the sound. TF2 is not searched.
+Playback uses full codec volume and stops after at most 30 seconds; it does
+not delay frontend launch. No sound file is bundled with BaseOS.
