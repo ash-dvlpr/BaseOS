@@ -40,6 +40,8 @@ See the [earlier results](experiments/rgsp-boot-timing/RESULTS.md).
 - Updates by copying one file to your card. Games, saves and settings stay put.
 - SSH/SFTP over Wi-Fi and adb over USB, enabled by default.
 - USB storage mode to access your card from a computer.
+- Optional startup sound: put `startup_sound.wav` at the root of TF1's BASEOS
+  partition. Use a short WAV clip; other formats are not supported.
 
 ## Installation and updates
 
